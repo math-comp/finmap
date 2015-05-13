@@ -1,5 +1,5 @@
-          A finset and finmap library
-       ----------------------------------
+       A finset and finmap DRAFT library
+       ---------------------------------
 
 AUTHOR
 ======
@@ -12,17 +12,15 @@ My library was developed independently but inspired from Pierre-Yves
 Strub's library (https://github.com/strub/ssrmisc/blob/master/fset.v)
 from Christian Doczkal's library
 (https://www.ps.uni-saarland.de/formalizations/fset/html/libs.fset.html)
-and from Beta Ziliani's work
-(no reference provided so far)
+and from Beta Ziliani's work (no reference provided so far).
 
 This library should ultimately be integrated to the mathematical
-components library.
+components library, when it is finished.
 
 DOCUMENTATION
 =============
 
 The documentation is available in the header of the file.
-
 
 LICENSING
 =========
