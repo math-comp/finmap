@@ -31,6 +31,7 @@ Require Import choice  path finset finfun fintype bigop.
 (* [disjoint A & B] := A `&` B == 0                                          *)
 (*     A `<=` B == A is a subset of B                                        *)
 (*     A `<` B == A is a proper subset of B                                  *)
+(*            #|`A| == cardinal of A                                         *)
 (*    fincl AsubB a == turns a : A  into an element of B                     *)
 (*                     using a proof AsubB of A \fsubset B                   *)
 (*         fsub B A == turns A : {fset K} into a {set B}                     *)
@@ -309,7 +310,7 @@ Definition fset_sub_finMixin :=
   Eval hnf in UniqFinMixin (undup_uniq _) mem_fset_sub_enum.
 Canonical fset_sub_finType := Eval hnf in FinType fset_sub fset_sub_finMixin.
 
-Lemma card_fset_sub : #|{:fset_sub}| = size (fset_keys A).
+Lemma card_fset_sub : #|{: fset_sub}| = size (fset_keys A).
 Proof.
 rewrite cardE enumT -(size_map val) unlock val_fset_sub_enum //.
 by rewrite canonical_uniq //; case: A.
@@ -319,6 +320,10 @@ End FinTypeSet.
 
 Coercion fset_sub : finSet >-> Sortclass.
 Hint Resolve fsvalP.
+
+Definition fset_predT {T : choiceType} {A : finSet T} := @predT {: A}.
+Notation "#|` A |" := #|@fset_predT _ A|
+  (at level 0, A at level 99, format "#|` A |") : nat_scope.
 
 Section Basics.
 Variables (K : choiceType).
@@ -894,21 +899,21 @@ Proof. by rewrite fproperEneq; case/andP. Qed.
 Lemma eqEfproper A B : (A == B) = (A `<=` B) && ~~ (A `<` B).
 Proof. by rewrite negb_and negbK andb_orr andbN eqEfsubset. Qed.
 
-Lemma card_fsub B A : A `<=` B -> #|fsub B A| = #|{: A}|.
+Lemma card_fsub B A : A `<=` B -> #|fsub B A| = #|` A|.
 Proof. by move=> sAB; rewrite fsubE card_imset //; apply: fincl_inj. Qed.
 
 Lemma eqEfcard A B : (A == B) = (A `<=` B) &&
-  (#|{: B}| <= #|{: A}|)%N.
+  (#|` B| <= #|` A|)%N.
 Proof.
 rewrite -(inj_in_eq (@fsub_inj (A `|` B))) -?topredE //=.
 by rewrite eqEcard !(@subset_fsubE (A `|` B)) ?(@card_fsub (A `|` B)).
 Qed.
 
 Lemma fproperEcard A B :
-  (A `<` B) = (A `<=` B) && (#|{: A}| < #|{: B}|)%N.
+  (A `<` B) = (A `<=` B) && (#|` A| < #|` B|)%N.
 Proof. by rewrite fproperEneq ltnNge andbC eqEfcard; case: (A `<=` B). Qed.
 
-Lemma fsubset_leqif_cards A B : A `<=` B -> (#|{: A}| <= #|{: B}| ?= iff (A == B))%N.
+Lemma fsubset_leqif_cards A B : A `<=` B -> (#|` A| <= #|` B| ?= iff (A == B))%N.
 Proof.
 rewrite -!(@card_fsub (A `|` B)) // -(@subset_fsubE (A `|` B)) //.
 by move=> /subset_leqif_cards; rewrite (inj_in_eq (@fsub_inj _)) -?topredE /=.
@@ -930,13 +935,13 @@ Proof. by []. Qed.
 Lemma fsubEproper A B : (A `<=` B) = (A == B) || (A `<` B).
 Proof. by rewrite fproperEneq; case: eqP => //= ->; apply: fsubset_refl. Qed.
 
-Lemma fsubset_leq_card A B : A `<=` B -> (#|{: A}| <= #|{: B}|)%N.
+Lemma fsubset_leq_card A B : A `<=` B -> (#|` A| <= #|` B|)%N.
 Proof. by move=> /fsubset_leqif_cards ->. Qed.
 
-Lemma fproper_ltn_card A B : A `<` B -> (#|{: A}| < #|{: B}|)%N.
+Lemma fproper_ltn_card A B : A `<` B -> (#|` A| < #|` B|)%N.
 Proof. by rewrite fproperEcard => /andP []. Qed.
 
-Lemma fsubset_cardP A B : #|{: A}| = #|{: B}| ->
+Lemma fsubset_cardP A B : #|` A| = #|` B| ->
   reflect (A =i B) (A `<=` B).
 Proof.
 move=> eq_cardAB; apply: (iffP idP) => [/eqVfproper [->//|]|/fsetP -> //].
@@ -1191,13 +1196,13 @@ Hint Resolve fsubsetIl fsubsetIr fsubsetDl fsubD1set.
 
 (* cardinal lemmas for fsets *)
 
-Lemma cardfs0 : #|{: @fset0 K}| = 0.
+Lemma cardfs0 : #|` @fset0 K| = 0.
 Proof. by rewrite -(@card_fsub fset0) // fsub0 cards0. Qed.
 
-Lemma cardfs_eq0 A : (#|{: A}| == 0) = (A == fset0).
+Lemma cardfs_eq0 A : (#|` A| == 0) = (A == fset0).
 Proof. by rewrite -(@card_fsub A) // cards_eq0 fsub_eq0. Qed.
 
-Lemma cardfs0_eq A : #|{: A}| = 0 -> A = fset0.
+Lemma cardfs0_eq A : #|` A| = 0 -> A = fset0.
 Proof. by move=> /eqP; rewrite cardfs_eq0 => /eqP. Qed.
 
 Lemma fset0Pn A : reflect (exists x, x \in A) (A != fset0).
@@ -1206,35 +1211,35 @@ rewrite -cardfs_eq0; apply: (equivP existsP).
 by split=> [] [a aP]; [exists (val a); apply: valP|exists (FSetSub aP)].
 Qed.
 
-Lemma cardfs_gt0 A : (0 < #|{: A}|)%N = (A != fset0).
+Lemma cardfs_gt0 A : (0 < #|` A|)%N = (A != fset0).
 Proof. by rewrite lt0n cardfs_eq0. Qed.
 
-Lemma cardfsE s : #|{: seq_fset s}| = size (undup s).
+Lemma cardfsE s : #|` seq_fset s| = size (undup s).
 Proof.
 rewrite cardT enumT unlock /= undup_id ?pmap_sub_uniq ?sort_keys_uniq //.
 rewrite size_pmap_sub (@eq_in_count _ _ predT) ?count_predT ?size_sort_keys //.
 by move=> k ? /=; rewrite pred_of_finsetE.
 Qed.
 
-Lemma cardfs1 x : #|{: [fset x]}| = 1.
+Lemma cardfs1 x : #|` [fset x]| = 1.
 Proof. by rewrite cardfsE undup_id. Qed.
 
-Lemma cardfsUI A B : #|{: A `|` B}| + #|{: A `&` B}| = #|{: A}| + #|{: B}|.
+Lemma cardfsUI A B : #|` A `|` B| + #|` A `&` B| = #|` A| + #|` B|.
 Proof.
 rewrite -!(@card_fsub (A `|` B)) ?(fsubset_trans (fsubsetIl _ _)) //.
 by rewrite fsubU fsubI cardsUI.
 Qed.
 
-Lemma cardfsU A B : #|{: A `|` B}| = (#|{: A}| + #|{: B}| - #|{: A `&` B}|)%N.
+Lemma cardfsU A B : #|` A `|` B| = (#|` A| + #|` B| - #|` A `&` B|)%N.
 Proof. by rewrite -cardfsUI addnK. Qed.
 
-Lemma cardfsI A B : #|{: A `&` B}| = (#|{: A}| + #|{: B}| - #|{: A `|` B}|)%N.
+Lemma cardfsI A B : #|` A `&` B| = (#|` A| + #|` B| - #|` A `|` B|)%N.
 Proof. by rewrite  -cardfsUI addKn. Qed.
 
-Lemma cardfsID B A : #|{: A `&` B}| + #|{: A `\` B}| = #|{: A}|.
+Lemma cardfsID B A : #|` A `&` B| + #|` A `\` B| = #|` A|.
 Proof. by rewrite -!(@card_fsub A) // fsubI fsubD cardsID. Qed.
 
-Lemma cardfsD A B : #|{: A `\` B}| = (#|{: A}| - #|{: A `&` B}|)%N.
+Lemma cardfsD A B : #|` A `\` B| = (#|` A| - #|` A `&` B|)%N.
 Proof. by rewrite -(cardfsID B A) addKn. Qed.
 
 Lemma mem_fset1U a A : a \in A -> a |` A = A.
@@ -1255,19 +1260,19 @@ apply/fsetP => x; rewrite (fun_if (fun X => _ \in X)) !in_fsetE.
 by have [[->|?] []] := (altP (x =P a), boolP (a \in A)); rewrite ?andbF.
 Qed.
 
-Lemma cardfsU1 a A : #|{: a |` A}| = (a \notin A) + #|{: A}|.
+Lemma cardfsU1 a A : #|` a |` A| = (a \notin A) + #|` A|.
 Proof.
 have [aA|aNA] := boolP (a \in A); first by rewrite mem_fset1U.
 rewrite cardfsU -addnBA ?fsubset_leq_card // fsetIC -cardfsD.
 by rewrite mem_fsetD1 // cardfs1.
 Qed.
 
-Lemma cardfs2 a b : #|{: [fset a; b]}| = (a != b).+1.
+Lemma cardfs2 a b : #|` [fset a; b]| = (a != b).+1.
 Proof. by rewrite !cardfsU1 cardfs1 addn1 in_seq_fsetE in_cons orbF. Qed.
 
-Lemma cardfsD1 a A : #|{: A}| = (a \in A) + #|{: A `\ a}|.
+Lemma cardfsD1 a A : #|` A| = (a \in A) + #|` A `\ a|.
 Proof.
-rewrite -(cardfsID [fset a]) fsetI1 (fun_if (fun A => #|{: A}|)).
+rewrite -(cardfsID [fset a]) fsetI1 (fun_if (fun A => #|` A|)).
 by rewrite cardfs0 cardfs1; case: (_ \in _).
 Qed.
 
@@ -1279,7 +1284,7 @@ rewrite -(@subset_fsubE (x |` A)) // fsub1 ?fset1U1 // => xxA.
 by rewrite sub1set in_fsub.
 Qed.
 
-Lemma cardfs1P A : reflect (exists x, A = [fset x]) (#|{: A}| == 1).
+Lemma cardfs1P A : reflect (exists x, A = [fset x]) (#|` A| == 1).
 Proof.
 apply: (iffP idP) => [|[x ->]]; last by rewrite cardfs1.
 rewrite eq_sym eqn_leq cardfs_gt0=> /andP[/fset0Pn[x Ax] leA1].
@@ -1294,7 +1299,7 @@ Qed.
 
 Implicit Arguments fsetIidPl [A B].
 
-Lemma cardfsDS A B : B `<=` A -> #|{: A `\` B}| = (#|{: A}| - #|{: B}|)%N.
+Lemma cardfsDS A B : B `<=` A -> #|` A `\` B| = (#|` A| - #|` B|)%N.
 Proof. by rewrite cardfsD => /fsetIidPr->. Qed.
 
 Lemma fsubIset A B C : (B `<=` A) || (C `<=` A) -> (B `&` C `<=` A).
@@ -1498,7 +1503,7 @@ Proof. by apply/setP => x; rewrite in_fsub val_in_FSet. Qed.
 End Theory.
 
 Lemma card_in_imfset (T : finType) (K : choiceType) (f : T -> K) (D : pred T) :
-   {in D &, injective f} -> #|{: [fset f x | x in D]}| = #|D|.
+   {in D &, injective f} -> #|` [fset f x | x in D]| = #|D|.
 Proof.
 move=> f_inj; rewrite [imfset]unlock cardfsE undup_id.
   by rewrite size_map -cardE.
@@ -1507,7 +1512,7 @@ by rewrite !mem_enum => ? ? /f_inj; apply.
 Qed.
 
 Lemma card_imfset (T : finType) (K : choiceType) (f : T -> K) (D : pred T) :
-    injective f -> #|{: [fset f x | x in D]}| = #|D|.
+    injective f -> #|` [fset f x | x in D]| = #|D|.
 Proof. by move=> f_inj; rewrite card_in_imfset // => x y ? ?; apply: f_inj. Qed.
 
 Section PowerSetTheory.
@@ -1544,7 +1549,7 @@ Proof. by apply/fsetP => X; rewrite !in_fsetE fpowersetE fsubset1 orbC. Qed.
 Lemma fpowersetI A B : fpowerset (A `&` B) = fpowerset A `&` fpowerset B.
 Proof. by apply/fsetP=> X; rewrite in_fsetE !fpowersetE fsubsetI. Qed.
 
-Lemma card_fpowerset (A : {fset K}) : #|{: fpowerset A}| = 2 ^ #|{: A}|.
+Lemma card_fpowerset (A : {fset K}) : #|` fpowerset A| = 2 ^ #|` A|.
 Proof.
 rewrite card_imfset //=; first by rewrite card_powerset cardsE.
 move=> X Y /fsetP eqXY; apply/setP => x;
