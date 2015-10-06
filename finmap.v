@@ -5,10 +5,10 @@
 (* License CeCILL-B                                                      *)
 (*************************************************************************)
 
-From mathcomp.ssreflect
+From mathcomp
 Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
-From mathcomp.discrete
-Require Import choice  path finset finfun fintype bigop.
+From mathcomp
+Require Import choice path finset finfun fintype bigop.
 
 (*****************************************************************************)
 (* This file provides a representation of finitely supported maps where      *)
@@ -18,7 +18,11 @@ Require Import choice  path finset finfun fintype bigop.
 (*    {fmap K -> V} == finitely supported maps from K to V.                  *)
 (*                                                                           *)
 (* In the remainder, A and B are of type {fset K}.                           *)
-(* because of the coercion for {fset K} to Type, writing a : A makes sense   *)
+(* - {fset K} is provided with a canonical structure of predType, in order   *)
+(*   to enable the notation "a \in A"                                        *)
+(* - There is a coercion from {fset K} to Type in order to interpret any     *)
+(*   finset A as the subType of elements a : K such that a \in A             *)
+(*   because of this coercion, writing a : A makes sense                     *)
 (*                                                                           *)
 (* The following notations are in the %fset scope                            *)
 (*            fset0 == the empty finite set                                  *)
@@ -38,54 +42,67 @@ Require Import choice  path finset finfun fintype bigop.
 (*           f @` A == the image set of the collective predicate A by f.     *)
 (*      f @2`(A, B) == the image set of A x B by the binary function f.      *)
 (*                                                                           *)
-(*    [fset x : X | P] == the set of all x in X such that P is true          *)
-(*                        where P is a predicate on X                        *)
-(*  [fset x : X | P & Q] := [set x : X | P && Q].                            *)
-(* [fset x : K in A | P] == the set containing the x in A such that P is true*)
-(*                      this type P is a predicate on K                      *)
-(* [fset x : K in A | P & Q ] :=  [set x : K in A | P && Q].                 *)
-(* [fset x in A | P]     :=   [set x : _ in A | P].                          *)
-(* [fset x in A | P & Q ] :=  [set x : _ in A | P & Q].                      *)
-(*      fpowerset A == the powerset of A, has type {fset {fset K}}           *)
+(* In order to support the following notations, we introduce three canonical *)
+(* structure that reflect the finiteness of a predicate, in the following    *)
+(* notations, p (resp q) are such finite predicates, which are ultimately    *)
+(* represented by elements A (resp B) from {fset K}.                         *)
 (*                                                                           *)
+(*    [fset x in p | P] == the set of all x of type K, such that             *)
+(*                         x \in A and P x where P is a predicate on K       *)
+(*  [fset x in p | P & Q] := [set x in p | P && Q].                          *)
 (*                                                                           *)
-(* [fset E | x in A] == the set of all the values of the expression E, for x *)
-(*                     drawn from the collective predicate A.                *)
-(* [fset E | x in A & P] == the set of values of E for x drawn from A, such  *)
+(* [fset E | x in p] == the set of all the values of the expression E, for x *)
+(*                     drawn from the collective finite predicate A.         *)
+(* [fset E | x in p & P] == the set of values of E for x drawn from A, such  *)
 (*                     that P is true.                                       *)
-(* [fset E | x in A, y in B] == the set of values of E for x drawn from A and*)
+(* [fset E | x in p, y in q] == the set of values of E for x drawn from A and*)
 (*                     and y drawn from B; B may depend on x.                *)
-(* [fset E | x : T] == the set of all values of E, with x in type T.         *)
-(* [fset E | x : T & P] == the set of values of E for x : T s.t. P is true.  *)
-(* [fset E | x : T, y : U in B], [fset E | x : T, y : U in B & P],           *)
-(* [fset E | x : T, y : U], [fset E | x : T, y : U & P]                      *)
-(*            == type-ranging versions of the binary comprehensions.         *)
-(*  [fset E | x : T in A], [fset E | x in A, y], [fset E | x, y & P], etc.   *)
-(*            == typed and untyped variants of the comprehensions above.     *)
-(*               The types may be required as type inference processes E     *)
-(*               before considering A or B. Note that type casts in the      *)
-(*               binary comprehension must either be both present or absent  *)
-(*               and that there are no untyped variants for single-type      *)
-(*               comprehension as Coq parsing confuses [x | P] and [E | x].  *)
+(* [fset E | x in p, y in q & P] == the set of values of E for x drawn from  *)
+(*                    A and y drawn from B; such that P is true.             *)
+(* [fsetval x in p] == the set of (val x) for x in the finite predicate p    *)
+(* [fsetval x in p | P ] == the set of (val x) for x in A, such that P       *)
+(* [fsetval x in p | P & Q] := [fsetval x in p | P && Q]                     *)
 (*                                                                           *)
-(* Operations on finmaps                                                     *)
+(* For each notation above, there is an additional one with ':' instead of   *)
+(* 'in' which is used to range over the finite type A instead of the finite  *)
+(* set A, and the optional predicate is over A instead of K                  *)
+(* For example:                                                              *)
+(*    [fset x : A | P] := [fset x in {: A} | P]                              *)
+(*                     == the set of all x of type A, such that P x          *)
+(* [fset E | x : A] == the set of all the values of the expression E, for x  *)
+(*                     drawn from the finite type A                          *)
+(*                                                                           *)
+(* Operations on finmap:                                                     *)
 (* The following notations are in the %fmap scope                            *)
 (*                                                                           *)
+(*           f.[? k] == returns Some v if k maps to v, otherwise None        *)
+(*             f.[p] == returns v if p has type k \in f, and k maps to v     *)
+(*        f.[k <- v] == f extended with the mapping k -> v                   *)
 (*            domf f == finite set (of type {fset K}) of keys of f           *)
 (*          codomf f == finite set (of type {fset V}) of values of f         *)
 (*           k \in f == k is a key of f                                      *)
+(*                   := k \in domf f                                         *)
 (*            [fmap] == the empty finite map                                 *)
 (* [fmap x : S => E] == the finmap defined by E on the support S             *)
-(*        f.[k <- v] == f extended with the mapping k -> v                   *)
 (*           f.[& A] == f restricted to A (intersected with domf f)          *)
-(*           f.[\ A] == f.[& domf `\` A]                                     *)
-(*                   := f where all the keys in A have been removed          *)
-(*           f.[~ k] := f.[\ [fset k]                                        *)
-(*             f.[p] == returns v if p has type k \in f, and k maps to v     *)
-(*           f.[? k] == returns Some v if k maps to v, otherwise None        *)
+(*           f.[\ A] := f.[& domf `\` A]                                     *)
+(*                   == f where all the keys in A have been removed          *)
+(*           f.[~ k] := f.[\ [fset k]]                                       *)
 (*             f + g == concatenation of f and g,                            *)
 (*                      the keys of g override the keys of f                 *)
 (*                                                                           *)
+(* Operation on function with finite support, i.e. finmap with default value *)
+(* for elements outside of the support. Contrarly to finmap, these are total *)
+(* function, so we provide a coercion to Funclass                            *)
+(*              [fsfun of default] == the default fsfun                      *)
+(* [fsfun of default | x : A => F] == the fsfun which takes value F on A     *)
+(*                                    x has type A                           *)
+(* [fsfun of default | x in A => F] == the fsfun which takes value F on A    *)
+(*                                    x has type T                           *)
+(* we also provide untyped variants and variants where default is ommitted   *)
+(* e.g.  [fsfun x : A => F] [fsfun of default | x => F] [fsfun]...           *)
+(*     (f \o g)%fsfun == composition of fsfun                                *)
+(*     fsinjectiveb f == boolean predicate of injectivity of f               *)
 (*****************************************************************************)
 
 Set Implicit Arguments.
@@ -109,22 +126,7 @@ Reserved Notation "x .[? k ]" (at level 2, k at level 200, format "x .[?  k ]").
 Reserved Infix "`~`" (at level 52).
 Reserved Notation "[ 'fset' k ]" (at level 0, k at level 99, format "[ 'fset'  k ]").
 
-Reserved Notation "[ 'fmap' E | k , kf , v <- f ]"
-  (at level 0, E at level 99, k ident, kf ident, v ident,
-   format "[ '[hv' 'fmap'  E '/ '  |  k ,  kf ,  v  <-  f ] ']'").
-Reserved Notation "[ 'fmap' E | k , v <- f ]"
-  (at level 0, E at level 99, k ident, v ident,
-   format "[ '[hv' 'fmap'  E '/ '  |  k ,  v  <-  f ] ']'").
-Reserved Notation "[ 'fmap' E | v <- f ]"
-  (at level 0, E at level 99, v ident,
-   format "[ '[hv' 'fmap'  E '/ '  |  v  <-  f ] ']'").
-
-Reserved Notation "[ 'fmap' k kf 'in' A => E ]"
-   (at level 0, E at level 99, k ident, kf ident,
-   format "[ '[hv' 'fmap'  k  kf  'in'  A  =>  '/' E ] ']'").
-Reserved Notation "[ 'fmap' k 'in' A => E ]"
-   (at level 0, E at level 99, k ident,
-   format "[ '[hv' 'fmap'  k  'in'  A  =>  '/' E ] ']'").
+Local Notation predOfType T := (sort_of_simpl_pred (@pred_of_argType T)).
 
 Section extra.
 
@@ -132,7 +134,7 @@ Lemma mem_remF (T : eqType) (s : seq T) x : uniq s -> x \in rem x s = false.
 Proof. by move=> us; rewrite mem_rem_uniq // inE eqxx. Qed.
 
 Definition ffun0 (T : finType) (X : Type) : #|T| = 0 -> {ffun T -> X}.
-Proof. by move=> /card0_eq T0; apply: finfun => t; move: (T0 t). Defined.
+Proof. by move=> T0; split; rewrite T0; exists nil. Defined.
 
 Definition oextract (T : Type) (o : option T) : o -> T :=
   if o is Some t return o -> T then fun=> t else False_rect T \o notF.
@@ -232,8 +234,8 @@ Section Def.
 Variables (K : choiceType).
 
 Structure finSet : Type := mkFinSet {
-  fset_keys : seq K;
-  _ : canonical_keys fset_keys
+  enum_fset : seq K;
+  _ : canonical_keys enum_fset
 }.
 
 Definition finset_of (_ : phant K) := finSet.
@@ -241,24 +243,18 @@ Definition finset_of (_ : phant K) := finSet.
 End Def.
 
 Identity Coercion type_of_finset : finset_of >-> finSet.
+Notation "{fset T }" := (@finset_of _ (Phant T)) : type_scope.
 
-Fact finset_key : unit. Proof. exact: tt. Qed.
 Definition pred_of_finset (K : choiceType)
-  (f : finSet K) : pred K := fun k => k \in locked_with finset_key (fset_keys f).
+  (f : finSet K) : pred K := fun k => k \in (enum_fset f).
 Canonical finSetPredType (K : choiceType) :=
   Eval hnf in mkPredType (@pred_of_finset K).
-
-Lemma pred_of_finsetE (K : choiceType) (f : finSet K) k :
-  (k \in f) = (k \in fset_keys f).
-Proof. by rewrite /pred_of_finset -topredE /= /pred_of_finset locked_withE. Qed.
-
-Notation "{fset T }" := (@finset_of _ (Phant T)) : type_scope.
 
 Section FinSetCanonicals.
 
 Variable (K : choiceType).
 
-Canonical fsetType := Eval hnf in [subType for (@fset_keys K)].
+Canonical fsetType := Eval hnf in [subType for (@enum_fset K)].
 Definition fset_eqMixin := Eval hnf in [eqMixin of {fset K} by <:].
 Canonical fset_eqType := Eval hnf in EqType {fset K} fset_eqMixin.
 Definition fset_choiceMixin := Eval hnf in [choiceMixin of {fset K} by <:].
@@ -270,29 +266,27 @@ Section FinTypeSet.
 
 Variables (K : choiceType) (A : finSet K).
 
-Record fset_sub : Type :=
+Record fset_sub_type : Type :=
   FSetSub {fsval : K; fsvalP : in_mem fsval (@mem K _ A)}.
 
 Canonical fset_sub_subType := Eval hnf in [subType for fsval].
-Definition fset_sub_eqMixin := Eval hnf in [eqMixin of fset_sub by <:].
-Canonical fset_sub_eqType := Eval hnf in EqType fset_sub fset_sub_eqMixin.
-Definition fset_sub_choiceMixin := Eval hnf in [choiceMixin of fset_sub by <:].
-Canonical fset_sub_choiceType := Eval hnf in ChoiceType fset_sub fset_sub_choiceMixin.
+Definition fset_sub_eqMixin := Eval hnf in [eqMixin of fset_sub_type by <:].
+Canonical fset_sub_eqType := Eval hnf in EqType fset_sub_type fset_sub_eqMixin.
+Definition fset_sub_choiceMixin := Eval hnf in [choiceMixin of fset_sub_type by <:].
+Canonical fset_sub_choiceType := Eval hnf in ChoiceType fset_sub_type fset_sub_choiceMixin.
 
-Definition fset_sub_enum : seq fset_sub :=
-  undup (pmap insub (fset_keys A)).
+Definition fset_sub_enum : seq fset_sub_type :=
+  undup (pmap insub (enum_fset A)).
 
 Lemma mem_fset_sub_enum x : x \in fset_sub_enum.
-Proof.
-by rewrite mem_undup mem_pmap -valK map_f // -pred_of_finsetE fsvalP.
-Qed.
+Proof. by rewrite mem_undup mem_pmap -valK map_f // fsvalP. Qed.
 
-Lemma val_fset_sub_enum : uniq (fset_keys A) ->
-  map val fset_sub_enum = fset_keys A.
+Lemma val_fset_sub_enum : uniq (enum_fset A) ->
+  map val fset_sub_enum = enum_fset A.
 Proof.
 move=> Us; rewrite /fset_sub_enum undup_id ?pmap_sub_uniq //.
 rewrite (pmap_filter (@insubK _ _ _)); apply/all_filterP.
-by apply/allP => x; rewrite isSome_insub pred_of_finsetE.
+by apply/allP => x; rewrite isSome_insub.
 Qed.
 
 Definition fset_sub_pickle x := index x fset_sub_enum.
@@ -304,13 +298,14 @@ by rewrite (nth_map x) ?nth_index ?index_mem ?mem_fset_sub_enum.
 Qed.
 
 Definition fset_sub_countMixin := CountMixin fset_sub_pickleK.
-Canonical fset_sub_countType := Eval hnf in CountType fset_sub fset_sub_countMixin.
+Canonical fset_sub_countType := Eval hnf in CountType fset_sub_type fset_sub_countMixin.
 
 Definition fset_sub_finMixin :=
   Eval hnf in UniqFinMixin (undup_uniq _) mem_fset_sub_enum.
-Canonical fset_sub_finType := Eval hnf in FinType fset_sub fset_sub_finMixin.
+Canonical fset_sub_finType := Eval hnf in FinType fset_sub_type fset_sub_finMixin.
+Canonical fset_sub_subfinType := [subFinType of fset_sub_type].
 
-Lemma card_fset_sub : #|{: fset_sub}| = size (fset_keys A).
+Lemma card_fsetE : #|{: fset_sub_type}| = size (enum_fset A).
 Proof.
 rewrite cardE enumT -(size_map val) unlock val_fset_sub_enum //.
 by rewrite canonical_uniq //; case: A.
@@ -318,49 +313,182 @@ Qed.
 
 End FinTypeSet.
 
-Coercion fset_sub : finSet >-> Sortclass.
+Identity Coercion finSet_sub_type : finset_of >-> finSet.
+Coercion fset_sub_type : finSet >-> Sortclass.
 Hint Resolve fsvalP.
 
-Definition fset_predT {T : choiceType} {A : finSet T} := @predT {: A}.
+Delimit Scope fset_scope with fset.
+Local Open Scope fset_scope.
+
+Notation "[` kf ]" := (FSetSub kf) (format "[`  kf ]") : fset_scope.
+
+Lemma fsetsubE (T : choiceType) (A : {fset T}) (x : A) (xA : val x \in A) : [` xA] = x.
+Proof. by apply/val_inj => /=. Qed.
+
+Definition fset_predT {T : choiceType} {A : {fset T}} := @predT {: A}.
 Notation "#|` A |" := #|@fset_predT _ A|
-  (at level 0, A at level 99, format "#|` A |") : nat_scope.
+  (at level 0, A at level 99, format "#|`  A |") : nat_scope.
+Coercion set_of_fset (K : choiceType) (A : {fset K}) : {set A} :=
+   [set x | x \in {: A}].
 
 Section Basics.
 Variables (K : choiceType).
 
-Lemma keys_canonical (f : {fset K}) : canonical_keys (fset_keys f).
+Lemma keys_canonical (f : {fset K}) : canonical_keys (enum_fset f).
 Proof. by case: f. Qed.
 
-Definition seq_fset s : {fset K} := mkFinSet (canonical_sort_keys s).
+Lemma enum_fset_uniq (f : {fset K}) : uniq (enum_fset f).
+Proof. by rewrite canonical_uniq // keys_canonical. Qed.
 
 End Basics.
+
+Fact finset_key : unit. Proof. exact: tt. Qed.
+Definition seq_fset : forall K : choiceType, seq K -> {fset K} :=
+   locked_with finset_key (fun K s => mkFinSet (@canonical_sort_keys K s)).
+
+Lemma seq_fsetE (K : choiceType) (s : seq K) : seq_fset s =i s.
+Proof. by move=> a; rewrite [seq_fset]unlock sort_keysE. Qed.
 
 Arguments pred_of_finset : simpl never.
 
 Hint Resolve keys_canonical.
 Hint Resolve sort_keys_uniq.
 
-Canonical  finSetSubType K := [subType for (@fset_keys K)].
+Canonical  finSetSubType K := [subType for (@enum_fset K)].
 Definition finSetEqMixin (K : choiceType) := [eqMixin of {fset K} by <:].
 Canonical  finSetEqType  (K : choiceType) := EqType {fset K} (finSetEqMixin K).
+Definition finSetChoiceMixin (K : choiceType) := [choiceMixin of {fset K} by <:].
+Canonical  finSetChoiceType  (K : choiceType) := ChoiceType {fset K} (finSetChoiceMixin K).
 
-(* Definition mem_pred_of_finset (K : choiceType) (A : {fset K}) := mem [finType of A]. *)
+Section FinPred.
 
-Notation Local imfset_def :=
-  (fun (K : choiceType) (T : finType) (f : T -> K) (P : mem_pred T) =>
-  seq_fset [seq f x | x <- enum P]).
-Notation Local imfset2_def :=
-  (fun (K : choiceType) (T1 T2 : finType) (f : T1 -> T2 -> K)
-      (P1 : mem_pred T1) (P2 : T1 -> mem_pred T2) =>
-  seq_fset (flatten [seq [seq f x y | y <- enum (P2 x)]| x <- enum P1])).
+Structure finpredType (T : choiceType) := FinPredType {
+  finpred_sort :> Type;
+  tofinpred : finpred_sort -> pred T;
+  _ : {mem : finpred_sort -> mem_pred T | isMem tofinpred mem};
+  _ : {pred_fset : finpred_sort -> {fset T} |
+       forall p x, x \in pred_fset p = tofinpred p x}
+}.
 
+Definition pred_fset  (T : choiceType) (fpT : finpredType T) : fpT -> {fset T} :=
+  let: FinPredType _ _ _ (exist pred_fset _) := fpT in pred_fset.
+
+Canonical finpredType_predType (T : choiceType) (fpT : finpredType T) :=
+  @PredType T (finpred_sort fpT) (@tofinpred T fpT)
+  (let: FinPredType _ _ mem _ := fpT in mem).
+
+Lemma pred_fsetE (T : choiceType) (fpT : finpredType T) (p : fpT) :
+   pred_fset p =i p.
+Proof.
+by case: fpT p => ? ? ? [pred_fset pred_fsetE] p x; rewrite pred_fsetE -topredE.
+Qed.
+
+Lemma mkFinPredType_of_subproof (T : choiceType) (pT : predType T)
+   (pred_fset : pT -> {fset T}) (pred_fsetE : forall p, pred_fset p =i p) :
+  forall p x, x \in pred_fset p = topred p x.
+Proof. by move=> p x; rewrite topredE pred_fsetE. Qed.
+
+Definition mkFinPredType_of (T : choiceType) (U : Type) :=
+  fun (pT : predType T) & pred_sort pT -> U =>
+  fun a mP (pT' := @PredType T U a mP) & phant_id pT' pT =>
+  fun (pred_fset : pT' -> {fset T}) (pred_fsetE : forall p, pred_fset p =i p) =>
+  @FinPredType T U a mP (exist _ pred_fset (mkFinPredType_of_subproof pred_fsetE)).
+
+Definition clone_finpredType (T : choiceType) (U : Type) :=
+  fun (pT : finpredType T) & finpred_sort pT -> U =>
+  fun a mP pP (pT' := @FinPredType T U a mP pP) & phant_id pT' pT => pT'.
+
+Notation mkFinPredType T pred_fsetE :=
+  (@mkFinPredType_of _ T _ id _ _ id _ pred_fsetE).
+
+(* This is en internal construciton, please use [fset x in A] instead of fset A. *)
+Definition finset (T : finType) (P : pred T) := seq_fset (enum P).
+
+Fact in_finset  (T : finType) (P : pred T) x : x \in finset P = P x.
+Proof. by rewrite seq_fsetE mem_enum. Qed.
+
+Canonical fset_finpredType (T: choiceType) :=
+  mkFinPredType (finSet T) (fun _ _ => erefl).
+
+Canonical pred_finpredType (T : finType) :=
+   mkFinPredType (pred T) (@in_finset _).
+
+Canonical simpl_pred_finpredType (T : finType) :=
+   mkFinPredType (simpl_pred T) (@in_finset _).
+
+Structure finpred (T : choiceType) (pT : predType T) (P : pred T) (A : {fset T}) :=
+  FinPredTerm {
+  pT_of_finpred :> pT;
+  _ : forall x, x \in pT_of_finpred = P x;
+  _ : forall x, x \in A = P x;
+}.
+
+Lemma finpredE (T : choiceType) (pT : predType T) (P : pred T) (A : {fset T})
+ (ppT : finpred pT P A)  x :
+  (x \in pT_of_finpred ppT = P x) * (x \in A = P x).
+Proof. by case: ppT. Qed.
+
+Structure finmempred (T : choiceType) (P : pred T) (A : {fset T}) := FinMemPred {
+  pred_of_finmempred :> mem_pred T;
+  _ : forall x : T, (in_mem x pred_of_finmempred) = P x;
+  _ : forall x : T, (x \in A) = P x
+}.
+
+Lemma finmempredE (T : choiceType) (P : pred T)  (A : {fset T}) (mP : finmempred P A) :
+  forall x, ((x \in A) = P x) * (in_mem x mP = P x).
+Proof. by case: mP. Qed.
+
+Lemma in_finmempred (T : choiceType) (P : pred T)  (A : {fset T}) (mP : finmempred P A) x :
+  x \in mP = P x.
+Proof. by rewrite [LHS]finmempredE. Qed.
+
+Program Canonical mem_finmempred (T : choiceType)
+  (pT : predType T) (P : pred T) (A : {fset T}) (p : finpred pT P A) :=
+  @FinMemPred _ [pred x | P x] A (mem p) _ _.
+Next Obligation. by rewrite finpredE. Qed.
+Next Obligation. by rewrite (finpredE p). Qed.
+
+Program Canonical finpredType_finpred (T : choiceType) (fpT : finpredType T)
+   (A : finpred_sort fpT) := 
+ @FinPredTerm _ _ [pred x in A] (pred_fset A) A (fun=> erefl) _.
+Next Obligation. by rewrite pred_fsetE. Qed.
+
+Program Canonical subfinset_finpred (T : choiceType) (A : {fset T}) (Q : pred T) :=
+  @FinPredTerm _ _ [pred x in A | Q x]
+               (seq_fset [seq x <- enum_fset A | Q x])
+               [pred x in A | Q x] _ _.
+Next Obligation. by rewrite seq_fsetE mem_filter andbC. Qed.
+
+
+Definition finmempred_of (T : choiceType) (P : pred T) (A : {fset T}) (mP : finmempred P A) &
+           phantom (mem_pred T) mP : finmempred P A := mP.
+
+Definition finpred_of (T : choiceType) (pT : predType T) (P : pred T) (A : {fset T})
+ (fpT : @finpred T pT P A) & phantom (pred_sort pT) fpT := fpT.
+
+Notation "[ 'finpredType' 'of' T ]" := (@clone_finpredType _ T _ id _ _ _ id)
+  (at level 0, format "[ 'finpredType'  'of'  T ]") : form_scope.
+
+End FinPred.
+
+Local Notation imfset_def :=
+  (fun (T K : choiceType) (f : T -> K) (P : pred T) (A : {fset T})
+       (p : finmempred P A) of phantom (mem_pred T) p =>
+  seq_fset [seq f x | x <- enum_fset A]).
+Local Notation imfset2_def :=
+  (fun (T1 T2 K : choiceType) (f : T1 -> T2 -> K)
+       (P1 : pred T1) (A1 : {fset T1}) (P2 : T1 -> pred T2) (A2 : T1 -> {fset T2})
+       (p1 : finmempred P1 A1) (p2 : forall x : T1, finmempred (P2 x) (A2 x))
+   of phantom (mem_pred T1) p1 & phantom (T1 -> mem_pred T2) p2 =>
+  seq_fset (flatten [seq [seq f x y | y <- enum_fset (A2 x)] | x <- enum_fset A1])).
 
 Module Type ImfsetSig.
-Parameter imfset : forall (K : choiceType) (T : finType),
-                   (T -> K) -> mem_pred T -> {fset K}.
-Parameter imfset2 : forall (K : choiceType) (T1 T2 : finType),
-                   (T1 -> T2 -> K) -> mem_pred T1 -> (T1 -> mem_pred T2) ->
-                   {fset K}.
+Parameter imfset : forall (T K : choiceType) (f : T -> K) (P : pred T) (A : {fset T})
+  (p : finmempred P A), phantom (mem_pred T) p -> {fset K}.
+Parameter imfset2 : forall (T1 T2 K : choiceType) (f : T1 -> T2 -> K)
+  (P1 : pred T1) (A1 : {fset T1}) (P2 : T1 -> pred T2) (A2 : T1 -> {fset T2})
+  (p1 : finmempred P1 A1) (p2 : forall x : T1, finmempred (P2 x) (A2 x)),
+  phantom (mem_pred T1) p1 -> phantom (T1 -> mem_pred T2) p2 -> {fset K}.
 Axiom imfsetE : imfset = imfset_def.
 Axiom imfset2E : imfset2 = imfset2_def.
 End ImfsetSig.
@@ -372,13 +500,11 @@ Lemma imfsetE : imfset = imfset_def. Proof. by []. Qed.
 Lemma imfset2E : imfset2 = imfset2_def. Proof. by []. Qed.
 End Imfset.
 
-Notation imfset := Imfset.imfset.
-Notation imfset2 := Imfset.imfset2.
+Notation imfset f p := (Imfset.imfset f (Phantom _ (pred_of_finmempred p))).
+Notation imfset2 f p q := (Imfset.imfset2 f (Phantom _ (pred_of_finmempred p))
+                                         (Phantom _ (fun x => (pred_of_finmempred (q x))))).
 Canonical imfset_unlock := Unlockable Imfset.imfsetE.
 Canonical imfset2_unlock := Unlockable Imfset.imfset2E.
-
-Delimit Scope fset_scope with fset.
-Local Open Scope fset_scope.
 
 Notation "A `=` B" := (A = B :> {fset _})
   (at level 70, no associativity, only parsing) : fset_scope.
@@ -391,27 +517,33 @@ Notation "A `!=` B" := (A != B :> {fset _})
 Notation "A `=P` B" := (A =P B :> {fset _})
   (at level 70, no associativity, only parsing) : fset_scope.
 
-Notation "f @` A" := (imfset f (mem A)) (at level 24) : fset_scope.
-Notation "f @2` ( A , B )" := (imfset2 f (mem A) (fun _ => mem B))
+Notation "f @` A" := (Imfset.imfset f (Phantom _ (mem A)))
+  (at level 24) : fset_scope.
+Notation "f @2` ( A , B )" := (Imfset.imfset2 f (Phantom _ (mem A)) (Phantom _ (fun _ => (mem B))))
   (at level 24, format "f  @2`  ( A ,  B )") : fset_scope.
 
-Notation "[ 'fset' E | x 'in' A ]" := ((fun x => E) @` A)
+Notation "[ 'fset' E | x : T 'in' A ]" := 
+  ((fun x : T => E) @` A)
+  (at level 0, E, x at level 99, only parsing) : fset_scope.
+Notation "[ 'fset' E | x 'in' A ]" := [fset E | x : _ in A]
   (at level 0, E, x at level 99,
    format "[ '[hv' 'fset'  E '/ '  |  x  'in'  A ] ']'") : fset_scope.
-(* Typed variants. *)
-Notation "[ 'fset' E | x : T 'in' A ]" := ((fun x : T => E) @` A)
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-
-Notation "[ 'fset' x : T | P ]" := [fset val t | t : T in [pred x | P]]
-  (at level 0, x at level 99, format "[ 'fset'  x  :  T  |  P ]") : fset_scope.
-
-Notation "[ 'fset' x : T | P & Q ]" := [fset x : T | P && Q]
-  (at level 0, x at level 99, format "[ 'fset'  x  :  T  |  P  &  Q ]") : fset_scope.
+Notation "[ 'fset' E | x : A ]" := [fset E | x : _ in {: A} ]
+  (at level 0, E, x at level 99,
+   format "[ '[hv' 'fset'  E '/ '  |  x  :  A ] ']'") : fset_scope.
+Notation "[ 'fset'  x  :  T  'in'  A ]" := [fset (x : T) | x in A]
+  (at level 0, x at level 99, only parsing) : fset_scope.
 Notation "[ 'fset'  x  :  T  'in'  A  |  P ]" :=
-  [fset @val T _ _ (x : A) | x in [pred a | (fun x => P) (val a)]]
+  [fset (x : T) | x in [pred x in A | P]]
   (at level 0, x at level 99, only parsing) : fset_scope.
 Notation "[ 'fset' x 'in' A | P ]" := [fset x : _ in A | P]
   (at level 0, x at level 99, format "[ 'fset'  x  'in'  A  |  P ]") : fset_scope.
+Notation "[ 'fset' x 'in' A ]" := [fset x : _ in A ]
+  (at level 0, x at level 99, format "[ 'fset'  x  'in'  A ]") : fset_scope.
+Notation "[ 'fset' x : T | P ]" := [fset x in {: T} | P]
+  (at level 0, x at level 99, format "[ 'fset'  x  :  T  |  P ]") : fset_scope.
+Notation "[ 'fset' x : T | P & Q ]" := [fset x : T | P && Q]
+  (at level 0, x at level 99, format "[ 'fset'  x  :  T  |  P  &  Q ]") : fset_scope.
 Notation "[ 'fset'  x  :  T  'in' A  |  P  &  Q ]" := [fset x : T in A | P && Q]
   (at level 0, x at level 99, only parsing) : fset_scope.
 Notation "[ 'fset' x 'in' A | P & Q ]" := [fset x in A | P && Q]
@@ -423,17 +555,14 @@ Section Ops.
 Context {K : choiceType}.
 Implicit Types (a b c : K) (A B C D : {fset K}) (s : seq K).
 
-(* Definition FinSet V (kvs : K * V) : *)
-(*   canonical_keys (keys []). *)
-
 Definition fset0 : {fset K} :=
   @mkFinSet K [::] (introT eqP (@sort_keys_nil K)).
 
-Definition fset1U a A : {fset K} := seq_fset (a :: fset_keys A).
+Definition fset1U a A : {fset K} := seq_fset (a :: enum_fset A).
 
 Definition fset1 a : {fset K} := seq_fset [:: a].
 
-Definition fsetU A B := seq_fset (fset_keys A ++ fset_keys B).
+Definition fsetU A B := seq_fset (enum_fset A ++ enum_fset B).
 
 Definition fsetI A B := [fset x in A | x \in B].
 
@@ -472,229 +601,187 @@ Notation "[ 'disjoint' A & B ]" := (fdisjoint A B) : fset_scope.
 
 
 (* Comprehensions *)
-Notation "[ 'fset' E | x 'in' A & P ]" := [fset E | x in [fset x in A | P]]
+Notation "[ 'fset' E | x 'in' A & P ]" := [fset E | x in [pred x in A | P]]
   (at level 0, E, x at level 99,
    format "[ '[hv' 'fset'  E '/ '  |  x  'in'  A '/ '  &  P ] ']'") : fset_scope.
+Notation "[ 'fset' E | x : A & P ]" := [fset E | x in {: A} & P]
+  (at level 0, E, x at level 99,
+   format "[ '[hv' 'fset'  E '/ '  |  x  :  A '/ '  &  P ] ']'") : fset_scope.
 Notation "[ 'fset' E | x 'in' A , y 'in' B ]" :=
-  (imfset2 (fun x y => E) (mem A) (fun x => (mem B)))
+  (Imfset.imfset2 (fun x y => E) (Phantom _ (mem A)) (Phantom _ (fun x => (mem B))))
   (at level 0, E, x, y at level 99, format
    "[ '[hv' 'fset'  E '/ '  |  x  'in'  A , '/   '  y  'in'  B ] ']'"
   ) : fset_scope.
+Notation "[ 'fset' E | x : A , y 'in' B ]" := [fset E | x in {: A}, y in B]
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'fset'  E '/ '  |  x  :  A , '/   '  y  'in'  B ] ']'"
+  ) : fset_scope.
+Notation "[ 'fset' E | x 'in' A , y : B ]" := [fset E | x in A, y in {: B}]
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'fset'  E '/ '  |  x  'in'  A , '/   '  y  :  B ] ']'"
+  ) : fset_scope.
+Notation "[ 'fset' E | x : A , y : B ]" := [fset E | x in {: A}, y in {: B}]
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'fset'  E '/ '  |  x  :  A , '/   '  y  :  B ] ']'"
+  ) : fset_scope.
 Notation "[ 'fset' E | x 'in' A , y 'in' B & P ]" :=
-  [fset E | x in A, y in [fset y in B | P]]
+  [fset E | x in A, y in [pred y in B | P]]
   (at level 0, E, x, y at level 99, format
    "[ '[hv' 'fset'  E '/ '  |  x  'in'  A , '/   '  y  'in'  B '/ '  &  P ] ']'"
   ) : fset_scope.
-
-(* Typed variants. *)
-Notation "[ 'fset' E | x : T 'in' A & P ]" :=
-  [fset E | x : T in [set x : T in A | P]]
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x : T 'in' A , y : U 'in' B ]" :=
-  (imset2 (fun (x : T) (y : U) => E) (mem A) (fun (x : T) => (mem B)))
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x : T 'in' A , y : U 'in' B & P ]" :=
-  [fset E | x : T in A, y : U in [set y : U in B | P]]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-
-(* Comprehensions over a type. *)
-Local Notation predOfType T := (sort_of_simpl_pred (@pred_of_argType T)).
-Notation "[ 'fset' E | x : T ]" := [fset E | x : T in predOfType T]
-  (at level 0, E, x at level 99,
-   format "[ '[hv' 'fset'  E '/ '  |  x  :  T ] ']'") : fset_scope.
-Notation "[ 'fset' E | x : T & P ]" := [fset E | x : T in [set x : T | P]]
-  (at level 0, E, x at level 99,
-   format "[ '[hv' 'fset'  E '/ '  |  x  :  T '/ '  &  P ] ']'") : fset_scope.
-Notation "[ 'fset' E | x : T , y : U 'in' B ]" :=
-  [fset E | x : T in predOfType T, y : U in B]
+Notation "[ 'fset' E | x : A , y 'in' B & P ]" := [fset E | x in {: A}, y in B & P]
   (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'fset'  E '/ '  |  x  :  T , '/   '  y  :  U  'in'  B ] ']'")
-   : fset_scope.
-Notation "[ 'fset' E | x : T , y : U 'in' B & P ]" :=
-  [fset E | x : T, y : U in [fset y in B | P]]
-  (at level 0, E, x, y at level 99, format
- "[ '[hv ' 'fset'  E '/'  |  x  :  T , '/  '  y  :  U  'in'  B '/'  &  P ] ']'"
+   "[ '[hv' 'fset'  E '/ '  |  x  :  A , '/   '  y  'in'  B  &  P ] ']'"
   ) : fset_scope.
-Notation "[ 'fset' E | x : T 'in' A , y : U ]" :=
-  [fset E | x : T in A, y : U in predOfType U]
+Notation "[ 'fset' E | x 'in' A , y : B & P ]" := [fset E | x in A, y in {: B} & P]
   (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'fset'  E '/ '  |  x  :  T  'in'  A , '/   '  y  :  U ] ']'")
-   : fset_scope.
-Notation "[ 'fset' E | x : T 'in' A , y : U & P ]" :=
-  [fset E | x : T in A, y : U in [set y in P]]
+   "[ '[hv' 'fset'  E '/ '  |  x  'in'  A , '/   '  y  :  B  &  P ] ']'"
+  ) : fset_scope.
+Notation "[ 'fset' E | x : A , y : B & P ]" := [fset E | x in {: A}, y in {: B} & P]
   (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'fset'  E '/ '  |  x  :  T  'in'  A , '/   '  y  :  U  &  P ] ']'")
-   : fset_scope.
-Notation "[ 'fset' E | x : T , y : U ]" :=
-  [fset E | x : T, y : U in predOfType U]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'fset'  E '/ '  |  x  :  T , '/   '  y  :  U ] ']'")
-   : fset_scope.
-Notation "[ 'fset' E | x : T , y : U & P ]" :=
-  [fset E | x : T, y : U in [set y in P]]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'fset'  E '/ '  |  x  :  T , '/   '  y  :  U  &  P ] ']'")
-   : fset_scope.
+   "[ '[hv' 'fset'  E '/ '  |  x  :  A , '/   '  y  :  B  &  P ] ']'"
+  ) : fset_scope.
 
-(* Untyped variants. *)
-Notation "[ 'fset' E | x , y 'in' B ]" := [fset E | x : _, y : _ in B]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x , y 'in' B & P ]" := [fset E | x : _, y : _ in B & P]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x 'in' A , y ]" := [fset E | x : _ in A, y : _]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x 'in' A , y & P ]" := [fset E | x : _ in A, y : _ & P]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x , y ]" := [fset E | x : _, y : _]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x , y & P ]" := [fset E | x : _, y : _ & P ]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+Notation "[ 'fsetval' x 'in' A ]" := [fset val x | x in A]
+  (at level 0, x at level 99, format "[ 'fsetval'  x  'in'  A ]") : fset_scope.
+Notation "[ 'fsetval' x 'in' A | P ]" := [fset val x | x in A & P]
+  (at level 0, x at level 99, format "[ 'fsetval'  x  'in'  A  |  P ]") : fset_scope.
+Notation "[ 'fsetval' x 'in' A | P & Q ]" := [fsetval x in A | (P && Q)]
+  (at level 0, x at level 99, format "[ 'fsetval'  x  'in'  A  |  P  &  Q ]") : fset_scope.
+Notation "[ 'fsetval' x : A ]" := [fset val x | x in {: A}]
+  (at level 0, x at level 99, format "[ 'fsetval'  x  :  A ]") : fset_scope.
+Notation "[ 'fsetval' x : A | P ]" := [fset val x | x in {: A} & P]
+  (at level 0, x at level 99, format "[ 'fsetval'  x  :  A  |  P ]") : fset_scope.
+Notation "[ 'fsetval' x : A | P & Q ]" := [fsetval x in {: A} | (P && Q)]
+  (at level 0, x at level 99, format "[ 'fsetval'  x  :  A  |  P  &  Q ]") : fset_scope.
+
 
 (* Print-only variants to work around the Coq pretty-printer K-term kink. *)
 Notation "[ 'fse' 't' E | x 'in' A , y 'in' B ]" :=
-  (imset2 (fun x y => E) (mem A) (fun _ => mem B))
+  ((fun x y => E) @2` (A, B))
   (at level 0, E, x, y at level 99, format
    "[ '[hv' 'fse' 't'  E '/ '  |  x  'in'  A , '/   '  y  'in'  B ] ']'")
    : fset_scope.
 Notation "[ 'fse' 't' E | x 'in' A , y 'in' B & P ]" :=
-  [se t E | x in A, y in [fset y in B | P]]
+  [fse t E | x in A, y in [fset y in B | P]]
   (at level 0, E, x, y at level 99, format
  "[ '[hv ' 'fse' 't'  E '/'  |  x  'in'  A , '/  '  y  'in'  B '/'  &  P ] ']'"
   ) : fset_scope.
-Notation "[ 'fse' 't' E | x : T , y : U 'in' B ]" :=
-  (imset2 (fun x (y : U) => E) (mem (predOfType T)) (fun _ => mem B))
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv ' 'fse' 't'  E '/'  |  x  :  T , '/  '  y  :  U  'in'  B ] ']'")
-   : fset_scope.
-Notation "[ 'fse' 't' E | x : T , y : U 'in' B & P ]" :=
-  [se t E | x : T, y : U in [fset y in B | P]]
-  (at level 0, E, x, y at level 99, format
-"[ '[hv ' 'fse' 't'  E '/'  |  x  :  T , '/  '  y  :  U  'in'  B '/'  &  P ] ']'"
-  ) : fset_scope.
-Notation "[ 'fse' 't' E | x : T 'in' A , y : U ]" :=
-  (imset2 (fun x y => E) (mem A) (fun _ : T => mem (predOfType U)))
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'fse' 't'  E '/ '  |  x  :  T  'in'  A , '/   '  y  :  U ] ']'")
-   : fset_scope.
-Notation "[ 'fse' 't' E | x : T 'in' A , y : U & P ]" :=
-  (imset2 (fun x (y : U) => E) (mem A) (fun _ : T => mem [fset y \in P]))
-  (at level 0, E, x, y at level 99, format
-"[ '[hv ' 'fse' 't'  E '/'  |  x  :  T  'in'  A , '/  '  y  :  U '/'  &  P ] ']'"
-  ) : fset_scope.
-Notation "[ 'fse' 't' E | x : T , y : U ]" :=
-  [se t E | x : T, y : U in predOfType U]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'fse' 't'  E '/ '  |  x  :  T , '/   '  y  :  U ] ']'")
-   : fset_scope.
-Notation "[ 'fse' 't' E | x : T , y : U & P ]" :=
-  [se t E | x : T, y : U in [set y in P]]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'fse' 't'  E '/'  |  x  :  T , '/   '  y  :  U '/'  &  P ] ']'")
-   : fset_scope.
 
 Section imfset.
 
 Variable (K : choiceType).
 Implicit Types (A B : {fset K}).
 
-Lemma imfsetP (T : finType) (f : T -> K) (D : mem_pred T) (k : K) :
-  reflect (exists2 x : T, in_mem x D & k = f x) (k \in imfset f D).
-Proof. rewrite unlock pred_of_finsetE sort_keysE; exact: imageP. Qed.
-
-Lemma in_imfset (T : finType) (f : T -> K) (D : pred T) (x : T) :
-   x \in D -> f x \in [fset f x | x in D].
-Proof. by move=> xD; apply/imfsetP; exists x. Qed.
-
-Lemma mem_imfset (T : finType) (f : T -> K) (D : pred T): injective f ->
-  forall (k : T), (f k \in [fset f x | x in D]) = (k \in D).
+Lemma imfsetP (T : choiceType) (f : T -> K) (P : pred T) (A : {fset T})
+  (p : finmempred P A) (k : K) :
+  reflect (exists2 x : T, P x & k = f x) (k \in imfset f p).
 Proof.
-by move=> f_inj k; rewrite unlock pred_of_finsetE /= sort_keysE mem_image.
+rewrite unlock seq_fsetE /=; apply: (iffP mapP) => [] [x];
+by rewrite ?(finmempredE p); exists x => //=; rewrite (finmempredE p).
 Qed.
 
-Lemma imfset2P (T1 T2 : finType) (f : T1 -> T2 -> K)
-      (D1 : mem_pred T1) (D2 : T1 -> mem_pred T2) (k : K) :
-  reflect (exists2 x : T1, in_mem x D1
-         & exists2 y : T2, in_mem y (D2 x) & k = f x y)
-          (k \in imfset2 f D1 D2).
+Lemma in_imfset (T : choiceType) (f : T -> K) (P : pred T) (A : {fset T})
+  (p : finmempred P A) (x : T) : P x -> f x \in imfset f p.
+Proof. by move=> xA; apply/imfsetP; exists x => //=; rewrite finmempredE. Qed.
+
+Lemma imfset_rec (T : choiceType) (f : T -> K) (D : pred T) (A : {fset T})
+  (p : finmempred D A) (P : imfset f p -> Prop) :
+  (forall (x : T) (Dx : D x), P [` in_imfset f p Dx ]) -> forall k, P k.
 Proof.
-rewrite unlock !pred_of_finsetE !sort_keysE.
+move=> PP v; have /imfsetP [k Dk vv_eq] := valP v.
+pose vP := in_imfset f p Dk; suff -> : P v = P [` vP] by apply: PP.
+by congr P; apply/val_inj => /=; rewrite vv_eq.
+Qed.
+
+Lemma mem_imfset (T : choiceType) (f : T -> K) (P : pred T) (A : {fset T}) (p : finmempred P A) :
+ injective f -> forall (x : T), (f x \in imfset f p) = (P x).
+Proof. by move=> f_inj k; rewrite unlock seq_fsetE mem_map // (finmempredE p). Qed.
+
+Lemma imfset2P (T1 T2 : finType) (f : T1 -> T2 -> K)
+      (D1 : pred T1) (D2 : T1 -> pred T2) (A1 : {fset T1}) (A2 : T1 -> {fset T2})
+      (p1 : finmempred D1 A1) (p2 : forall x : T1, finmempred (D2 x) (A2 x)) (k : K) :
+  reflect (exists2 x : T1, D1 x
+         & exists2 y : T2, D2 x y & k = f x y)
+          (k \in imfset2 f p1 p2).
+Proof.
+rewrite unlock !seq_fsetE.
 apply: (iffP flatten_mapP) => [[x xD1 /mapP [y yD2]]|[x xD1 [y yD2]]] ->.
-  by rewrite !mem_enum in xD1 yD2; exists x => //; exists y.
-by exists x; rewrite ?mem_enum //; apply/mapP; exists y; rewrite ?mem_enum.
+  rewrite !(finmempredE p1, finmempredE (p2 _)) in xD1 yD2;
+  by exists x => //; exists y.
+exists x; rewrite ?(finmempredE p1) //; apply/mapP.
+by exists y; rewrite ?(finmempredE (p2 _)).
 Qed.
 
 Lemma in_imfset2 (T1 T2 : finType) (f : T1 -> T2 -> K)
-      (D1 : mem_pred T1) (D2 : T1 -> mem_pred T2) (k : K) (x : T1) (y : T2) :
-   x \in D1 -> y \in D2 x -> f x y \in [fset f x y | x in D1, y in D2 x].
+      (D1 : pred T1) (D2 : T1 -> pred T2) (A1 : {fset T1}) (A2 : T1 -> {fset T2})
+      (p1 : finmempred D1 A1) (p2 : forall x : T1, finmempred (D2 x) (A2 x)) (k : K) 
+      (x : T1) (y : T2) :
+   x \in D1 -> y \in D2 x -> f x y \in imfset2 f p1 p2.
 Proof. by move=> xD1 yD2; apply/imfset2P; exists x => //; exists y. Qed.
 
-Lemma val_in_FSet A (X : pred A) (k : A) :
-  (val k \in [fset k : A | k \in X]) = (k \in X).
-Proof. by rewrite mem_imfset //; apply: val_inj. Qed.
+End imfset.
 
-Lemma in_FSet A (X : pred A) (k : K) (kA : k \in A) :
-  (k \in [fset k : A | k \in X]) = (FSetSub kA \in X).
-Proof. by rewrite -val_in_FSet. Qed.
+Section imfset2.
 
-Lemma FSetP A (X : pred A) (k : K) :
-  reflect {kA : k \in A & FSetSub kA \in X} (k \in [fset k : A | k \in X]).
+Variable (K : choiceType).
+Implicit Types (A B : {fset K}).
+
+Lemma in_fset (X : pred K) A (p : finmempred X A) (k : K) :
+  (k \in imfset id p) = X k.
+Proof. by rewrite mem_imfset; apply: inj_id. Qed.
+
+Lemma val_in_fset A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : A) :
+  (val k \in imfset val p) = (k \in p).
+Proof. by rewrite mem_imfset ?in_finmempred //; exact: val_inj. Qed.
+
+Lemma in_fset_val A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) :
+  (k \in imfset val p) = if insub k is Some a then a \in p else false.
 Proof.
-apply: (iffP idP) => [|[kA kA_X]]; last by rewrite in_FSet.
-rewrite unlock pred_of_finsetE /= sort_keysE => /mapP [/= x x_in_X ->].
-exists (valP x); rewrite mem_enum in x_in_X.
-by set y := (y in y \in X); suff <- : x = y by []; apply: val_inj.
+have [a _ <- /=|kNA] := insubP; first by rewrite val_in_fset.
+by apply/imfsetP => [] [a _ k_def]; move: kNA; rewrite k_def [_ \in _]valP.
 Qed.
 
-Lemma notin_FSet A (X : pred A) (k : K) : k \notin A ->
-  (k \in [fset k : A | k \in X]) = false.
-Proof. by apply: contraNF => /FSetP []. Qed.
+Lemma in_fset_valT A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) (kA : k \in A) :
+  (k \in imfset val p) = X (FSetSub kA).
+Proof. by rewrite in_fset_val insubT in_finmempred. Qed.
+  
+Lemma in_fset_valP A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) :
+  reflect {kA : k \in A & X (FSetSub kA)} (k \in imfset val p).
+Proof.
+have [kX|kNX] := boolP (k \in imfset val p); constructor; last first.
+  by move=> [kA]; move: kNX; rewrite in_fset_valT => /negPf->.
+move: kX; rewrite in_fset_val; case: insubP => [[u uP] _ <- Xu|//]; exists uP.
+by rewrite in_finmempred in Xu.
+Qed.
 
-End imfset.
+Lemma in_fset_valF A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) : k \notin A ->
+  (k \in imfset val p) = false.
+Proof. by apply: contraNF => /in_fset_valP []. Qed.
+
+End imfset2.
 
 Section Theory.
 
 Variables (K : choiceType).
 Implicit Types (a b x : K) (A B C D : {fset K}) (pA pB pC : pred K) (s : seq K).
 
-Lemma in_seq_fsetE s : seq_fset s =i s.
-Proof. by move=> a; rewrite pred_of_finsetE sort_keysE. Qed.
-
-Lemma in_seq_fset x s : x \in seq_fset s -> x \in s.
-Proof. by rewrite in_seq_fsetE. Qed.
-
-Lemma in_fsetT x s : x \in s -> x \in seq_fset s.
-Proof. by rewrite in_seq_fsetE. Qed.
-
 Lemma fsetP {A B} : A =i B <-> A = B.
-Proof.
-split=> [eqAB|-> //]; apply/val_inj/canonical_eq_keys => //= a.
-by rewrite -!pred_of_finsetE.
-Qed.
+Proof. by split=> [eqAB|-> //]; apply/val_inj/canonical_eq_keys => //= a. Qed.
 
 Lemma fset_eqP {A B} : reflect (A =i B) (A == B).
 Proof. exact: (equivP eqP (iff_sym fsetP)). Qed.
 
-Lemma in_fset0 x : x \in fset0 = false.
-Proof. by rewrite pred_of_finsetE. Qed.
+Lemma in_fset0 x : x \in fset0 = false. Proof. by []. Qed.
 
 Lemma in_fset1U a' A a : (a \in a' |` A) = (a == a') || (a \in A).
-Proof. by rewrite !(pred_of_finsetE, sort_keysE, in_cons, mem_cat, orbF). Qed.
+Proof. by rewrite !(seq_fsetE, in_cons, mem_cat, orbF). Qed.
 
 Lemma in_fset1 a' a : a \in [fset a'] = (a == a').
-Proof. by rewrite !(pred_of_finsetE, sort_keysE, in_cons, mem_cat, orbF). Qed.
+Proof. by rewrite !(seq_fsetE, sort_keysE, in_cons, mem_cat, orbF). Qed.
 
 Lemma in_fsetU A B a : (a \in A `|` B) = (a \in A) || (a \in B).
-Proof. by rewrite !(pred_of_finsetE, sort_keysE, mem_cat). Qed.
-
-Lemma in_fset A pA a : (a \in [fset x in A | pA x]) = (a \in A) && (pA a).
-Proof.
-apply/FSetP/idP => [[/= aA]|/andP [aA pAa]]; last by exists aA.
-by rewrite -[in X in X -> _]topredE /= aA.
-Qed.
-
-Lemma val_in_fset A (P : pred A) (k : A) :
-  (val k \in [fset k : A | P k]) = P k.
-Proof. by have Pk := valP k; rewrite in_FSet; congr P; apply: val_inj. Qed.
+Proof. by rewrite !(seq_fsetE, sort_keysE, mem_cat). Qed.
 
 Lemma in_fsetI A B a : (a \in A `&` B) = (a \in A) && (a \in B).
 Proof. by rewrite in_fset. Qed.
@@ -706,22 +793,26 @@ Lemma in_fsetD1 A b a : (a \in A `\ b) = (a != b) && (a \in A).
 Proof. by rewrite in_fsetD in_fset1. Qed.
 
 Definition in_fsetE :=
-  (in_fset, in_fset0, in_fset1, in_fsetU, in_fset1U, in_fsetI, in_fsetD, in_fsetD1).
+  (in_fset, val_in_fset, in_fset0, in_fset1,
+   in_fsetU, in_fsetI, in_fsetD,
+   in_fset1U, in_fsetD1, in_finset).
+
+Let inE := (inE, in_fsetE).
 
 Lemma fsetIC (A B : {fset K}) : A `&` B = B `&` A.
-Proof. by apply/fsetP => a; rewrite !in_fsetI andbC. Qed.
+Proof. by apply/fsetP => a; rewrite !inE andbC. Qed.
 
 Lemma fsetUC (A B : {fset K}) : A `|` B = B `|` A.
-Proof. by apply/fsetP => a; rewrite !in_fsetU orbC. Qed.
+Proof. by apply/fsetP => a; rewrite !inE orbC. Qed.
 
 Lemma fset0I A : fset0 `&` A = fset0.
-Proof. by apply/fsetP => x; rewrite !in_fsetE andFb. Qed.
+Proof. by apply/fsetP => x; rewrite !inE andFb. Qed.
 
 Lemma fsetI0 A : A `&` fset0 = fset0.
 Proof. by rewrite fsetIC fset0I. Qed.
 
 Lemma fsetIA A B C : A `&` (B `&` C) = A `&` B `&` C.
-Proof. by apply/fsetP=> x; rewrite !in_fsetI andbA. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE andbA. Qed.
 
 Lemma fsetICA A B C : A `&` (B `&` C) = B `&` (A `&` C).
 Proof. by rewrite !fsetIA (fsetIC A). Qed.
@@ -733,7 +824,7 @@ Lemma fsetIACA A B C D : (A `&` B) `&` (C `&` D) = (A `&` C) `&` (B `&` D).
 Proof. by rewrite -!fsetIA (fsetICA B). Qed.
 
 Lemma fsetIid A : A `&` A = A.
-Proof. by apply/fsetP=> x; rewrite in_fsetI andbb. Qed.
+Proof. by apply/fsetP=> x; rewrite inE andbb. Qed.
 
 Lemma fsetIIl A B C : A `&` B `&` C = (A `&` C) `&` (B `&` C).
 Proof. by rewrite fsetIA !(fsetIAC _ C) -(fsetIA _ C) fsetIid. Qed.
@@ -744,45 +835,49 @@ Proof. by rewrite !(fsetIC A) fsetIIl. Qed.
 (* distribute /cancel *)
 
 Lemma fsetIUr A B C : A `&` (B `|` C) = (A `&` B) `|` (A `&` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE andb_orr. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE andb_orr. Qed.
 
 Lemma fsetIUl A B C : (A `|` B) `&` C = (A `&` C) `|` (B `&` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE andb_orl. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE andb_orl. Qed.
 
 Lemma fsetUIr A B C : A `|` (B `&` C) = (A `|` B) `&` (A `|` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE orb_andr. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE orb_andr. Qed.
 
 Lemma fsetUIl A B C : (A `&` B) `|` C = (A `|` C) `&` (B `|` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE orb_andl. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE orb_andl. Qed.
 
 Lemma fsetUK A B : (A `|` B) `&` A = A.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE orbK. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE orbK. Qed.
 
 Lemma fsetKU A B : A `&` (B `|` A) = A.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE orKb. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE orKb. Qed.
 
 Lemma fsetIK A B : (A `&` B) `|` A = A.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE andbK. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE andbK. Qed.
 
 Lemma fsetKI A B : A `|` (B `&` A) = A.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE andKb. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE andKb. Qed.
 
 (* subset *)
 
 Lemma fsubsetP {A B} : reflect {subset A <= B} (A `<=` B).
 Proof.
-apply: (iffP fset_eqP) => AsubB a; first by rewrite -AsubB in_fsetI => /andP[].
-by rewrite in_fsetI; have [/AsubB|] := boolP (a \in A).
+apply: (iffP fset_eqP) => AsubB a; first by rewrite -AsubB inE => /andP[].
+by rewrite inE; have [/AsubB|] := boolP (a \in A).
 Qed.
 
-Lemma FSet_sub A (P : pred A) : [fset x : A | P x] `<=` A.
-Proof. by apply/fsubsetP => k /FSetP []. Qed.
+Lemma fset_sub_val A (X : pred A) (Y : {fset A}) (p : finmempred X Y) :
+   (imfset val p) `<=` A.
+Proof. by apply/fsubsetP => k /in_fset_valP []. Qed.
+
+Lemma fset_sub A (P : pred K) : [fset x in A | P x] `<=` A.
+Proof. by apply/fsubsetP => k; rewrite inE /= => /andP []. Qed.
 
 Lemma fsetD_eq0 (A B : {fset K}) : (A `\` B == fset0) = (A `<=` B).
 Proof.
 apply/fset_eqP/fsubsetP => sAB a.
-  by move=> aA; have := sAB a; rewrite !in_fsetE aA andbT => /negPn.
-by rewrite in_fsetD in_fset0 andbC; apply/negP => /andP [/sAB ->].
+  by move=> aA; have := sAB a; rewrite !inE aA andbT => /negPn.
+by rewrite !inE andbC; apply/negP => /andP [/sAB ->].
 Qed.
 
 Lemma fsubset_refl A : A `<=` A. Proof. exact/fsubsetP. Qed.
@@ -794,7 +889,7 @@ Definition fincl A B (AsubB : A `<=` B) (a : A) : B :=
 Definition fsub B A : {set B} := [set x : B | val x \in A].
 
 Lemma fsubE A B (AsubB : A `<=` B) :
-  fsub B A = [set fincl AsubB x | x in {: A}].
+  fsub B A = [set fincl AsubB x | x : A].
 Proof.
 apply/setP => x; rewrite in_set; apply/idP/imsetP => [|[[a aA] aA' ->]] //.
 by move=> xA; exists (FSetSub xA)=> //; apply: val_inj.
@@ -811,8 +906,8 @@ Lemma subset_fsubE C A B : A `<=` C -> B `<=` C ->
    (fsub C A \subset fsub C B) = (A `<=` B).
 Proof.
 move=> sAC sBC; apply/subsetP/fsubsetP => sAB a; last first.
-  by rewrite !in_fsub => /sAB.
-by move=> aA; have := sAB _ (fincl_fsub sAC (FSetSub aA)); rewrite in_fsub.
+  by rewrite !inE => /sAB.
+by move=> aA; have := sAB _ (fincl_fsub sAC (FSetSub aA)); rewrite inE.
 Qed.
 
 Lemma fsubset_trans : transitive (@fsubset K).
@@ -830,7 +925,7 @@ Proof. by rewrite fsetIC; apply: fsetIidPl. Qed.
 
 Lemma fsubsetIidl A B : (A `<=` A `&` B) = (A `<=` B).
 Proof.
-by apply/fsubsetP/fsubsetP=> sAB a aA; have := sAB _ aA; rewrite !in_fsetI ?aA.
+by apply/fsubsetP/fsubsetP=> sAB a aA; have := sAB _ aA; rewrite !inE ?aA.
 Qed.
 
 Lemma fsubsetIidr A B : (B `<=` A `&` B) = (B `<=` A).
@@ -838,15 +933,15 @@ Proof. by rewrite fsetIC fsubsetIidl. Qed.
 
 Lemma fsetUidPr A B : reflect (A `|` B = B) (A `<=` B).
 Proof.
-apply: (iffP fsubsetP) => sAB; last by move=> a aA; rewrite -sAB in_fsetU aA.
-by apply/fsetP => b; rewrite in_fsetU; have [/sAB|//] := boolP (_ \in _).
+apply: (iffP fsubsetP) => sAB; last by move=> a aA; rewrite -sAB inE aA.
+by apply/fsetP => b; rewrite inE; have [/sAB|//] := boolP (_ \in _).
 Qed.
 
 Lemma fsetUidPl A B : reflect (A `|` B = A) (B `<=` A).
 Proof. by rewrite fsetUC; apply/fsetUidPr. Qed.
 
 Lemma fsubsetUl A B : A `<=` A `|` B.
-Proof. by apply/fsubsetP => a; rewrite in_fsetU => ->. Qed.
+Proof. by apply/fsubsetP => a; rewrite inE => ->. Qed.
 Hint Resolve fsubsetUl.
 
 Lemma fsubsetUr A B : B `<=` A `|` B.
@@ -868,10 +963,8 @@ Lemma fsub_inj B : {in [pred A | A `<=` B] &, injective (fsub B)}.
 Proof.
 move=> A A'; rewrite -!topredE /= => sAB sA'B /setP eqAA'; apply/fsetP => a.
 apply/idP/idP => mem_a.
-  have := eqAA' (fincl sAB (FSetSub mem_a)).
-  by rewrite !in_fsub // => <-.
-have := eqAA' (fincl sA'B (FSetSub mem_a)).
-by rewrite !in_fsub // => ->.
+  by have := eqAA' (fincl sAB (FSetSub mem_a)); rewrite !inE // => <-.
+by have := eqAA' (fincl sA'B (FSetSub mem_a)); rewrite !inE // => ->.
 Qed.
 Hint Resolve fsub_inj.
 
@@ -920,7 +1013,7 @@ by move=> /subset_leqif_cards; rewrite (inj_in_eq (@fsub_inj _)) -?topredE /=.
 Qed.
 
 Lemma fsub0set A : fset0 `<=` A.
-Proof. by apply/fsubsetP=> x; rewrite in_fsetE. Qed.
+Proof. by apply/fsubsetP=> x; rewrite inE. Qed.
 Hint Resolve fsub0set.
 
 Lemma fsubset0 A : (A `<=` fset0) = (A == fset0).
@@ -967,22 +1060,22 @@ Proof. by rewrite -!fproper0 => sAB /fproper_sub_trans->. Qed.
 (* fsub is a morphism *)
 
 Lemma fsub0 A : fsub A fset0 = set0 :> {set A}.
-Proof. by apply/setP => x; rewrite in_fsub in_fsetE inE. Qed.
+Proof. by apply/setP => x; rewrite !inE. Qed.
 
 Lemma fsubT A : fsub A A = [set : A].
-Proof. by apply/setP => x; rewrite in_fsub inE (valP x). Qed.
+Proof. by apply/setP => x; rewrite !inE (valP x). Qed.
 
 Lemma fsub1 A a (aA : a \in A) : fsub A [fset a] = [set FSetSub aA] :> {set A}.
-Proof. by apply/setP=> x; rewrite in_fsub in_set1 in_fset1; congr eq_op. Qed.
+Proof. by apply/setP=> x; rewrite !inE; congr eq_op. Qed.
 
 Lemma fsubU C A B : fsub C (A `|` B) = fsub C A :|: fsub C B.
-Proof. by apply/setP => x; rewrite !(in_fsub, in_setU, in_fsetU). Qed.
+Proof. by apply/setP => x; rewrite !inE. Qed.
 
 Lemma fsubI C A B : fsub C (A `&` B) = fsub C A :&: fsub C B.
-Proof. by apply/setP => x; rewrite !(in_fsub, in_setI, in_fsetI). Qed.
+Proof. by apply/setP => x; rewrite !inE. Qed.
 
 Lemma fsubD C A B : fsub C (A `\` B) = fsub C A :\: fsub C B.
-Proof. by apply/setP => x; rewrite !(in_fsub, in_setD, in_fsetD) andbC. Qed.
+Proof. by apply/setP => x; rewrite !inE andbC. Qed.
 
 Lemma fsubD1 C A b (bC : b \in C) : fsub C (A `\ b) = fsub C A :\ FSetSub bC.
 Proof. by rewrite fsubD fsub1. Qed.
@@ -995,74 +1088,72 @@ Qed.
 Lemma fset_0Vmem A : (A = fset0) + {x : K | x \in A}.
 Proof.
 have [|[x mem_x]] := set_0Vmem (fsub A A); last first.
-  by right; exists (val x); rewrite in_fsub // in mem_x.
+  by right; exists (val x); rewrite inE // in mem_x.
 by move=> /eqP; rewrite fsub_eq0 // => /eqP; left.
 Qed.
 
 Lemma fset1P x a : reflect (x = a) (x \in [fset a]).
-Proof. by rewrite in_fset1; exact: eqP. Qed.
+Proof. by rewrite inE; exact: eqP. Qed.
 
 Lemma fset11 x : x \in [fset x].
-Proof. by rewrite in_fset1. Qed.
+Proof. by rewrite inE. Qed.
 
 Lemma fset1_inj : injective (@fset1 K).
 Proof. by move=> a b eqsab; apply/fset1P; rewrite -eqsab fset11. Qed.
 
 Lemma fset1UP x a B : reflect (x = a \/ x \in B) (x \in a |` B).
-Proof. by rewrite !in_fset1U; exact: predU1P. Qed.
+Proof. by rewrite !inE; exact: predU1P. Qed.
 
 Lemma fset_cons a s : seq_fset (a :: s) = a |` (seq_fset s).
-Proof. by apply/fsetP=> x; rewrite in_fset1U !in_seq_fsetE. Qed.
+Proof. by apply/fsetP=> x; rewrite in_fset1U !seq_fsetE. Qed.
 
-Lemma fset1U1 x B : x \in x |` B.
-Proof. by rewrite in_fset1U eqxx. Qed.
+Lemma fset1U1 x B : x \in x |` B. Proof. by rewrite !inE eqxx. Qed.
 
 Lemma fset1Ur x a B : x \in B -> x \in a |` B.
-Proof. by move=> Bx; rewrite in_fset1U predU1r. Qed.
+Proof. by move=> Bx; rewrite !inE predU1r. Qed.
 
 (* We need separate lemmas for the explicit enumerations since they *)
 (* associate on the left.                                           *)
 Lemma fsetU1l x A b : x \in A -> x \in A `|` [fset b].
-Proof. by move=> Ax; rewrite !in_fsetU Ax. Qed.
+Proof. by move=> Ax; rewrite !inE Ax. Qed.
 
 Lemma fsetU1r A b : b \in A `|` [fset b].
-Proof. by rewrite in_fsetU in_fset1 eqxx orbT. Qed.
+Proof. by rewrite !inE eqxx orbT. Qed.
 
 Lemma fsetD1P x A b : reflect (x != b /\ x \in A) (x \in A `\ b).
-Proof. by rewrite in_fsetD1; exact: andP. Qed.
+Proof. by rewrite !inE; exact: andP. Qed.
 
-Lemma fsetD11 b A : (b \in A `\ b) = false.
-Proof. by rewrite in_fsetD1 eqxx. Qed.
+Lemma fsetD11 b A : (b \in A `\ b) = false. Proof. by rewrite !inE eqxx. Qed.
 
 Lemma fsetD1K a A : a \in A -> a |` (A `\ a) = A.
 Proof.
-by move=> Aa; apply/fsetP=> x; rewrite !in_fsetE; case: eqP => // ->.
+by move=> Aa; apply/fsetP=> x; rewrite !inE; case: eqP => // ->.
 Qed.
 
 Lemma fsetU1K a B : a \notin B -> (a |` B) `\ a = B.
 Proof.
-by move/negPf=> nBa; apply/fsetP=> x; rewrite !in_fsetE; case: eqP => // ->.
+by move/negPf=> nBa; apply/fsetP=> x; rewrite !inE; case: eqP => // ->.
 Qed.
 
 Lemma fset2P x a b : reflect (x = a \/ x = b) (x \in [fset a; b]).
-Proof. by rewrite !in_fsetE; apply: (iffP orP) => [] [] /eqP; intuition. Qed.
+Proof. by rewrite !inE; apply: (iffP orP) => [] [] /eqP; intuition. Qed.
 
 Lemma in_fset2 x a b : (x \in [fset a; b]) = (x == a) || (x == b).
-Proof. by rewrite !in_fsetU !in_fset1. Qed.
+Proof. by rewrite !inE. Qed.
 
 Lemma set21 a b : a \in [fset a; b]. Proof. by rewrite fset1U1. Qed.
 
 Lemma set22 a b : b \in [fset a; b]. Proof. by rewrite in_fset2 eqxx orbT. Qed.
 
 Lemma fsetUP x A B : reflect (x \in A \/ x \in B) (x \in A `|` B).
-Proof. by rewrite !in_fsetU; exact: orP. Qed.
+Proof. by rewrite !inE; exact: orP. Qed.
 
 Lemma fsetULVR x A B : x \in A `|` B -> (x \in A) + (x \in B).
-Proof. by rewrite in_fsetU; case: (x \in A); [left|right]. Qed.
+Proof. by rewrite inE; case: (x \in A); [left|right]. Qed.
 
 Lemma fsetUS A B C : A `<=` B -> C `|` A `<=` C `|` B.
 Proof.
-move=> sAB; apply/fsubsetP=> x; rewrite !in_fsetU.
+move=> sAB; apply/fsubsetP=> x; rewrite !inE.
 by case: (x \in C) => //; exact: (fsubsetP sAB).
 Qed.
 
@@ -1073,13 +1164,13 @@ Lemma fsetUSS A B C D : A `<=` C -> B `<=` D -> A `|` B `<=` C `|` D.
 Proof. by move=> /(fsetSU B) /fsubset_trans sAC /(fsetUS C)/sAC. Qed.
 
 Lemma fset0U A : fset0 `|` A = A.
-Proof. by apply/fsetP => x; rewrite !in_fsetE orFb. Qed.
+Proof. by apply/fsetP => x; rewrite !inE orFb. Qed.
 
 Lemma fsetU0 A : A `|` fset0 = A.
 Proof. by rewrite fsetUC fset0U. Qed.
 
 Lemma fsetUA A B C : A `|` (B `|` C) = A `|` B `|` C.
-Proof. by apply/fsetP => x; rewrite !in_fsetU orbA. Qed.
+Proof. by apply/fsetP => x; rewrite !inE orbA. Qed.
 
 Lemma fsetUCA A B C : A `|` (B `|` C) = B `|` (A `|` C).
 Proof. by rewrite !fsetUA (fsetUC B). Qed.
@@ -1091,7 +1182,7 @@ Lemma fsetUACA A B C D : (A `|` B) `|` (C `|` D) = (A `|` C) `|` (B `|` D).
 Proof. by rewrite -!fsetUA (fsetUCA B). Qed.
 
 Lemma fsetUid A : A `|` A = A.
-Proof. by apply/fsetP=> x; rewrite in_fsetU orbb. Qed.
+Proof. by apply/fsetP=> x; rewrite inE orbb. Qed.
 
 Lemma fsetUUl A B C : A `|` B `|` C = (A `|` C) `|` (B `|` C).
 Proof. by rewrite fsetUA !(fsetUAC _ C) -(fsetUA _ C) fsetUid. Qed.
@@ -1102,11 +1193,11 @@ Proof. by rewrite !(fsetUC A) fsetUUl. Qed.
 (* intersection *)
 
 Lemma fsetIP x A B : reflect (x \in A /\ x \in B) (x \in A `&` B).
-Proof. by rewrite in_fsetI; apply: andP. Qed.
+Proof. by rewrite inE; apply: andP. Qed.
 
 Lemma fsetIS A B C : A `<=` B -> C `&` A `<=` C `&` B.
 Proof.
-move=> sAB; apply/fsubsetP=> x; rewrite !in_fsetI.
+move=> sAB; apply/fsubsetP=> x; rewrite !inE.
 by case: (x \in C) => //; exact: (fsubsetP sAB).
 Qed.
 
@@ -1119,17 +1210,17 @@ Proof. by move=> /(fsetSI B) /fsubset_trans sAC /(fsetIS C) /sAC. Qed.
 (* difference *)
 
 Lemma fsetDP A B x : reflect (x \in A /\ x \notin B) (x \in A `\` B).
-Proof. by rewrite in_fsetD andbC; apply: andP. Qed.
+Proof. by rewrite inE andbC; apply: andP. Qed.
 
 Lemma fsetSD A B C : A `<=` B -> A `\` C `<=` B `\` C.
 Proof.
-move=> sAB; apply/fsubsetP=> x; rewrite !in_fsetD.
+move=> sAB; apply/fsubsetP=> x; rewrite !inE.
 by case: (x \in C) => //; exact: (fsubsetP sAB).
 Qed.
 
 Lemma fsetDS A B C : A `<=` B -> C `\` B `<=` C `\` A.
 Proof.
-move=> sAB; apply/fsubsetP=> x; rewrite !in_fsetD ![_ && (_ \in _)]andbC.
+move=> sAB; apply/fsubsetP=> x; rewrite !inE ![_ && (_ \in _)]andbC.
 by case: (x \in C) => //; apply: contra; exact: (fsubsetP sAB).
 Qed.
 
@@ -1137,57 +1228,57 @@ Lemma fsetDSS A B C D : A `<=` C -> D `<=` B -> A `\` B `<=` C `\` D.
 Proof. by move=> /(fsetSD B) /fsubset_trans sAC /(fsetDS C) /sAC. Qed.
 
 Lemma fsetD0 A : A `\` fset0 = A.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE. Qed.
 
 Lemma fset0D A : fset0 `\` A = fset0.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE andbF. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE andbF. Qed.
 
 Lemma fsetDv A : A `\` A = fset0.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE andNb. Qed.
+Proof. by apply/fsetP=> x; rewrite !inE andNb. Qed.
 
 Lemma fsetID A B : A `&` B `|` A `\` B = A.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetDUl A B C : (A `|` B) `\` C = (A `\` C) `|` (B `\` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetDUr A B C : A `\` (B `|` C) = (A `\` B) `&` (A `\` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetDIl A B C : (A `&` B) `\` C = (A `\` C) `&` (B `\` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetIDA A B C : A `&` (B `\` C) = (A `&` B) `\` C.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetIDAC A B C : (A `\` B) `&` C = (A `&` C) `\` B.
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetDIr A B C : A `\` (B `&` C) = (A `\` B) `|` (A `\` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetDDl A B C : (A `\` B) `\` C = A `\` (B `|` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetDDr A B C : A `\` (B `\` C) = (A `\` B) `|` (A `&` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetUDl (A B C : {fset K}) : A `|` (B `\` C) = (A `|` B) `\` (C `\` A).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetUDr (A B C : {fset K}) : (A `\` B) `|` C = (A `|` C) `\` (B `\` C).
-Proof. by apply/fsetP=> x; rewrite !in_fsetE; do ?case: (_ \in _). Qed.
+Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 (* other inclusions *)
 
 Lemma fsubsetIl A B : A `&` B `<=` A.
-Proof. by apply/fsubsetP=> x; rewrite in_fsetE => /andP []. Qed.
+Proof. by apply/fsubsetP=> x; rewrite inE => /andP []. Qed.
 
 Lemma fsubsetIr A B : A `&` B `<=` B.
-Proof. by apply/fsubsetP=> x; rewrite in_fsetE => /andP []. Qed.
+Proof. by apply/fsubsetP=> x; rewrite inE => /andP []. Qed.
 
 Lemma fsubsetDl A B : A `\` B `<=` A.
-Proof. by apply/fsubsetP=> x; rewrite in_fsetE => /andP []. Qed.
+Proof. by apply/fsubsetP=> x; rewrite inE => /andP []. Qed.
 
 Lemma fsubD1set A x : A `\ x `<=` A.
 Proof. by rewrite fsubsetDl. Qed.
@@ -1216,9 +1307,8 @@ Proof. by rewrite lt0n cardfs_eq0. Qed.
 
 Lemma cardfsE s : #|` seq_fset s| = size (undup s).
 Proof.
-rewrite cardT enumT unlock /= undup_id ?pmap_sub_uniq ?sort_keys_uniq //.
-rewrite size_pmap_sub (@eq_in_count _ _ predT) ?count_predT ?size_sort_keys //.
-by move=> k ? /=; rewrite pred_of_finsetE.
+rewrite cardT enumT unlock /= undup_id ?pmap_sub_uniq ?[seq_fset]unlock //=.
+by rewrite size_pmap_sub (@eq_in_count _ _ predT) ?count_predT ?size_sort_keys.
 Qed.
 
 Lemma cardfs1 x : #|` [fset x]| = 1.
@@ -1244,19 +1334,19 @@ Proof. by rewrite -(cardfsID B A) addKn. Qed.
 
 Lemma mem_fset1U a A : a \in A -> a |` A = A.
 Proof.
-move=> aA; apply/fsetP => x; rewrite !in_fsetE orbC.
+move=> aA; apply/fsetP => x; rewrite !inE orbC.
 by have [//|/=] := boolP (_ \in A); apply: contraNF => /eqP ->.
 Qed.
 
 Lemma mem_fsetD1 a A : a \notin A -> A `\ a = A.
 Proof.
-move=> aA; apply/fsetP => x; rewrite !in_fsetE andbC.
+move=> aA; apply/fsetP => x; rewrite !inE andbC.
 by have [/= xA|//] := boolP (_ \in A); apply: contraNneq aA => <-.
 Qed.
 
 Lemma fsetI1 a A : A `&` [fset a] = if a \in A then [fset a] else fset0.
 Proof.
-apply/fsetP => x; rewrite (fun_if (fun X => _ \in X)) !in_fsetE.
+apply/fsetP => x; rewrite (fun_if (fun X => _ \in X)) !inE.
 by have [[->|?] []] := (altP (x =P a), boolP (a \in A)); rewrite ?andbF.
 Qed.
 
@@ -1268,7 +1358,7 @@ by rewrite mem_fsetD1 // cardfs1.
 Qed.
 
 Lemma cardfs2 a b : #|` [fset a; b]| = (a != b).+1.
-Proof. by rewrite !cardfsU1 cardfs1 addn1 in_seq_fsetE in_cons orbF. Qed.
+Proof. by rewrite !cardfsU1 cardfs1 addn1 seq_fsetE in_cons orbF. Qed.
 
 Lemma cardfsD1 a A : #|` A| = (a \in A) + #|` A `\ a|.
 Proof.
@@ -1281,7 +1371,7 @@ Qed.
 Lemma fsub1set A x : ([fset x] `<=` A) = (x \in A).
 Proof.
 rewrite -(@subset_fsubE (x |` A)) // fsub1 ?fset1U1 // => xxA.
-by rewrite sub1set in_fsub.
+by rewrite sub1set inE.
 Qed.
 
 Lemma cardfs1P A : reflect (exists x, A = [fset x]) (#|` A| == 1).
@@ -1325,9 +1415,9 @@ Proof. by rewrite fsubUset; exact: andP. Qed.
 
 Lemma fsubDset A B C : (A `\` B `<=` C) = (A `<=` B `|` C).
 Proof.
-apply/fsubsetP/fsubsetP=> sABC x; rewrite !in_fsetE.
+apply/fsubsetP/fsubsetP=> sABC x; rewrite !inE.
   by case Bx: (x \in B) => // Ax; rewrite sABC ?in_fsetD ?Bx.
-by case Bx: (x \in B) => //; move/sABC; rewrite in_fsetE Bx.
+by case Bx: (x \in B) => //; move/sABC; rewrite inE Bx.
 Qed.
 
 Lemma fsetU_eq0 A B : (A `|` B == fset0) = (A == fset0) && (B == fset0).
@@ -1340,7 +1430,7 @@ Lemma fsubsetD1 A B x : (A `<=` B `\ x) = (A `<=` B) && (x \notin A).
 Proof.
 do !rewrite -(@subset_fsubE (x |` A `|` B)) ?fsubDset ?fsetUA // 1?fsetUAC //.
 rewrite fsubD1 => [|mem_x]; first by rewrite -fsetUA fset1U1.
-by rewrite subsetD1 // in_fsub.
+by rewrite subsetD1 // inE.
 Qed.
 
 Lemma fsubsetD1P A B x : reflect (A `<=` B /\ x \notin A) (A `<=` B `\ x).
@@ -1349,8 +1439,8 @@ Proof. by rewrite fsubsetD1; exact: andP. Qed.
 Lemma fsubsetPn A B : reflect (exists2 x, x \in A & x \notin B) (~~ (A `<=` B)).
 Proof.
  rewrite -fsetD_eq0; apply: (iffP (fset0Pn _)) => [[x]|[x xA xNB]].
-  by rewrite in_fsetE => /andP[]; exists x.
-by exists x; rewrite in_fsetE xA xNB.
+  by rewrite inE => /andP[]; exists x.
+by exists x; rewrite inE xA xNB.
 Qed.
 
 Lemma fproperD1 A x : x \in A -> A `\ x `<` A.
@@ -1395,8 +1485,8 @@ Proof. by []. Qed.
 Lemma fdisjoint_sub {A B} : [disjoint A & B]%fset ->
   forall C : {fset K}, [disjoint fsub C A & fsub C B]%bool.
 Proof.
-move=> disjointAB C; apply/pred0P => a /=; rewrite !in_fsub.
-by have /eqP /fsetP /(_ (val a)) := disjointAB; rewrite !in_fsetE.
+move=> disjointAB C; apply/pred0P => a /=; rewrite !inE.
+by have /eqP /fsetP /(_ (val a)) := disjointAB; rewrite !inE.
 Qed.
 
 Lemma disjoint_fsub C A B : A `|` B `<=` C ->
@@ -1404,24 +1494,24 @@ Lemma disjoint_fsub C A B : A `|` B `<=` C ->
 Proof.
 move=> ABsubC.
 apply/idP/idP=> [/pred0P DAB|/fdisjoint_sub->//]; apply/eqP/fsetP=> a.
-rewrite !in_fsetE; have [aC|] := boolP (a \in A `|` B); last first.
-  by rewrite !in_fsetE => /norP [/negPf-> /negPf->].
-by have /= := DAB (FSetSub (fsubsetP ABsubC _ aC)); rewrite !(@in_fsub C).
+rewrite !inE; have [aC|] := boolP (a \in A `|` B); last first.
+  by rewrite !inE => /norP [/negPf-> /negPf->].
+by have /= := DAB (FSetSub (fsubsetP ABsubC _ aC)); rewrite !inE.
 Qed.
 
 Lemma fdisjointP {A B} :
   reflect (forall a, a \in A -> a \notin B) [disjoint A & B]%fset.
 Proof.
 apply: (iffP eqP) => [AIB_eq0 a aA|neq_ab].
-  by have /fsetP /(_ a) := AIB_eq0; rewrite !in_fsetE aA /= => ->.
-apply/fsetP => a; rewrite !in_fsetE.
+  by have /fsetP /(_ a) := AIB_eq0; rewrite !inE aA /= => ->.
+apply/fsetP => a; rewrite !inE.
 by case: (boolP (a \in A)) => // /neq_ab /negPf ->.
 Qed.
 
 Lemma fsetDidPl A B : reflect (A `\` B = A) [disjoint A & B]%fset.
 Proof.
-apply: (iffP fdisjointP)=> [NB|<- a]; last by rewrite in_fsetE => /andP[].
-apply/fsetP => a; rewrite !in_fsetE andbC.
+apply: (iffP fdisjointP)=> [NB|<- a]; last by rewrite inE => /andP[].
+apply/fsetP => a; rewrite !inE andbC.
 by case: (boolP (a \in A)) => //= /NB ->.
 Qed.
 
@@ -1466,9 +1556,8 @@ Proof. by rewrite -fsetI_eq0 fsetI0. Qed.
 
 Lemma fdisjoint1X x A : [disjoint [fset x] & A] = (x \notin A).
 Proof.
-rewrite -(@disjoint_fsub (x |` A)) //;
-rewrite (@eq_disjoint1 _ (FSetSub (fset1U1 _ _))) ?(@in_fsub (x |` A)) //=.
-by move=> b; rewrite (@in_fsub (x |` _)) [in RHS]inE in_fsetE.
+rewrite -(@disjoint_fsub (x |` A)) //.
+by rewrite (@eq_disjoint1 _ (FSetSub (fset1U1 _ _))) ?inE =>// ?; rewrite !inE.
 Qed.
 
 Lemma fdisjointX1 x A : [disjoint A & [fset x]] = (x \notin A).
@@ -1486,45 +1575,94 @@ Lemma fdisjointU1X x A B :
    [disjoint x |` A & B]%fset = (x \notin B) && [disjoint A & B]%fset.
 Proof. by rewrite fdisjointUX fdisjoint1X. Qed.
 
-Lemma Ffset_sub A (X : {set A}) : [fset k : A | k \in X] `<=` A.
-Proof. by apply/fsubsetP => k /FSetP []. Qed.
-
-Lemma fsubK A B : A `<=` B -> [fset k : B | k \in (fsub B A)] = A.
+Lemma fsubK A B : A `<=` B -> [fsetval k in fsub B A] = A.
 Proof.
 move=> AsubB; apply/fsetP => k /=; symmetry.
-have [kB|kNB] := (boolP (k \in B)); first by rewrite in_FSet in_fsub.
-rewrite (contraNF (fsubsetP (Ffset_sub _) _)) //.
-by apply: contraNF kNB; apply: fsubsetP.
+have [kB|kNB] := (boolP (k \in B)).
+   by rewrite in_fset_valT /= inE.
+by rewrite in_fset_valF //; apply: contraNF kNB; apply/fsubsetP.
 Qed.
 
-Lemma FSetK A (X : {set A}) : fsub A [fset k : A | k \in X] = X.
-Proof. by apply/setP => x; rewrite in_fsub val_in_FSet. Qed.
+Lemma FSetK A (X : {set A}) : fsub A [fsetval k in X] = X.
+Proof. by apply/setP => x; rewrite !inE. Qed.
 
 End Theory.
 
-Lemma card_in_imfset (T : finType) (K : choiceType) (f : T -> K) (D : pred T) :
-   {in D &, injective f} -> #|` [fset f x | x in D]| = #|D|.
+Definition inE := (inE, in_fsetE).
+
+Lemma fset_in_finpred (T : finType) (P : pred T) : [fset x in P] = finset P.
+Proof. by apply/fsetP => x; rewrite !inE. Qed.
+
+Section Card.
+
+Lemma card_finset (T : finType) (P : pred T) : #|` finset P | = #|P|.
 Proof.
-move=> f_inj; rewrite [imfset]unlock cardfsE undup_id.
-  by rewrite size_map -cardE.
-rewrite map_inj_in_uniq ?enum_uniq // => x y.
-by rewrite !mem_enum => ? ? /f_inj; apply.
+rewrite card_fsetE cardE; apply/eqP.
+rewrite -uniq_size_uniq ?enum_fset_uniq ?enum_uniq // => x.
+by rewrite !inE mem_enum.
 Qed.
 
-Lemma card_imfset (T : finType) (K : choiceType) (f : T -> K) (D : pred T) :
-    injective f -> #|` [fset f x | x in D]| = #|D|.
-Proof. by move=> f_inj; rewrite card_in_imfset // => x y ? ?; apply: f_inj. Qed.
+Lemma card_in_imfset (T K : choiceType) (f : T -> K)
+   (P : pred T) (A : {fset T}) (p : finmempred P A) :
+   {in P &, injective f} -> #|` (imfset f p)| = #|` A|.
+Proof.
+move=> f_inj; have vP (x : A) : P (val x) by rewrite -(finmempredE p) (valP x).
+rewrite -[RHS](@card_in_imset _ _ (fun x : A => [` in_imfset f p (vP x)])).
+  symmetry; apply: eq_card => /= k; rewrite !inE; apply/imsetP => /=.
+  elim/imfset_rec: k => x Px; have xA : x \in A by rewrite (finmempredE p).
+  by exists [` xA] => //; apply/val_inj.
+move=> x y _ _ /eqP; rewrite -val_eqE => /eqP /f_inj /eqP.
+by rewrite -!topredE /= -!(finmempredE p) val_eqE => /(_ _ _) /eqP; apply.
+Qed.
+
+Lemma card_imfset (T K : choiceType) (f : T -> K)
+   (P : pred T) (A : {fset T}) (p : finmempred P A) :
+   injective f -> #|` (imfset f p)| = #|` A|.
+Proof. by move=> f_inj; rewrite card_in_imfset //= => x y ? ?; apply: f_inj. Qed.
+
+End Card.
+
+Section ImfsetTh.
+
+Variables (K V : choiceType).
+Implicit Types (f : K -> V) (g : V -> K) (A : {fset K}).
+
+Lemma imfset_id (A : {fset K}) : id @` A = A.
+Proof. by apply/fsetP=> a; rewrite !inE. Qed.
+
+Lemma imfset_comp f g A : (g \o f) @` A = g @` (f @` A).
+Proof.
+apply/fsetP=> a; apply/imfsetP/imfsetP=> [[/= x xA ->]|].
+  by exists (f x); rewrite // in_imfset.
+by move=> [/= x /imfsetP [/= y yA ->] ->]; exists y.
+Qed.
+
+Lemma subset_imfset f A B : A `<=` B -> f @` A `<=` f @` B.
+Proof.
+move=> /fsubsetP AB; apply/fsubsetP => x /imfsetP [y /= yA ->].
+by rewrite in_imfset //= AB.
+Qed.
+
+Lemma eq_imfset (f f' : K -> V) (P Q : pred K) (A B : {fset K})
+  (p : finmempred P A) (q : finmempred Q B):
+  f =1 f' -> P =1 Q -> imfset f p = imfset f' q.
+Proof.
+move=> eq_f eqP; apply/fsetP => x; apply/imfsetP/imfsetP => /= [] [k Pk ->];
+by exists k => //=; rewrite ?eq_f ?eqP in Pk *.
+Qed.
+
+End ImfsetTh.
 
 Section PowerSetTheory.
 
 Variable (K : choiceType).
 
 Definition fpowerset (A : {fset K}) : {fset {fset K}} :=
-  [fset [fset val y | y : A in Y : {set A}] | Y in powerset [set: A]].
+  [fset [fsetval y in Y : {set A}] | Y in powerset [set: A]].
 
 Lemma fpowersetE A B : (B \in fpowerset A) = (B `<=` A).
 Proof.
-apply/imfsetP/fsubsetP => /= [[Z _ -> y /FSetP [] //]|/fsubsetP subYX].
+apply/imfsetP/fsubsetP => /= [[Z _ -> y /in_fset_valP [] //]|/fsubsetP subYX].
 exists (fsub _ B); last by rewrite fsubK.
 by rewrite powersetE /= -fsubT subset_fsub ?fsubset_refl.
 Qed.
@@ -1541,19 +1679,18 @@ by rewrite !fpowersetE => /fsubsetP XA; apply/fsubsetP => x /XA /subAB.
 Qed.
 
 Lemma fpowerset0 : fpowerset fset0 = [fset fset0].
-Proof. by apply/fsetP=> X; rewrite in_fsetE fpowersetE fsubset0. Qed.
+Proof. by apply/fsetP=> X; rewrite inE fpowersetE fsubset0. Qed.
 
 Lemma fpowerset1 (x : K) : fpowerset [fset x] = [fset fset0; [fset x]].
-Proof. by apply/fsetP => X; rewrite !in_fsetE fpowersetE fsubset1 orbC. Qed.
+Proof. by apply/fsetP => X; rewrite !inE fpowersetE fsubset1 orbC. Qed.
 
 Lemma fpowersetI A B : fpowerset (A `&` B) = fpowerset A `&` fpowerset B.
-Proof. by apply/fsetP=> X; rewrite in_fsetE !fpowersetE fsubsetI. Qed.
+Proof. by apply/fsetP=> X; rewrite inE !fpowersetE fsubsetI. Qed.
 
 Lemma card_fpowerset (A : {fset K}) : #|` fpowerset A| = 2 ^ #|` A|.
 Proof.
-rewrite card_imfset //=; first by rewrite card_powerset cardsE.
-move=> X Y /fsetP eqXY; apply/setP => x;
-by have := eqXY (val x); rewrite !val_in_FSet.
+rewrite card_imfset ?card_finset; first by rewrite card_powerset cardsE.
+by move=> X Y /fsetP eqXY; apply/setP => x; have := eqXY (val x); rewrite !inE.
 Qed.
 
 End PowerSetTheory.
@@ -1582,7 +1719,7 @@ Canonical finMapPredType (K : choiceType) (V : Type) :=
 
 Delimit Scope fmap_scope with fmap.
 Local Open Scope fmap_scope.
-Notation "f .[ kf ]" := (f (FSetSub kf)) : fmap_scope.
+Notation "f .[ kf ]" := (f [` kf]) : fmap_scope.
 Arguments ffun_of_fmap : simpl never.
 
 Notation "[ 'fmap' x : aT => F ]" := (FinMap [ffun x : aT => F])
@@ -1596,7 +1733,6 @@ Notation "[ 'fmap' x => F ]" := [fmap x : _ => F]
 
 Notation "[ 'fmap' => F ]" := [fmap: _ => F]
   (at level 0, format "[ 'fmap' =>  F ]") : fun_scope.
-
 
 Canonical finmap_of_finfun (K : choiceType) V (A : {fset K}) (f : {ffun A -> V}) := FinMap f.
 Arguments finmap_of_finfun /.
@@ -1627,6 +1763,7 @@ Arguments fmap0 {K V}.
 Arguments setf : simpl never.
 Arguments fnd : simpl never.
 
+Notation "[ 'fmap' 'of' T ]" := (fmap0 : {fmap T}) (only parsing) : fmap_scope.
 Notation "[fmap]" := fmap0 : fmap_scope.
 Notation "x .[ k <- v ]" := (setf x k v) : fmap_scope.
 Notation "f .[? k ]" := (fnd f k) : fmap_scope.
@@ -1719,7 +1856,7 @@ Qed.
 
 Lemma mem_setf V (f : {fmap K -> V}) (k0 : K) (v0 : V) :
   f.[k0 <- v0] =i predU1 k0 (mem (domf f)).
-Proof. by move=> k; rewrite !in_fsetE !inE. Qed.
+Proof. by move=> k; rewrite !inE. Qed.
 
 Lemma dom_setf V (f : {fmap K -> V}) (k0 : K) (v0 : V) :
   domf (f.[k0 <- v0]) = k0 |` domf f.
@@ -1748,7 +1885,7 @@ Qed.
 
 Lemma fmap_nil V (f : {fmap K -> V}) : domf f = fset0 -> f = [fmap].
 Proof.
-by move=> kf0; apply: getfP => //= k ? kMg; have := kMg; rewrite in_fsetE.
+by move=> kf0; apply: getfP => //= k ? kMg; have := kMg; rewrite !inE.
 Qed.
 
 Lemma getf_set V (f : {fmap K -> V}) (k : K) (v : V) (kf' : k \in _) :
@@ -1764,6 +1901,8 @@ Lemma setfNK V (f : {fmap K -> V}) (k k' : K) (v : V)
    f.[k <- v].[k'f'] = if k' == k then v else f.[k'f].
 Proof. by apply: Some_inj; rewrite Some_fnd !fnd_set in_fnd; case: ifP. Qed.
 
+Lemma domf0 V : domf [fmap of K -> V] = fset0. Proof. by apply/fsetP => x. Qed.
+
 End FinMapTheory.
 
 Section ReduceOp.
@@ -1771,10 +1910,10 @@ Section ReduceOp.
 Variable (K : choiceType) (V : Type).
 Implicit Types (f : {fmap K -> option V}).
 
-Lemma reducef_subproof f (x : [fset x : domf f | f x]) :
-  f (fincl (FSet_sub _) x).
+Lemma reducef_subproof f (x : [fsetval x : domf f | f x]) :
+  f (fincl (fset_sub_val _) x).
 Proof.
-set y := (y in f y); suff : val y \in [fset x : domf f | f x].
+set y := (y in f y); suff : val y \in [fsetval x : domf f | f x].
   by rewrite val_in_fset.
 by suff -> : val y = val x by exact: valP.
 Qed.
@@ -1782,13 +1921,13 @@ Qed.
 Definition reducef f : {fmap K -> V} :=
   [fmap x => oextract (@reducef_subproof f x)].
 
-Lemma domf_reduce f : domf (reducef f) = [fset k : domf f | f k].
+Lemma domf_reduce f : domf (reducef f) = [fsetval x : domf f | f x].
 Proof. by []. Qed.
 
 Lemma mem_reducef f k : k \in reducef f = ojoin f.[? k].
 Proof.
-rewrite inE; case: fndP => [kf|] /=; first by rewrite in_FSet.
-by apply: contraNF; apply: (fsubsetP (FSet_sub _)).
+rewrite inE; case: fndP => [kf|] /=; first by rewrite in_fset_valT.
+by apply: contraNF; apply: (fsubsetP (fset_sub_val _)).
 Qed.
 
 Lemma fnd_reducef f k : (reducef f).[? k] = ojoin f.[? k].
@@ -1812,7 +1951,7 @@ Variable (K : choiceType) (V : Type).
 Implicit Types (f g : {fmap K -> V}).
 
 Definition filterf f (P : pred K) : {fmap K -> V} :=
-   [fmap x : [fset x in domf f | P x] => f (fincl (FSet_sub _) x)].
+   [fmap x : [fset x in domf f | P x] => f (fincl (fset_sub _ _) x)].
 
 Definition restrictf f (A : {fset K}) : {fmap K -> V} :=
   filterf f (mem A).
@@ -1827,7 +1966,7 @@ Proof. by []. Qed.
 
 Lemma mem_filterf f (P : pred K) (k : K) :
   (k \in domf (filterf f P)) = (k \in f) && (P k) :> bool.
-Proof. by rewrite in_fset. Qed.
+Proof. by rewrite !inE. Qed.
 
 Lemma mem_restrictf f (A : {fset K}) (k : K) :
    k \in f.[& A] = (k \in A) && (k \in f) :> bool.
@@ -1835,14 +1974,14 @@ Proof. by rewrite mem_filterf andbC. Qed.
 
 Lemma mem_remf f (A : {fset K}) (k : K) :
    k \in f.[\ A] = (k \notin A) && (k \in f) :> bool.
-Proof. by rewrite mem_restrictf in_fsetE -andbA andbb. Qed.
+Proof. by rewrite mem_restrictf inE -andbA andbb. Qed.
 
 Lemma mem_remf1 f (k' k : K) :
    k \in f.[~ k'] = (k != k') && (k \in f) :> bool.
-Proof. by rewrite mem_remf in_fsetE. Qed.
+Proof. by rewrite mem_remf inE. Qed.
 
 Lemma domf_restrict f A : domf f.[& A] = A `&` domf f.
-Proof. by apply/fsetP=> k'; rewrite mem_restrictf !in_fsetE. Qed.
+Proof. by apply/fsetP=> k'; rewrite mem_restrictf !inE. Qed.
 
 Lemma domf_rem f A : domf f.[\ A] = domf f `\` A.
 Proof. by rewrite domf_restrict fsetIDAC fsetIid. Qed.
@@ -1853,15 +1992,15 @@ Proof. by rewrite mem_remf1 eqxx. Qed.
 Lemma fnd_filterf f P k : (filterf f P).[? k] = if P k then f.[? k] else None.
 Proof.
 case: fndP => [kff|]; last first.
-  by rewrite in_fset => /nandP [/not_fnd->|/negPf-> //]; rewrite if_same.
-by have := kff; rewrite in_fset => /andP [kf ->]; rewrite ffunE Some_fnd.
+  by rewrite inE => /nandP [/not_fnd->|/negPf-> //]; rewrite if_same.
+by have := kff; rewrite inE => /andP [kf ->]; rewrite ffunE Some_fnd.
 Qed.
 
 Lemma get_filterf f P k (kff : k \in filterf f P) (kf : k \in f) :
   (filterf f P).[kff] = f.[kf].
 Proof.
 apply: Some_inj; rewrite !Some_fnd /= fnd_filterf.
-by move: kff; rewrite in_fset => /andP [? ->].
+by move: kff; rewrite !inE => /andP [? ->].
 Qed.
 
 Lemma fnd_restrict f A (k : K) :
@@ -1870,29 +2009,29 @@ Proof. by rewrite fnd_filterf. Qed.
 
 Lemma fnd_rem f A (k : K) : f.[\ A].[? k] = if k \in A then None else f.[? k].
 Proof.
-rewrite fnd_restrict in_fsetE.
+rewrite fnd_restrict inE.
 by case: fndP => ?; rewrite ?(andbT, andbF) //=; case: (_ \in _).
 Qed.
 
 Lemma restrictf_comp f A B : f.[& A].[& B] = f.[& A `&` B].
 Proof.
-by apply/fmapP=> k; rewrite !fnd_restrict !in_fsetE; do !case: (_ \in _).
+by apply/fmapP=> k; rewrite !fnd_restrict !inE; do !case: (_ \in _).
 Qed.
 
 Lemma remf_comp f A B : f.[\ A].[\ B] = f.[\ A `|` B].
-Proof. by apply/fmapP=> k; rewrite !fnd_rem in_fsetE; do !case: (_ \in _). Qed.
+Proof. by apply/fmapP=> k; rewrite !fnd_rem inE; do !case: (_ \in _). Qed.
 
 Lemma restrictfT f : f.[& domf f] = f.
 Proof. by apply/fmapP=> k; rewrite fnd_restrict; case: fndP. Qed.
 
 Lemma restrictf0 f : f.[& fset0] = [fmap].
-Proof. by apply/fmapP => k; rewrite fnd_restrict !(in_fsetE, not_fnd). Qed.
+Proof. by apply/fmapP => k; rewrite fnd_restrict !(inE, not_fnd). Qed.
 
 Lemma remf0 f : f.[\ fset0] = f. Proof. by rewrite fsetD0 restrictfT. Qed.
 
 Lemma fnd_rem1 f (k k' : K) :
   f.[~ k].[? k'] = if k' != k then f.[? k'] else None.
-Proof. by rewrite fnd_rem in_fsetE; case: eqP. Qed.
+Proof. by rewrite fnd_rem inE; case: eqP. Qed.
 
 Lemma getf_restrict f A (k : K) (kf : k \in f) (kfA : k \in f.[& A]) :
       f.[& A].[kfA] = f.[kf].
@@ -1901,7 +2040,7 @@ Proof. by rewrite get_filterf. Qed.
 Lemma setf_restrict f A (k : K) (v : V) :
   f.[& A].[k <- v] = f.[k <- v].[& k |` A].
 Proof.
-by apply/fmapP=> k'; rewrite !(fnd_set, fnd_restrict, in_fsetE); case: eqP.
+by apply/fmapP=> k'; rewrite !(fnd_set, fnd_restrict, inE); case: eqP.
 Qed.
 
 Lemma setf_rem f A (k : K) (v : V) :
@@ -1921,7 +2060,7 @@ Qed.
 
 Lemma restrictf_mkdom f A : f.[& A] = f.[& domf f `&` A].
 Proof.
-apply/fmapP=> k; rewrite !fnd_restrict in_fsetE.
+apply/fmapP=> k; rewrite !fnd_restrict inE.
 by case: fndP => ?; rewrite ?(andbT, andbF) //=; case: (_ \in _).
 Qed.
 
@@ -1944,13 +2083,13 @@ Qed.
 Lemma remf_set f A (k : K) (v : V) :
   f.[k <- v].[\ A] = if k \in A then f.[\ A] else f.[\ A].[k <- v].
 Proof.
-apply/fmapP => k' /=; rewrite !(fnd_if, fnd_rem, fnd_set, in_fsetE).
+apply/fmapP => k' /=; rewrite !(fnd_if, fnd_rem, fnd_set, inE).
 by case: eqP => [->|]; do !case: (_ \in _).
 Qed.
 
 Lemma remf1_set f (k k' : K) (v : V) :
   f.[k' <- v].[~ k] = if k == k' then f.[~ k] else f.[~ k].[k' <- v].
-Proof. by rewrite remf_set in_fsetE eq_sym. Qed.
+Proof. by rewrite remf_set inE eq_sym. Qed.
 
 Lemma setf_inj f f' k v : k \notin f -> k \notin f' ->
                           f.[k <- v] = f'.[k <- v]-> f = f'.
@@ -1983,18 +2122,18 @@ Local Notation "f + g" := (catf f g) : fset_scope.
 
 Lemma domf_cat f g : domf (f + g) = domf f `|` domf g.
 Proof.
-by apply/fsetP=> x; rewrite !in_fsetE; case: (boolP (_ \in _)); rewrite ?orbT.
+by apply/fsetP=> x; rewrite !inE; case: (boolP (_ \in _)); rewrite ?orbT.
 Qed.
 
 Lemma mem_catf f g k : k \in domf (f + g) = (k \in f) || (k \in g).
-Proof. by rewrite domf_cat in_fsetE. Qed.
+Proof. by rewrite domf_cat inE. Qed.
 
 Lemma fnd_cat f g k :
   (f + g).[? k] = if k \in domf g then g.[? k] else f.[? k].
 Proof.
 case: fndP => //= [kfg|]; rewrite /catf /=.
   rewrite ffunE /=; case: fsetULVR => [kf|kg]; last by rewrite Some_fnd kg.
-  by rewrite -in_fnd; move: kf; rewrite in_fsetE => /andP[/negPf ->].
+  by rewrite -in_fnd; move: kf; rewrite inE => /andP[/negPf ->].
 by rewrite mem_catf => /norP [kNf kNg]; rewrite !not_fnd // if_same.
 Qed.
 
@@ -2017,7 +2156,7 @@ Proof. by apply/fmapP => k; rewrite fnd_cat in_fset0. Qed.
 Lemma cat0f f : [fmap] + f = f.
 Proof.
 apply/fmapP => k; rewrite fnd_cat; case: ifPn => //= kf.
-by rewrite !not_fnd ?in_fsetE.
+by rewrite !not_fnd ?inE.
 Qed.
 
 Lemma catf_setl f g k (v : V) :
@@ -2052,13 +2191,13 @@ Qed.
 
 Lemma catf_restrictl A f g : f.[& A] + g = (f + g).[& A `|` domf g].
 Proof.
-apply/fmapP=> k; rewrite !(fnd_cat, fnd_restrict) !in_fsetE.
+apply/fmapP=> k; rewrite !(fnd_cat, fnd_restrict) !inE.
 by do !case: (_ \in _).
 Qed.
 
 Lemma catf_reml A f g : f.[\ A] + g = (f + g).[\ A `\` domf g].
 Proof.
-by apply/fmapP=> k; rewrite !(fnd_cat, fnd_rem) in_fsetE; case: (_ \in _).
+by apply/fmapP=> k; rewrite !(fnd_cat, fnd_rem) inE; case: (_ \in _).
 Qed.
 
 Lemma catf_rem1l k f g :
@@ -2081,7 +2220,7 @@ Qed.
 
 Lemma catfC f g : f + g = g + f.[\ domf g].
 Proof.
-apply/fmapP=> k; rewrite !fnd_cat fnd_rem domf_rem in_fsetE.
+apply/fmapP=> k; rewrite !fnd_cat fnd_rem domf_rem inE.
 by have [|kNg] //= := boolP (_ \in domf g); rewrite (not_fnd kNg); case: fndP.
 Qed.
 
@@ -2162,8 +2301,8 @@ Qed.
 
 Lemma codomf0 : codomf [fmap] = fset0.
 Proof.
-apply/fsetP=> k; rewrite in_fsetE; apply/negP => /codomfP [k'].
-by rewrite not_fnd //= in_fsetE.
+apply/fsetP=> k; rewrite inE; apply/negP => /codomfP [k'].
+by rewrite not_fnd //= inE.
 Qed.
 
 Lemma in_codomf f (k : domf f) : f k \in codomf f.
@@ -2178,67 +2317,38 @@ by exists kf; apply: Some_inj; rewrite Some_fnd.
 Qed.
 
 Lemma codomf_restrict f (A : {fset K})  :
-  codomf f.[& A] = [fset v : codomf f
-                   | [exists k : domf f, (val k \in A) && (f k == val v)]].
+  codomf f.[& A] = [fset f k | k : domf f & val k \in A].
 Proof.
-apply/fsetP => v; apply/imfsetP/imfsetP => [[k _ ->]|[v' v'_in ->]].
-  have k_in_res := valP k.
-  have [k_in_dom k_inA] : val k \in domf f /\ val k \in A.
-    by move: k_in_res; rewrite in_fsetE => /andP.
-  exists (FSetSub ((@in_codomf _).[k_in_dom])); rewrite ?inE /=.
-    by apply/existsP; exists (FSetSub k_in_dom); rewrite ?k_inA /=.
-  by rewrite ffunE /=; rewrite -getfE.
-move: v'_in; rewrite inE => /existsP [k /andP [kA /eqP <-]].
-have kfA : val k \in domf f.[& A] by rewrite in_fsetE /= (valP k).
-exists (FSetSub kfA); rewrite ?inE //= ?ffunE //=.
-by apply: Some_inj; rewrite !Some_fnd.
+apply/fsetP=> v; apply/imfsetP/imfsetP => /= [] [k kP ->].
+  have := valP k; rewrite !inE => /andP [kf kA]; exists [` kf] => //.
+  by rewrite ffunE /= -getfE.
+have kA : val k \in [fset x | x in domf f & x \in A] by rewrite !inE (valP k).
+by exists [` kA]; rewrite // ?ffunE !getfE.
 Qed.
 
-Lemma codomf_restrictE f (A : {fset K})  :
-  codomf f.[& A] = [fset f (fincl (fsubsetIr _ _) k) | k : A `&` domf f].
+Lemma codomf_restrict_exists f (A : {fset K})  :
+  codomf f.[& A] = [fset v in codomf f
+                   | [exists k : domf f, (val k \in A) && (f k == v)]].
 Proof.
-apply/fsetP => v; apply/imfsetP/imfsetP => [] [k _ ->].
-  have k_in_res := valP k.
-  have k_inI : val k \in A `&` domf f by rewrite in_fsetE -mem_restrictf.
-  have k_inA : val k \in A by move: k_inI; rewrite in_fsetI => /andP[].
-  exists (FSetSub k_inI); rewrite ?inE //.
-  by apply: Some_inj; rewrite -getfE -!in_fnd fnd_restrict k_inA.
-have k_inI := valP k.
-have k_in_res : val k \in domf f.[& A].
-  by rewrite mem_restrictf -in_fsetE.
-have k_inA : val k \in A by move: k_inI; rewrite in_fsetI => /andP[].
-exists (FSetSub k_in_res); rewrite ?inE //; apply: Some_inj.
-rewrite -getfE; first by move: k_inI; rewrite in_fsetE => /andP[].
-by move=> k_in_dom; rewrite -!in_fnd fnd_restrict k_inA.
+rewrite codomf_restrict; apply/fsetP => v; rewrite !inE /=; apply/imfsetP/idP.
+  by move=> [k kA ->]; rewrite in_codomf /=; apply/existsP; exists k; apply/andP.
+by move=> /andP[fkdom /existsP [k /andP[kA /eqP<-]]]; exists k.
 Qed.
 
 Lemma codomf_rem f (A : {fset K})  :
-  codomf f.[\ A] = codomf f `\` [fset v : codomf f
-                   | [forall k : domf f,
-                      (val k \in A) || (f k != val v)]].
+  codomf f.[\ A] = [fset f k | k : domf f & val k \notin A].
 Proof.
-rewrite codomf_restrict; apply/fsetP => v; rewrite !in_fsetE.
-have [vf|vNf] := boolP (v \in codomf f); rewrite (andbF, andbT); last first.
-  by rewrite notin_FSet.
-rewrite !in_FSet /= -!topredE /= -[RHS]lt0n.
-apply/existsP/card_gt0P => [[x]|[x]]; rewrite !(in_fsetE, inE).
-  rewrite -andbA => /and3P [xf xNA /eqP <-].
-  by exists x; rewrite inE eqxx orbF.
-rewrite negb_or negbK => /andP [xNA /eqP <-].
-by exists x; rewrite !in_fsetE xNA (valP x) eqxx.
+rewrite codomf_restrict.
+by apply: eq_imfset => //= x /=; rewrite -!topredE /= !inE (valP x) andbT.
 Qed.
 
-Lemma codomf_remE f (A : {fset K})  :
-  codomf f.[\ A] = [fset f (fincl (fsubsetDl _ _) k) | k : domf f `\` A].
+Lemma codomf_rem_exists f (A : {fset K})  :
+  codomf f.[\ A] = [fset v in codomf f
+                   | [exists k : domf f, (val k \notin A) && (f k == v)]].
 Proof.
-rewrite codomf_restrictE; apply/fsetP => k.
-apply/imfsetP/imfsetP => [] [k' _ ->].
-  have k'D: val k' \in domf f `\` A.
-    by have := valP k'; rewrite in_fsetE => /andP [].
-  by exists (FSetSub k'D); rewrite ?inE //; apply: eq_getf.
-have k'D : val k' \in (domf f `\` A) `&` domf f.
-  by have := valP k'; rewrite !in_fsetE -andbA; case: (_ \in domf _).
-by exists (FSetSub k'D); rewrite ?inE //=; apply: eq_getf.
+rewrite codomf_restrict_exists; apply: eq_imfset => x //=; case: (_ \in _) => //=.
+apply/existsP/existsP => [] /= [k]; rewrite ?inE;
+by do 2?[move=>/andP []]; exists k; rewrite ?inE; do 2?[apply/andP; split].
 Qed.
 
 Lemma in_codomf_rem1 f (k : K) (kf : k \in domf f)  :
@@ -2246,35 +2356,270 @@ Lemma in_codomf_rem1 f (k : K) (kf : k \in domf f)  :
   if [exists k' : domf f, (val k' != k) && (f k' == f.[kf])] then codomf f
   else codomf f `\ f.[kf].
 Proof.
-transitivity
-  (codomf f `\` if [exists k' : domf f, (val k' != k) && (f k' == f.[kf])]
-                then fset0 else [fset f.[kf]]); last first.
-  by case: ifP => //=; rewrite fsetD0.
-rewrite codomf_rem; apply/fsetP => v; rewrite !in_fsetE.
-have [vf|vNf] := boolP (v \in codomf f); rewrite ?andbF //; last first.
-rewrite !andbT; congr (~~ _); rewrite (fun_if (fun X => _ \in X)) !in_fsetE.
-have [->|neq_vfk] := altP eqP; last first.
-  rewrite if_same; apply: negbTE; rewrite in_FSet /= -topredE /= -lt0n.
-  case: vf => /imfsetP [k' _ ->] in neq_vfk *.
-  apply/card_gt0P; exists k'; rewrite -topredE /= in_fsetE eqxx orbF.
-  apply: contra neq_vfk => /eqP eq_kk'; apply/eqP/Some_inj.
-  by rewrite !Some_fnd /= eq_kk'.
-apply: negb_inj; rewrite -/(negb _) negbK.
-rewrite in_FSet ?in_codomf // => ?; rewrite -topredE /= -lt0n.
-apply/card_gt0P/existsP => [] [x fx]; exists x;
-by  move: fx; rewrite !inE negb_or in_fsetE negbK.
+apply/fsetP => v; rewrite codomf_rem_exists (fun_if (fun x => v \in x)) !inE.
+have [vf|vNf] := boolP (_ \in codomf f); rewrite /= ?(andbF,andbT) ?if_same //.
+rewrite -/(_ || _); apply/existsP/idP => /= [[k' /andP[xk /eqP <-]]|].
+  rewrite orbC -implybE; apply/implyP => eq_fk.
+  by rewrite inE /= in xk; apply/existsP; exists k'; rewrite // xk eq_fk.
+have /imfsetP /= [[l lf] _ ->] := vf; rewrite orbC.
+have [->|neq_f _] := altP (f.[lf] =P _).
+  by move=> /existsP [m /andP[Nmk /eqP <-]]; exists m; rewrite eqxx inE Nmk.
+exists [` lf]; rewrite eqxx andbT inE /=.
+apply: contra neq_f => /eqP eq_lk; rewrite eq_lk in lf *.
+by apply/eqP; congr f.[_]; apply: bool_irrelevance.
 Qed.
 
 Lemma codomf_set f (k : K) (v : V) (kf : k \in domf f) :
   codomf f.[k <- v] = v |` codomf f.[~ k].
 Proof.
-rewrite -setf_rem1; apply/fsetP=> v'; rewrite !in_fsetE.
+rewrite -setf_rem1; apply/fsetP=> v'; rewrite !inE.
 have [->|neq_v'v] /= := altP eqP.
   by apply/codomfP; exists k; rewrite fnd_set eqxx.
 apply/codomfP/codomfP => [] [k' fk'_eq]; exists k';
 move: fk'_eq; rewrite fnd_set.
   by have [_ [eq_vv']|//] := altP eqP; rewrite eq_vv' eqxx in neq_v'v *.
-by have [->|//] := altP eqP; rewrite fnd_rem in_fsetE eqxx.
+by have [->|//] := altP eqP; rewrite fnd_rem inE eqxx.
 Qed.
 
 End FinMapKeyType.
+
+Section FinSFunDef.
+
+Variables (K : choiceType) (V : eqType) (default : K -> V).
+
+Record finsfun := FinSFun {
+  fmap_of_finsfun : {fmap K -> V};
+  _ : [forall k : domf fmap_of_finsfun,
+       fmap_of_finsfun k != default (val k)]
+}.
+
+Definition finsfun_of (_ : phant (K -> V)) := finsfun.
+
+Canonical finsfun_subType := Eval hnf in [subType for fmap_of_finsfun].
+Definition finsfun_eqMixin := [eqMixin of finsfun by <:].
+
+Fact finsfun_subproof (f : finsfun) :
+  forall (k : K) (kf : k \in fmap_of_finsfun f),
+  (fmap_of_finsfun f).[kf]%fmap != default k.
+Proof.
+case:f => f f_stable k kf /=.
+exact: (forallP f_stable (FSetSub kf)).
+Qed.
+
+Definition fun_of_finsfun (f : finsfun) (k : K) :=
+  odflt (default k) (fmap_of_finsfun f).[? k]%fmap.
+
+Coercion fun_of_finsfun : finsfun >-> Funclass.
+
+Definition finsupp f := domf (fmap_of_finsfun f).
+
+Lemma mem_finsupp f (k : K) : (k \in finsupp f) = (f k != default k).
+Proof.
+rewrite /fun_of_finsfun; case: fndP; rewrite ?eqxx //=.
+by move=> kf; rewrite finsfun_subproof.
+Qed.
+
+Lemma finsfun_dflt f (k : K) : k \notin finsupp f -> f k = default k.
+Proof. by rewrite mem_finsupp negbK => /eqP. Qed.
+
+CoInductive finsfun_spec f (k : K) : V -> bool -> Type :=
+  | FinsfunOut : k \notin finsupp f -> finsfun_spec f k (default k) false
+  | FinsfunIn  (kf : k \in finsupp f) : finsfun_spec f k (f k) true.
+
+Lemma finsuppP f (k : K) : finsfun_spec f k (f k) (k \in finsupp f).
+Proof.
+have [kf|kNf] := boolP (_ \in _); first by constructor.
+by rewrite finsfun_dflt // ; constructor.
+Qed.
+
+Lemma finsfunP (f g : finsfun) : f =1 g -> f = g.
+Proof.
+move=> eq_fg; apply/val_inj/fmapP => k.
+have := eq_fg k; rewrite /(f _) /(g _) /=.
+case: fndP; case: fndP => //= kf kg; first by move->.
+  by move/eqP/negPn; rewrite finsfun_subproof.
+by move/eqP/negPn; rewrite eq_sym finsfun_subproof.
+Qed.
+
+Section FinsfunOfFinfun.
+
+Variables (h : {fmap K -> V}).
+Definition suppS := [fset val a | a in {: domf h} & h a != default (val a)].
+Definition fmapS := [fmap a : suppS => h (fincl (fset_sub_val _) a)].
+
+Fact finsfunS_subproof : [forall k : suppS, fmapS k != default (val k)].
+Proof.
+apply/forallP => /= a; rewrite ffunE; have /in_fset_valP [a_in_S /=] := valP a.
+have -> // : FSetSub a_in_S = fincl (fset_sub_val _) a by exact/val_inj.
+Qed.
+
+Definition finsfun_of_ffun := @FinSFun fmapS finsfunS_subproof.
+
+End FinsfunOfFinfun.
+
+Lemma fsfunE (S : {fset K}) (h : K -> V) :
+  (forall a : K, h a != default a -> a \in S) ->
+  (finsfun_of_ffun [fmap a : S => h (val a)]) =1 h.
+Proof.
+move=> aS a; symmetry; rewrite /finsfun_of_ffun /fun_of_finsfun.
+case: fndP => /= [kf|]; first by rewrite !ffunE /=.
+apply: contraNeq => /(fun x => (x,x)) [/aS a_inS].
+by rewrite in_fset_valT /= -topredE /= ffunE.
+Qed.
+
+Definition finsfun_of_can_ffun (T : {fset K}) (g : {ffun T -> V})
+          (can_g : [forall k : T,  g k != default (val k)]) :=
+  @FinSFun (FinMap g) can_g.
+
+Lemma finsfun_of_can_ffunE (T : {fset K}) (g : {ffun T -> V})
+          (can_g : [forall k : T ,  g k != default (val k)])
+          (k : K) (kg : k \in T) :
+  (finsfun_of_can_ffun can_g) k = g.[kg].
+Proof. by rewrite/fun_of_finsfun in_fnd. Qed.
+
+Lemma finsfun_injective_inP  (f : finsfun) (T : {fset K}) :
+  reflect {in T &, injective f} (injectiveb [ffun x : T => f (val x)]).
+Proof.
+apply: (iffP (@injectiveP _ _ _)) => f_inj a b; last first.
+  by rewrite !ffunE => *; apply: val_inj; apply: f_inj => //; apply: valP.
+move=> aT bT eq_ga_gb; have := f_inj.[aT].[bT]; rewrite !ffunE /=.
+by move=> /(_ eq_ga_gb) /(congr1 val).
+Qed.
+
+End FinSFunDef.
+
+Delimit Scope finsfun_scope with fsfun.
+
+Notation "[ 'fsfun' 'of' default | x : aT => F ]" := 
+  (finsfun_of_ffun default [fmap x : aT => F])
+  (at level 0, x ident, only parsing) : fun_scope.
+
+Notation "[ 'fsfun' x : aT => F ]" := [fsfun of _ | x : aT => F ]
+  (at level 0, x ident, only parsing) : fun_scope.
+
+Notation "[ 'fsfun' 'of' default | : aT => F ]" := [fsfun of default | _ : aT => F ]
+  (at level 0, only parsing) : fun_scope.
+
+Notation "[ 'fsfun' : aT => F ]" := [fsfun _ : aT => F ]
+  (at level 0, only parsing) : fun_scope.
+
+Notation "[ 'fsfun' 'of' default | x => F ]" := [fsfun of default | x : _ => F ]
+  (at level 0, x ident, only parsing) : fun_scope.
+
+Notation "[ 'fsfun' x => F ]" := [fsfun of _ | x : _ => F ]
+  (at level 0, x ident, format "[ 'fsfun'  x  =>  F ]") : fun_scope.
+
+Notation "[ 'fsfun' 'of' default | => F ]" := [fsfun of default | _ => F]
+  (at level 0, only parsing) : fun_scope.
+
+Notation "[ 'fsfun' => F ]" := [fsfun of _ | => F]
+  (at level 0, format "[ 'fsfun'  =>   F ]") : fun_scope.
+
+Notation "[ 'fsfun' 'of' default ]" := (finsfun_of_ffun default [fmap])
+  (at level 0, only parsing) : fun_scope.
+
+Notation "[ 'fsfun' ]" := [fsfun of _] (at level 0, format "[ 'fsfun' ]") : fun_scope.
+
+Definition finsfun_of_fun (K : choiceType) (V : eqType)
+  default (S : {fset K}) (h : K -> V) :=
+  [fsfun of default | x : S => h (val x)].
+
+Notation "[ 'fsfun' 'of' default | x 'in' aT => F ]" := 
+  (finsfun_of_fun default aT (fun x => F))
+  (at level 0, x ident, only parsing) : fun_scope.
+
+Notation "[ 'fsfun' x 'in' aT => F ]" := [fsfun of _ | x in aT => F ]
+  (at level 0, x ident, format "[ 'fsfun'  x  'in'  aT  =>  F ]") : fun_scope.
+
+Section FinSFunTheory.
+Variables (K : choiceType) (V : eqType) (default : K -> V).
+
+Lemma finsupp0 : finsupp [fsfun of default] = fset0.
+Proof. by apply/fsetP => x; rewrite !inE; case: in_fset_valP => [[]|]. Qed.
+
+Lemma fsfun0E : [fsfun of default] =1 default.
+Proof. by move=> k; rewrite /([fsfun] _) not_fnd // in_fset_valF. Qed.
+
+Lemma fsfun0_inj : injective default -> injective [fsfun of default].
+Proof. by move=> def_inj x y; rewrite !fsfun0E => /def_inj. Qed.
+
+End FinSFunTheory.
+
+Section FinSFunIdTheory.
+
+Variables (K : choiceType).
+Implicit Types (f g : finsfun (@id K)).
+
+Definition finsfun_comp g f := 
+  [fsfun of id | k in finsupp f `|` finsupp g => g (f k)].
+
+Notation "g \o f" := (finsfun_comp g f) : finsfun_scope.
+
+Lemma fscompE g f : (g \o f)%fsfun =1 g \o f.
+Proof.
+move=> k; rewrite /finsfun_comp fsfunE // => a gfK; rewrite inE !mem_finsupp.
+by apply: contraNT gfK; rewrite negb_or !negbK => /andP [/eqP {1}<-].
+Qed.
+
+Lemma fscomp0f : left_id [fsfun] finsfun_comp.
+Proof. by move=> f; apply/finsfunP=> k; rewrite fscompE /= fsfun0E. Qed.
+
+Lemma fscompA : associative finsfun_comp.
+Proof. by move=> f g h; apply/finsfunP => k; rewrite !fscompE /= !fscompE. Qed.
+
+Lemma fscomp_inj g f : injective f -> injective g -> injective (g \o f)%fsfun.
+Proof. by move=> f_inj g_inj k k'; rewrite !fscompE => /= /g_inj /f_inj. Qed.
+
+Definition fsinjectiveb : pred (finsfun (@id K)) :=
+  [pred f | (injectiveb [ffun a : finsupp f => f (val a)])
+            && [forall a : finsupp f, f (val a) \in finsupp f]].
+
+Let equivalent (Ps : seq Prop) :=
+  if Ps is P0 :: Ps then
+  let fix aux (P : Prop) (Qs : seq Prop) :=
+      if Qs is Q :: Qs then (P -> Q) /\ (aux Q  Qs) else P -> P0
+  in aux P0 Ps else True.
+
+Lemma fsinjective_subproof (f : finsfun (@id K)) :
+  equivalent [:: injective f
+              ; let S := finsupp f in
+                {in S &, injective f} /\ forall a : S, f (val a) \in S
+              ; exists2 S : {fset K}, (finsupp f `<=` S)
+                & {in S &, injective f} /\ forall a : S, f (val a) \in S].
+Proof.
+split => /= [f_inj|]; last split=> [[f_inj f_st]|[S fS [f_inj f_st]] a b].
+- split=> [a b ? ?|a]; first exact: f_inj.
+  by rewrite mem_finsupp (inj_eq f_inj) -mem_finsupp; apply/valP.
+- by exists (finsupp f)=> //; apply: fsubset_refl.
+have Nfinsupp := contra (fsubsetP fS _).
+wlog /andP [aS bNS] : a b / (a \in S) && (b \notin S) => [hwlog|]; last first.
+  rewrite (finsfun_dflt (Nfinsupp _ bNS)) => fb_eq_a.
+  by move: bNS; rewrite -fb_eq_a (f_st.[aS]).
+have [[aS|aNS] [bS|bNS]] := (boolP (a \in S), boolP (b \in S)); first 3 last.
+- by rewrite !finsfun_dflt // ?Nfinsupp.
+- exact: f_inj.
+- by apply: hwlog; rewrite aS.
+by move=> fab; symmetry; apply: hwlog; rewrite // bS.
+Qed.
+
+Lemma fsinjectiveP (f : finsfun (@id K)) :
+  reflect (injective f) (fsinjectiveb f).
+Proof.
+have [H1 [H2 H3]]:= fsinjective_subproof f.
+rewrite /fsinjectiveb; apply: (iffP idP)=> [|].
+  by move=> /andP [/finsfun_injective_inP ? /forallP ?]; apply/H3/H2.
+by move=> /H1 [/finsfun_injective_inP ? /forallP ?]; apply/andP.
+Qed.
+
+Lemma fsinjectivebP (f : finsfun (@id K)) :
+  reflect (exists2 S : {fset K}, (finsupp f `<=` S)
+           & {in S &, injective f} /\ forall a : S, f (val a) \in S) 
+        (fsinjectiveb f).
+Proof. 
+have [H1 [H2 H3]]:= fsinjective_subproof f.
+by apply: (iffP (fsinjectiveP _)) => //; by move=> /H1 /H2.
+Qed.
+
+End FinSFunIdTheory.
+
+
