@@ -5,9 +5,9 @@
 (* License CeCILL-B                                                      *)
 (*************************************************************************)
 
-From mathcomp.ssreflect
+From mathcomp
 Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
-From mathcomp.discrete
+From mathcomp
 Require Import choice  path finset finfun fintype bigop.
 
 (*****************************************************************************)
