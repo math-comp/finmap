@@ -9,7 +9,6 @@ From mathcomp
 Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
 From mathcomp
 Require Import choice path finset finfun fintype bigop.
-Require Import choice  path finset finfun fintype bigop.
 
 (*****************************************************************************)
 (* This file provides a representation of finitely supported maps where      *)
@@ -2623,6 +2622,58 @@ Qed.
 
 End FinSFunIdTheory.
 
+
+Notation "\bigcup_ ( i <- r | P ) F" :=
+  (\big[@fsetU _/fset0]_(i <- r | P%fset) F%fset) : fset_scope.
+
+Notation "\bigcup_ ( i <- r ) F" :=
+  (\big[@fsetU _/fset0]_(i <- r) F%fset) : fset_scope.
+
+Notation "\bigcup_ ( i | P ) F" :=
+  (\big[@fsetU _/fset0]_(i | P) F%fset) : fset_scope.
+
+Notation "\bigcup_ ( i 'in' A | P ) F" :=
+  (\big[@fsetU _/fset0]_(i in A | P) F%fset) : fset_scope.
+
+Notation "\bigcup_ ( i 'in' A ) F" :=
+  (\big[@fsetU _/fset0]_(i in A) F%fset) : fset_scope.
+
+Section FSetMonoids.
+
+Import Monoid.
+Variable (T : choiceType).
+
+Canonical fsetU_monoid := Law (@fsetUA T) (@fset0U T) (@fsetU0 T).
+Canonical fsetU_comoid := ComLaw (@fsetUC T).
+
+End FSetMonoids.
+
+Section BigFOpsFin.
+
+Variables (T : choiceType) (I : finType).
+Implicit Types (P : pred I) (A B : {fset I}) (F :  I -> {fset T}).
+
+Lemma bigfcup_sup j P F : P j -> F j `<=` \bigcup_(i | P i) F i.
+Proof. by move=> Pj; rewrite (bigD1 j) //= fsubsetUl. Qed.
+
+Lemma bigfcupP x F P :
+  reflect (exists2 i : I, P i & x \in F i) (x \in (\bigcup_(i | P i) F i)).
+Proof.
+apply: (iffP idP) => [|[i Pi]]; last first.
+  apply: fsubsetP x; exact: bigfcup_sup.
+by elim/big_rec: _ => [|i _ Pi _ /fsetUP[|//]]; [rewrite in_fset0 | exists i].
+Qed.
+
+Lemma bigfcupsP (U : {fset T}) P F :
+  reflect (forall i : I, P i -> F i `<=` U)
+          (\bigcup_(i | P i) F i `<=` U).
+Proof.
+apply: (iffP idP) => [sFU i Pi| sFU].
+  by apply: fsubset_trans sFU; apply: bigfcup_sup.
+by apply/fsubsetP=> x /bigfcupP[i Pi]; apply: (fsubsetP (sFU i Pi)).
+Qed.
+
+End BigFOpsFin.
 
 Section BigFSet.
 Variable (R : Type) (idx : R) (op : Monoid.law idx).
