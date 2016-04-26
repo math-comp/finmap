@@ -450,7 +450,7 @@ Next Obligation. by rewrite finpredE. Qed.
 Next Obligation. by rewrite (finpredE p). Qed.
 
 Program Canonical finpredType_finpred (T : choiceType) (fpT : finpredType T)
-   (A : finpred_sort fpT) := 
+   (A : finpred_sort fpT) :=
  @FinPredTerm _ _ [pred x in A] (pred_fset A) A (fun=> erefl) _.
 Next Obligation. by rewrite pred_fsetE. Qed.
 
@@ -523,7 +523,7 @@ Notation "f @` A" := (Imfset.imfset f (Phantom _ (mem A)))
 Notation "f @2` ( A , B )" := (Imfset.imfset2 f (Phantom _ (mem A)) (Phantom _ (fun _ => (mem B))))
   (at level 24, format "f  @2`  ( A ,  B )") : fset_scope.
 
-Notation "[ 'fset' E | x : T 'in' A ]" := 
+Notation "[ 'fset' E | x : T 'in' A ]" :=
   ((fun x : T => E) @` A)
   (at level 0, E, x at level 99, only parsing) : fset_scope.
 Notation "[ 'fset' E | x 'in' A ]" := [fset E | x : _ in A]
@@ -716,7 +716,7 @@ Qed.
 
 Lemma in_imfset2 (T1 T2 : finType) (f : T1 -> T2 -> K)
       (D1 : pred T1) (D2 : T1 -> pred T2) (A1 : {fset T1}) (A2 : T1 -> {fset T2})
-      (p1 : finmempred D1 A1) (p2 : forall x : T1, finmempred (D2 x) (A2 x)) (k : K) 
+      (p1 : finmempred D1 A1) (p2 : forall x : T1, finmempred (D2 x) (A2 x)) (k : K)
       (x : T1) (y : T2) :
    x \in D1 -> y \in D2 x -> f x y \in imfset2 f p1 p2.
 Proof. by move=> xD1 yD2; apply/imfset2P; exists x => //; exists y. Qed.
@@ -746,7 +746,7 @@ Qed.
 Lemma in_fset_valT A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) (kA : k \in A) :
   (k \in imfset val p) = X (FSetSub kA).
 Proof. by rewrite in_fset_val insubT in_finmempred. Qed.
-  
+
 Lemma in_fset_valP A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) :
   reflect {kA : k \in A & X (FSetSub kA)} (k \in imfset val p).
 Proof.
@@ -2491,7 +2491,7 @@ End FinSFunDef.
 
 Delimit Scope finsfun_scope with fsfun.
 
-Notation "[ 'fsfun' 'of' default | x : aT => F ]" := 
+Notation "[ 'fsfun' 'of' default | x : aT => F ]" :=
   (finsfun_of_ffun default [fmap x : aT => F])
   (at level 0, x ident, only parsing) : fun_scope.
 
@@ -2525,7 +2525,7 @@ Definition finsfun_of_fun (K : choiceType) (V : eqType)
   default (S : {fset K}) (h : K -> V) :=
   [fsfun of default | x : S => h (val x)].
 
-Notation "[ 'fsfun' 'of' default | x 'in' aT => F ]" := 
+Notation "[ 'fsfun' 'of' default | x 'in' aT => F ]" :=
   (finsfun_of_fun default aT (fun x => F))
   (at level 0, x ident, only parsing) : fun_scope.
 
@@ -2551,7 +2551,7 @@ Section FinSFunIdTheory.
 Variables (K : choiceType).
 Implicit Types (f g : finsfun (@id K)).
 
-Definition finsfun_comp g f := 
+Definition finsfun_comp g f :=
   [fsfun of id | k in finsupp f `|` finsupp g => g (f k)].
 
 Notation "g \o f" := (finsfun_comp g f) : finsfun_scope.
@@ -2614,9 +2614,9 @@ Qed.
 
 Lemma fsinjectivebP (f : finsfun (@id K)) :
   reflect (exists2 S : {fset K}, (finsupp f `<=` S)
-           & {in S &, injective f} /\ forall a : S, f (val a) \in S) 
+           & {in S &, injective f} /\ forall a : S, f (val a) \in S)
         (fsinjectiveb f).
-Proof. 
+Proof.
 have [H1 [H2 H3]]:= fsinjective_subproof f.
 by apply: (iffP (fsinjectiveP _)) => //; by move=> /H1 /H2.
 Qed.
@@ -2632,4 +2632,3 @@ Lemma big_fset0 (T : choiceType) (P : pred _) (F : _ -> R) :
 Proof. by apply: big_pred0 => -[j hj]; have := hj; rewrite in_fset0. Qed.
 
 End BigFSet.
-
