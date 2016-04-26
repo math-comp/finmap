@@ -32,6 +32,7 @@ Require Import choice path finset finfun fintype bigop.
 (*           a |` B == the union of singleton a and B                        *)
 (*          A `\` B == the complement of B in A                              *)
 (*           A `\ b == A without b                                           *)
+(*          A `*` B == the cartesian product of A and B                      *)
 (* [disjoint A & B] := A `&` B == 0                                          *)
 (*     A `<=` B == A is a subset of B                                        *)
 (*     A `<` B == A is a proper subset of B                                  *)
@@ -111,6 +112,8 @@ Import Prenex Implicits.
 
 Reserved Notation "{fset K }" (at level 0, format "{fset  K }").
 Reserved Notation "A `&` B"  (at level 48, left associativity).
+Reserved Notation "A `*` B"  (at level 46, left associativity).
+Reserved Notation "A `+` B"  (at level 54, left associativity).
 Reserved Notation "A `|` B" (at level 52, left associativity).
 Reserved Notation "a |` A" (at level 52, left associativity).
 Reserved Notation "A `\` B" (at level 50, left associativity).
@@ -360,7 +363,7 @@ Canonical  finSetEqType  (K : choiceType) := EqType {fset K} (finSetEqMixin K).
 Definition finSetChoiceMixin (K : choiceType) := [choiceMixin of {fset K} by <:].
 Canonical  finSetChoiceType  (K : choiceType) := ChoiceType {fset K} (finSetChoiceMixin K).
 
-Section FinPred.
+Section FinPredStruct.
 
 Structure finpredType (T : choiceType) := FinPredType {
   finpred_sort :> Type;
@@ -370,12 +373,14 @@ Structure finpredType (T : choiceType) := FinPredType {
        forall p x, x \in pred_fset p = tofinpred p x}
 }.
 
-Definition pred_fset  (T : choiceType) (fpT : finpredType T) : fpT -> {fset T} :=
-  let: FinPredType _ _ _ (exist pred_fset _) := fpT in pred_fset.
 
 Canonical finpredType_predType (T : choiceType) (fpT : finpredType T) :=
   @PredType T (finpred_sort fpT) (@tofinpred T fpT)
   (let: FinPredType _ _ mem _ := fpT in mem).
+
+Definition pred_fset  (T : choiceType) (fpT : finpredType T) :
+  fpT -> {fset T} :=
+  let: FinPredType _ _ _ (exist pred_fset _) := fpT in pred_fset.
 
 Lemma pred_fsetE (T : choiceType) (fpT : finpredType T) (p : fpT) :
    pred_fset p =i p.
@@ -398,23 +403,6 @@ Definition clone_finpredType (T : choiceType) (U : Type) :=
   fun (pT : finpredType T) & finpred_sort pT -> U =>
   fun a mP pP (pT' := @FinPredType T U a mP pP) & phant_id pT' pT => pT'.
 
-Notation mkFinPredType T pred_fsetE :=
-  (@mkFinPredType_of _ T _ id _ _ id _ pred_fsetE).
-
-(* This is en internal construciton, please use [fset x in A] instead of fset A. *)
-Definition finset (T : finType) (P : pred T) := seq_fset (enum P).
-
-Fact in_finset  (T : finType) (P : pred T) x : x \in finset P = P x.
-Proof. by rewrite seq_fsetE mem_enum. Qed.
-
-Canonical fset_finpredType (T: choiceType) :=
-  mkFinPredType (finSet T) (fun _ _ => erefl).
-
-Canonical pred_finpredType (T : finType) :=
-   mkFinPredType (pred T) (@in_finset _).
-
-Canonical simpl_pred_finpredType (T : finType) :=
-   mkFinPredType (simpl_pred T) (@in_finset _).
 
 Structure finpred (T : choiceType) (pT : predType T) (P : pred T) (A : {fset T}) :=
   FinPredTerm {
@@ -442,6 +430,37 @@ Lemma in_finmempred (T : choiceType) (P : pred T)  (A : {fset T}) (mP : finmempr
   x \in mP = P x.
 Proof. by rewrite [LHS]finmempredE. Qed.
 
+Definition finmempred_of (T : choiceType) (P : pred T) (A : {fset T}) (mP : finmempred P A) &
+           phantom (mem_pred T) mP : finmempred P A := mP.
+
+Definition finpred_of (T : choiceType) (pT : predType T) (P : pred T) (A : {fset T})
+ (fpT : @finpred T pT P A) & phantom (pred_sort pT) fpT := fpT.
+
+End FinPredStruct.
+
+Notation "[ 'finpredType' 'of' T ]" := (@clone_finpredType _ T _ id _ _ _ id)
+  (at level 0, format "[ 'finpredType'  'of'  T ]") : form_scope.
+
+Notation mkFinPredType T pred_fsetE :=
+  (@mkFinPredType_of _ T _ id _ _ id _ pred_fsetE).
+
+Section CanonicalFinPred.
+
+(* This is en internal construciton, please use [fset x in A] instead of fset A. *)
+Definition finset (T : finType) (P : pred T) := seq_fset (enum P).
+
+Fact in_finset  (T : finType) (P : pred T) x : x \in finset P = P x.
+Proof. by rewrite seq_fsetE mem_enum. Qed.
+
+Canonical fset_finpredType (T: choiceType) :=
+  mkFinPredType (finSet T) (fun _ _ => erefl).
+
+Canonical pred_finpredType (T : finType) :=
+   mkFinPredType (pred T) (@in_finset _).
+
+Canonical simpl_pred_finpredType (T : finType) :=
+   mkFinPredType (simpl_pred T) (@in_finset _).
+
 Program Canonical mem_finmempred (T : choiceType)
   (pT : predType T) (P : pred T) (A : {fset T}) (p : finpred pT P A) :=
   @FinMemPred _ [pred x | P x] A (mem p) _ _.
@@ -459,17 +478,7 @@ Program Canonical subfinset_finpred (T : choiceType) (A : {fset T}) (Q : pred T)
                [pred x in A | Q x] _ _.
 Next Obligation. by rewrite seq_fsetE mem_filter andbC. Qed.
 
-
-Definition finmempred_of (T : choiceType) (P : pred T) (A : {fset T}) (mP : finmempred P A) &
-           phantom (mem_pred T) mP : finmempred P A := mP.
-
-Definition finpred_of (T : choiceType) (pT : predType T) (P : pred T) (A : {fset T})
- (fpT : @finpred T pT P A) & phantom (pred_sort pT) fpT := fpT.
-
-Notation "[ 'finpredType' 'of' T ]" := (@clone_finpredType _ T _ id _ _ _ id)
-  (at level 0, format "[ 'finpredType'  'of'  T ]") : form_scope.
-
-End FinPred.
+End CanonicalFinPred.
 
 Local Notation imfset_def :=
   (fun (T K : choiceType) (f : T -> K) (P : pred T) (A : {fset T})
@@ -568,6 +577,9 @@ Definition fsetI A B := [fset x in A | x \in B].
 
 Definition fsetD A B := [fset x in A | x \notin B].
 
+Definition fsetM A B := seq_fset
+  [seq (x, y) | x <- enum_fset A, y <- enum_fset B].
+
 Definition fsubset A B := fsetI A B == A.
 
 Definition fproper A B := fsubset A B && ~~ fsubset B A.
@@ -588,6 +600,7 @@ Notation "[ 'fset' a1 ; a2 ; .. ; an ]" := (fsetU .. (a1 |` [fset a2]) .. [fset 
   (at level 0, a1 at level 99,
    format "[ 'fset'  a1 ;  a2 ;  .. ;  an ]") : fset_scope.
 Notation "A `&` B" := (fsetI A B) : fset_scope.
+Notation "A `*` B" := (fsetM A B) : fset_scope.
 Notation "A `\` B" := (fsetD A B) : fset_scope.
 Notation "A `\ a" := (A `\` [fset a]) : fset_scope.
 
@@ -791,6 +804,13 @@ Proof. by rewrite in_fset andbC. Qed.
 
 Lemma in_fsetD1 A b a : (a \in A `\ b) = (a != b) && (a \in A).
 Proof. by rewrite in_fsetD in_fset1. Qed.
+
+Lemma in_fsetM A B (u : K * K) : (u \in A `*` B) = (u.1 \in A) && (u.2 \in B).
+Proof.
+rewrite seq_fsetE; apply/allpairsP/idP => [[[/= a b] [aA bB -> /=]]|].
+  by rewrite aA bB.
+by case: u => a b /= /andP [aA bB]; exists (a, b); rewrite aA bB.
+Qed.
 
 Definition in_fsetE :=
   (in_fset, val_in_fset, in_fset0, in_fset1,
@@ -2393,10 +2413,9 @@ Record finsfun := FinSFun {
        fmap_of_finsfun k != default (val k)]
 }.
 
-Definition finsfun_of (_ : phant (K -> V)) := finsfun.
-
 Canonical finsfun_subType := Eval hnf in [subType for fmap_of_finsfun].
 Definition finsfun_eqMixin := [eqMixin of finsfun by <:].
+Canonical  finsfun_eqType := EqType finsfun finsfun_eqMixin.
 
 Fact finsfun_subproof (f : finsfun) :
   forall (k : K) (kf : k \in fmap_of_finsfun f),
@@ -2444,16 +2463,20 @@ Qed.
 Section FinsfunOfFinfun.
 
 Variables (h : {fmap K -> V}).
-Definition suppS := [fset val a | a in {: domf h} & h a != default (val a)].
-Definition fmapS := [fmap a : suppS => h (fincl (fset_sub_val _) a)].
+Definition finmap_supp :=
+  [fset val a | a in {: domf h} & h a != default (val a)].
 
-Fact finsfunS_subproof : [forall k : suppS, fmapS k != default (val k)].
+Definition finmap_on_supp :=
+  [fmap a : finmap_supp => h (fincl (fset_sub_val _) a)].
+
+Fact finsfunS_subproof : 
+  [forall k : finmap_supp, finmap_on_supp k != default (val k)].
 Proof.
 apply/forallP => /= a; rewrite ffunE; have /in_fset_valP [a_in_S /=] := valP a.
 have -> // : FSetSub a_in_S = fincl (fset_sub_val _) a by exact/val_inj.
 Qed.
 
-Definition finsfun_of_ffun := @FinSFun fmapS finsfunS_subproof.
+Definition finsfun_of_ffun := @FinSFun finmap_on_supp finsfunS_subproof.
 
 End FinsfunOfFinfun.
 
@@ -2487,6 +2510,11 @@ by move=> /(_ eq_ga_gb) /(congr1 val).
 Qed.
 
 End FinSFunDef.
+
+Definition finsfun_choiceMixin (K V : choiceType) (d : K -> V) :=
+  [choiceMixin of finsfun d by <:].
+Canonical  finsfun_choiceType (K V : choiceType) (d : K -> V) :=
+  ChoiceType (finsfun d) (finsfun_choiceMixin d).
 
 Delimit Scope finsfun_scope with fsfun.
 
@@ -2622,7 +2650,6 @@ Qed.
 
 End FinSFunIdTheory.
 
-
 Notation "\bigcup_ ( i <- r | P ) F" :=
   (\big[@fsetU _/fset0]_(i <- r | P%fset) F%fset) : fset_scope.
 
@@ -2683,3 +2710,81 @@ Lemma big_fset0 (T : choiceType) (P : pred _) (F : _ -> R) :
 Proof. by apply: big_pred0 => -[j hj]; have := hj; rewrite in_fset0. Qed.
 
 End BigFSet.
+
+Delimit Scope mset_scope with mset.
+Local Open Scope mset_scope.
+Local Open Scope nat_scope.
+
+Definition multiset (T : choiceType) := finsfun ((fun=>0) : T -> nat).
+Definition multiset_of (T : choiceType) of phant T := @multiset T.
+Notation "'{mset' T }" := (@multiset_of _ (Phant T))
+  (format "'{mset'  T }") : mset_scope.
+
+Identity Coercion multiset_multiset_of : multiset_of >-> multiset.
+Coercion fset_of_multiset (T : choiceType) (A : multiset T) : finSet T :=
+  domf (fmap_of_finsfun A).
+Canonical multiset_predType (K : choiceType) :=  Eval hnf in mkPredType 
+  (@pred_of_finset K \o @fset_of_multiset K : multiset K -> pred K).
+Canonical mset_finpredType (T: choiceType) :=
+  mkFinPredType (multiset T) (fun _ _ => erefl).
+
+Section MultisetOps.
+
+Context {K : choiceType}.
+Implicit Types (a b c : K) (A B C D : {mset K}) (s : seq K).
+
+Definition mset0 : {mset K} := [fsfun].
+
+Definition mset1 a : {mset K} := [fsfun x in [fset a] => 1%N].
+
+Definition mset1U a A : {mset K} := [fsfun x in A => (A x + (x == a))%N].
+
+Definition seq_mset (s : seq K) : {mset K} :=
+  [fsfun x in seq_fset s => count (pred1 x) s].
+
+Definition msetU A B : {mset K} :=
+  [fsfun x in A `|` B => maxn (A x) (B x)].
+
+Definition msetI A B : {mset K} := 
+  [fsfun x in A `&` B => minn (A x) (B x)].
+
+Definition msetD A B : {mset K} := 
+  [fsfun x in A `|` B => A x + B x].
+
+Definition msetB A B : {mset K} := 
+  [fsfun x in A `\` B => A x - B x].
+
+Definition msetM A B : {mset (K * K)} := 
+  [fsfun x in A `*` B => A x.1 * B x.2].
+
+Definition msubset A B := [forall x : A, A (val x) <= B (val x)].
+
+Definition mproper A B := msubset A B && ~~ msubset B A.
+
+Definition mdisjoint A B := (msetI A B == mset0).
+
+End MultisetOps.
+
+Notation "[ 'mset' a ]" := (mset1 a)
+  (at level 0, a at level 99, format "[ 'mset'  a ]") : mset_scope.
+Notation "[ 'mset' a : T ]" := [mset (a : T)]
+  (at level 0, a at level 99, format "[ 'mset'  a   :  T ]") : mset_scope.
+Notation "A `|` B" := (msetU A B) : mset_scope.
+Notation "a |` A" := ([mset a] `|` A) : mset_scope.
+
+(* This is left-associative due to historical limitations of the .. Notation. *)
+Notation "[ 'mset' a1 ; a2 ; .. ; an ]" := (msetU .. (a1 |` [mset a2]) .. [mset an])
+  (at level 0, a1 at level 99,
+   format "[ 'mset'  a1 ;  a2 ;  .. ;  an ]") : mset_scope.
+Notation "A `&` B" := (msetI A B) : mset_scope.
+Notation "A `+` B" := (msetD A B) : mset_scope.
+Notation "A `\` B" := (msetB A B) : mset_scope.
+Notation "A `\ a" := (A `\` [mset a]) : mset_scope.
+Notation "A `*` B" := (msetM A B) : mset_scope.
+
+Notation "A `<=` B" := (msubset A B)
+  (at level 70, no associativity) : bool_scope.
+
+Notation "A `<` B" := (mproper A B)
+  (at level 70, no associativity) : bool_scope.
+
