@@ -9,6 +9,7 @@ From mathcomp
 Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
 From mathcomp
 Require Import choice path finset finfun fintype bigop.
+Require Import choice  path finset finfun fintype bigop.
 
 (*****************************************************************************)
 (* This file provides a representation of finitely supported maps where      *)
@@ -2622,4 +2623,13 @@ Qed.
 
 End FinSFunIdTheory.
 
+
+Section BigFSet.
+Variable (R : Type) (idx : R) (op : Monoid.law idx).
+
+Lemma big_fset0 (T : choiceType) (P : pred _) (F : _ -> R) :
+  \big[op/idx]_(i : @fset0 T | P i) F i = idx :> R.
+Proof. by apply: big_pred0 => -[j hj]; have := hj; rewrite in_fset0. Qed.
+
+End BigFSet.
 
