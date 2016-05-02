@@ -783,6 +783,16 @@ Implicit Types (a b x : K) (A B C D : {fset K}) (pA pB pC : pred K) (s : seq K).
 Lemma fsetP {A B} : A =i B <-> A = B.
 Proof. by split=> [eqAB|-> //]; apply/val_inj/canonical_eq_keys => //= a. Qed.
 
+CoInductive in_fset_spec (A : {fset K}) (x : K) : K -> bool -> Prop :=
+ | InFset (u : A) & x = val u : in_fset_spec A x (val u) true 
+ | OutFset of x \notin A : in_fset_spec A x x false.
+
+Lemma in_fsetP A x : in_fset_spec A x x (x \in A).
+Proof.
+have [xA|xNA] := boolP (x \in A); last by constructor.
+by have {2}-> : x = val [` xA] by []; constructor.
+Qed.
+
 Lemma fset_eqP {A B} : reflect (A =i B) (A == B).
 Proof. exact: (equivP eqP (iff_sym fsetP)). Qed.
 
@@ -853,6 +863,27 @@ Proof. by rewrite fsetIA !(fsetIAC _ C) -(fsetIA _ C) fsetIid. Qed.
 Lemma fsetIIr A B C : A `&` (B `&` C) = (A `&` B) `&` (A `&` C).
 Proof. by rewrite !(fsetIC A) fsetIIl. Qed.
 
+Lemma fsetUA A B C : A `|` (B `|` C) = A `|` B `|` C.
+Proof. by apply/fsetP => x; rewrite !inE orbA. Qed.
+
+Lemma fsetUCA A B C : A `|` (B `|` C) = B `|` (A `|` C).
+Proof. by rewrite !fsetUA (fsetUC B). Qed.
+
+Lemma fsetUAC A B C : A `|` B `|` C = A `|` C `|` B.
+Proof. by rewrite -!fsetUA (fsetUC B). Qed.
+
+Lemma fsetUACA A B C D : (A `|` B) `|` (C `|` D) = (A `|` C) `|` (B `|` D).
+Proof. by rewrite -!fsetUA (fsetUCA B). Qed.
+
+Lemma fsetUid A : A `|` A = A.
+Proof. by apply/fsetP=> x; rewrite inE orbb. Qed.
+
+Lemma fsetUUl A B C : A `|` B `|` C = (A `|` C) `|` (B `|` C).
+Proof. by rewrite fsetUA !(fsetUAC _ C) -(fsetUA _ C) fsetUid. Qed.
+
+Lemma fsetUUr A B C : A `|` (B `|` C) = (A `|` B) `|` (A `|` C).
+Proof. by rewrite !(fsetUC A) fsetUUl. Qed.
+
 (* distribute /cancel *)
 
 Lemma fsetIUr A B C : A `&` (B `|` C) = (A `&` B) `|` (A `&` C).
@@ -867,17 +898,53 @@ Proof. by apply/fsetP=> x; rewrite !inE orb_andr. Qed.
 Lemma fsetUIl A B C : (A `&` B) `|` C = (A `|` C) `&` (B `|` C).
 Proof. by apply/fsetP=> x; rewrite !inE orb_andl. Qed.
 
-Lemma fsetUK A B : (A `|` B) `&` A = A.
+Lemma fsetUKC A B : (A `|` B) `&` A = A.
 Proof. by apply/fsetP=> x; rewrite !inE orbK. Qed.
 
-Lemma fsetKU A B : A `&` (B `|` A) = A.
-Proof. by apply/fsetP=> x; rewrite !inE orKb. Qed.
+Lemma fsetUK A B : (B `|` A) `&` A = A.
+Proof. by rewrite fsetUC fsetUKC. Qed.
 
-Lemma fsetIK A B : (A `&` B) `|` A = A.
+Lemma fsetKUC A B : A `&` (B `|` A) = A.
+Proof. by rewrite fsetIC fsetUK. Qed.
+
+Lemma fsetKU A B : A `&` (A `|` B) = A.
+Proof. by rewrite fsetIC fsetUKC. Qed.
+
+Lemma fsetIKC A B : (A `&` B) `|` A = A.
 Proof. by apply/fsetP=> x; rewrite !inE andbK. Qed.
 
-Lemma fsetKI A B : A `|` (B `&` A) = A.
-Proof. by apply/fsetP=> x; rewrite !inE andKb. Qed.
+Lemma fsetIK A B : (B `&` A) `|` A = A.
+Proof. by rewrite fsetIC fsetIKC. Qed.
+
+Lemma fsetKIC A B : A `|` (B `&` A) = A.
+Proof. by rewrite fsetUC fsetIK. Qed.
+
+Lemma fsetKI A B : A `|` (A `&` B) = A.
+Proof. by rewrite fsetIC fsetKIC. Qed.
+
+Lemma fsetUKid A B : B `|` A `|` A = B `|` A.
+Proof. by rewrite -fsetUA fsetUid. Qed.
+
+Lemma fsetUKidC A B : A `|` B `|` A = A `|` B.
+Proof. by rewrite fsetUAC fsetUid. Qed.
+
+Lemma fsetKUid A B : A `|` (A `|` B) = A `|` B.
+Proof. by rewrite fsetUA fsetUid. Qed.
+
+Lemma fsetKUidC A B : A `|` (B `|` A) = B `|` A.
+Proof. by rewrite fsetUCA fsetUid. Qed.
+
+Lemma fsetIKid A B : B `&` A `&` A = B `&` A.
+Proof. by rewrite -fsetIA fsetIid. Qed.
+
+Lemma fsetIKidC A B : A `&` B `&` A = A `&` B.
+Proof. by rewrite fsetIAC fsetIid. Qed.
+
+Lemma fsetKIid A B : A `&` (A `&` B) = A `&` B.
+Proof. by rewrite fsetIA fsetIid. Qed.
+
+Lemma fsetKIidC A B : A `&` (B `&` A) = B `&` A.
+Proof. by rewrite fsetICA fsetIid. Qed.
 
 (* subset *)
 
@@ -1189,27 +1256,6 @@ Proof. by apply/fsetP => x; rewrite !inE orFb. Qed.
 
 Lemma fsetU0 A : A `|` fset0 = A.
 Proof. by rewrite fsetUC fset0U. Qed.
-
-Lemma fsetUA A B C : A `|` (B `|` C) = A `|` B `|` C.
-Proof. by apply/fsetP => x; rewrite !inE orbA. Qed.
-
-Lemma fsetUCA A B C : A `|` (B `|` C) = B `|` (A `|` C).
-Proof. by rewrite !fsetUA (fsetUC B). Qed.
-
-Lemma fsetUAC A B C : A `|` B `|` C = A `|` C `|` B.
-Proof. by rewrite -!fsetUA (fsetUC B). Qed.
-
-Lemma fsetUACA A B C D : (A `|` B) `|` (C `|` D) = (A `|` C) `|` (B `|` D).
-Proof. by rewrite -!fsetUA (fsetUCA B). Qed.
-
-Lemma fsetUid A : A `|` A = A.
-Proof. by apply/fsetP=> x; rewrite inE orbb. Qed.
-
-Lemma fsetUUl A B C : A `|` B `|` C = (A `|` C) `|` (B `|` C).
-Proof. by rewrite fsetUA !(fsetUAC _ C) -(fsetUA _ C) fsetUid. Qed.
-
-Lemma fsetUUr A B C : A `|` (B `|` C) = (A `|` B) `|` (A `|` C).
-Proof. by rewrite !(fsetUC A) fsetUUl. Qed.
 
 (* intersection *)
 
@@ -2477,23 +2523,30 @@ Qed.
 
 Section FinsfunOfFinfun.
 
-Variables (h : {fmap K -> V}).
+Variables (key : unit) (h : {fmap K -> V}).
 
-Definition finmap_supp := [fsetval a in {: domf h} | h a != default (val a)].
-Definition finmap_on_supp := [fmap a : finmap_supp => h (fincl (fset_sub_val _) a)].
+Fact fset_sub_locked_val (A : {fset K}) (X : pred A)
+  (Y : {fset A}) (p : finmempred X Y) : locked_with key (imfset val p) `<=` A.
+Proof. by rewrite unlock fset_sub_val. Qed.
+
+Definition finmap_supp := locked_with key
+  [fsetval a in {: domf h} | h a != default (val a)].
+Definition finmap_on_supp :=
+  [fmap a : finmap_supp => h (fincl (fset_sub_locked_val _) a)].
 
 Fact finsfunS_subproof : 
   [forall k : finmap_supp, finmap_on_supp k != default (val k)].
 Proof.
-apply/forallP => /= a; rewrite ffunE; have /in_fset_valP [a_in_S /=] := valP a.
-have -> // : [` a_in_S] = fincl (fset_sub_val _) a by exact/val_inj.
+apply/forallP => /= a; rewrite ffunE.
+have := valP a; rewrite [X in _ \in X]unlock => /in_fset_valP [a_in_S /=].
+by have -> : [` a_in_S] = fincl (fset_sub_locked_val _) a by exact/val_inj.
 Qed.
 
 End FinsfunOfFinfun.
 
 Fact finsfun_key : unit. Proof. exact: tt. Qed.
 Definition finsfun_of_ffun key h := locked_with key
-  (@FinSFun (finmap_on_supp h) (finsfunS_subproof h)).
+  (@FinSFun (finmap_on_supp key h) (finsfunS_subproof key h)).
 
 Definition finsfun_of_can_ffun (T : {fset K}) (g : {ffun T -> V})
           (can_g : [forall k : T,  g k != default (val k)]) :=
@@ -2569,7 +2622,8 @@ Notation "[ 'finsfun' & key | x => F ]" := [finsfun of _ & key | x : _ => F ]
 Notation "[ 'finsfun' x => F ]" := [finsfun of _ | x : _ => F ]
   (at level 0, x ident, format "[ 'finsfun'  x  =>  F ]") : fun_scope.
 
-Notation "[ 'finsfun' 'of' default & key | => F ]" := [finsfun of default & key | _ => F]
+Notation "[ 'finsfun' 'of' default & key | => F ]" :=
+  [finsfun of default & key | _ => F]
   (at level 0, only parsing) : fun_scope.
 
 Notation "[ 'finsfun' 'of' default | => F ]" := [finsfun of default | _ => F]
@@ -2590,7 +2644,7 @@ Notation "[ 'finsfun' 'of' default & key | x 'in' aT => F ]" :=
   (at level 0, x ident, only parsing) : fun_scope.
 
 Notation "[ 'finsfun' 'of' default | x 'in' aT => F ]" :=
-  (finsfun_of_fun default aT (fun x => F))
+  [finsfun of default & finsfun_key | x in aT => F ]
   (at level 0, x ident, only parsing) : fun_scope.
 
 Notation "[ 'finsfun' & key | x 'in' aT => F ]" := [finsfun of _ & key | x in aT => F ]
@@ -2619,7 +2673,7 @@ case: insubP => /= [u _ <-|xNS]; last first.
   by set y := (X in h X); rewrite (valP y) in xNS.
 case: fndP => /= [kf|].
   by rewrite !ffunE; congr h; apply/val_inj => //.
-by rewrite inE /= -topredE /= ffunE negbK => /eqP ->.
+by rewrite [X in _ \in X]unlock inE /= -topredE /= ffunE negbK => /eqP ->.
 Qed.
 
 Lemma finsfun_fun (S : {fset K}) (h : K -> V) (x : K) :
@@ -2826,8 +2880,8 @@ Fact seq_mset_key : unit. Proof. exact: tt. Qed.
 Definition seq_mset (s : seq K) :=
   [mset & seq_mset_key | x in seq_fset s => count (pred1 x) s].
 
-Fact msetU_key : unit. Proof. exact: tt. Qed.
-Definition msetU A B := [mset & msetU_key | x in A `|` B => maxn (A x) (B x)].
+Fact msetU_key A B  : unit. Proof. exact: tt. Qed.
+Definition msetU A B := [mset & msetU_key A B | x in A `|` B => maxn (A x) (B x)].
 
 Fact msetI_key : unit. Proof. exact: tt. Qed.
 Definition msetI A B := [mset & msetI_key | x in A `|` B => minn (A x) (B x)].
@@ -2971,9 +3025,10 @@ Lemma in_msetM A B (u : K * K) : (u \in A `*` B) = (u.1 \in A) && (u.2 \in B).
 Proof. by rewrite !mem_finsupp msetE muln_eq0 negb_or. Qed.
 
 Definition in_msetE :=
-  (in_mset0, in_mset1,
-   in_msetU, in_msetI, in_msetD, in_msetM,
-   in_mset1U, in_mset1D, in_msetB1).
+  (in_mset0, in_mset1, in_msetn,
+   in_mset1U, in_mset1D, in_msetB1,
+   in_msetU, in_msetI, in_msetD, in_msetM
+  ).
 
 Let inE := (inE, in_msetE).
 
@@ -3129,7 +3184,7 @@ Proof. by rewrite inE; case: (x \in A); [left|right]. Qed.
 
 Lemma msetUS A B C : A `<=` B -> C `|` A `<=` C `|` B.
 Proof.
-move=> sAB; apply/fsubsetP=> x; rewrite !inE.
+move=> sAB; apply/fsubsetP=> x; rewrite !in_msetU.
 by case: (x \in C) => //; exact: (fsubsetP sAB).
 Qed.
 
@@ -3166,17 +3221,53 @@ Proof. by apply/msetP=> x; rewrite !msetE maxn_minr. Qed.
 Lemma msetUIl A B C : (A `&` B) `|` C = (A `|` C) `&` (B `|` C).
 Proof. by apply/msetP=> x; rewrite !msetE maxn_minl. Qed.
 
-Lemma msetUK A B : (A `|` B) `&` A = A.
+Lemma msetUKC A B : (A `|` B) `&` A = A.
 Proof. by apply/msetP=> x; rewrite !msetE maxnK. Qed.
 
-Lemma msetKU A B : A `&` (B `|` A) = A.
-Proof. by apply/msetP=> x; rewrite !msetE maxKn. Qed.
+Lemma msetUK A B : (B `|` A) `&` A = A.
+Proof. by rewrite msetUC msetUKC. Qed.
 
-Lemma msetIK A B : (A `&` B) `|` A = A.
+Lemma msetKUC A B : A `&` (B `|` A) = A.
+Proof. by rewrite msetIC msetUK. Qed.
+
+Lemma msetKU A B : A `&` (A `|` B) = A.
+Proof. by rewrite msetIC msetUKC. Qed.
+
+Lemma msetIKC A B : (A `&` B) `|` A = A.
 Proof. by apply/msetP=> x; rewrite !msetE minnK. Qed.
 
-Lemma msetKI A B : A `|` (B `&` A) = A.
-Proof. by apply/msetP=> x; rewrite !msetE minKn. Qed.
+Lemma msetIK A B : (B `&` A) `|` A = A.
+Proof. by rewrite msetIC msetIKC. Qed.
+
+Lemma msetKIC A B : A `|` (B `&` A) = A.
+Proof. by rewrite msetUC msetIK. Qed.
+
+Lemma msetKI A B : A `|` (A `&` B) = A.
+Proof. by rewrite msetIC msetKIC. Qed.
+
+Lemma msetUKid A B : B `|` A `|` A = B `|` A.
+Proof. by rewrite -msetUA msetUid. Qed.
+
+Lemma msetUKidC A B : A `|` B `|` A = A `|` B.
+Proof. by rewrite msetUAC msetUid. Qed.
+
+Lemma msetKUid A B : A `|` (A `|` B) = A `|` B.
+Proof. by rewrite msetUA msetUid. Qed.
+
+Lemma msetKUidC A B : A `|` (B `|` A) = B `|` A.
+Proof. by rewrite msetUCA msetUid. Qed.
+
+Lemma msetIKid A B : B `&` A `&` A = B `&` A.
+Proof. by rewrite -msetIA msetIid. Qed.
+
+Lemma msetIKidC A B : A `&` B `&` A = A `&` B.
+Proof. by rewrite msetIAC msetIid. Qed.
+
+Lemma msetKIid A B : A `&` (A `&` B) = A `&` B.
+Proof. by rewrite msetIA msetIid. Qed.
+
+Lemma msetKIidC A B : A `&` (B `&` A) = B `&` A.
+Proof. by rewrite msetICA msetIid. Qed.
 
 Lemma msetDIr A B C : A `+` (B `&` C) = (A `+` B) `&` (A `+` C).
 Proof. by apply/msetP=> x; rewrite !msetE addn_minr. Qed.
@@ -3184,260 +3275,244 @@ Proof. by apply/msetP=> x; rewrite !msetE addn_minr. Qed.
 Lemma msetDIl A B C : (A `&` B) `+` C = (A `+` C) `&` (B `+` C).
 Proof. by apply/msetP=> x; rewrite !msetE addn_minl. Qed.
 
-Lemma msetDK A B : (A `+` B) `&` A = A.
-Proof. apply/msetP=> x; rewrite !msetE. Qed.
+Lemma msetDKIC A B : (A `+` B) `&` A = A.
+Proof. by apply/msetP=> x; rewrite !msetE (minn_idPr _) // leq_addr. Qed.
 
-Lemma msetKD A B : A `&` (B `+` A) = A.
-Proof. by apply/msetP=> x; rewrite !msetE maxKn. Qed.
+Lemma msetDKI A B : (B `+` A) `&` A = A.
+Proof. by rewrite msetDC msetDKIC. Qed.
 
-Lemma msetIK A B : (A `&` B) `+` A = A.
-Proof. by apply/msetP=> x; rewrite !msetE minnK. Qed.
+Lemma msetKDIC A B : A `&` (B `+` A) = A.
+Proof. by rewrite msetIC msetDKI. Qed.
 
-Lemma msetKI A B : A `+` (B `&` A) = A.
-Proof. by apply/msetP=> x; rewrite !msetE minKn. Qed.
+Lemma msetKDI A B : A `&` (A `+` B) = A.
+Proof. by rewrite msetDC msetKDIC. Qed.
+
+(* adjunction / subtraction *)
+
+Lemma msetDKB A : cancel (msetD A) (msetB^~ A).
+Proof. by move=> B; apply/msetP => a; rewrite !msetE addKn. Qed.
+
+Lemma msetDKBC A : cancel (msetD^~ A) (msetB^~ A).
+Proof. by move=> B; rewrite msetDC msetDKB. Qed.
+
+Lemma msetBSKl A B a : ((a +` A) `\` B) `\ a = A `\` B.
+Proof.
+apply/msetP=> b; rewrite !msetE; case: ifPn; rewrite ?add0n ?subn0 //.
+by rewrite add1n subn1 subSKn.
+Qed.
+
+Lemma msetBDl C A B : (C `+` A) `\` (C `+` B) = A `\` B.
+Proof. by apply/msetP=> a; rewrite !msetE subnDl. Qed.
+
+Lemma msetBDr C A B : (A `+` C) `\` (B `+` C) = A `\` B.
+Proof. by apply/msetP=> a; rewrite !msetE subnDr. Qed.
+
+Lemma msetBDA A B C : B `\` (A `+` C) = B `\` A `\` C.
+Proof. by apply/msetP=> a; rewrite !msetE subnDA. Qed.
+
+Lemma msetUE A B C : msetU A B = A `+` (B `\` A).
+Proof. by apply/msetP=> a; rewrite !msetE maxnE. Qed.
 
 (* subset *)
 
-Lemma fsubsetP {A B} : reflect {subset A <= B} (A `<=` B).
+Lemma msubsetP {A B} : reflect (forall x, A x <= B x) (msubset A B).
 Proof.
-apply: (iffP mset_eqP) => AsubB a; first by rewrite -AsubB inE => /andP[].
-by rewrite inE; have [/AsubB|] := boolP (a \in A).
+by apply: (iffP forallP)=> // ? x; case: (in_fsetP A x) => // /mset_eq0P->.
 Qed.
 
-Lemma mset_sub_val A (X : pred A) (Y : {mset A}) (p : finmempred X Y) :
-   (immset val p) `<=` A.
-Proof. by apply/fsubsetP => k /in_mset_valP []. Qed.
-
-Lemma mset_sub A (P : pred K) : [mset x in A | P x] `<=` A.
-Proof. by apply/fsubsetP => k; rewrite inE /= => /andP []. Qed.
-
-Lemma msetD_eq0 (A B : {mset K}) : (A `\` B == mset0) = (A `<=` B).
+Lemma msubset_subset {A B} : msubset A B -> {subset A <= B}.
 Proof.
-apply/mset_eqP/fsubsetP => sAB a.
-  by move=> aA; have := sAB a; rewrite !inE aA andbT => /negPn.
-by rewrite !inE andbC; apply/negP => /andP [/sAB ->].
+by move=> /msubsetP AB x; rewrite !in_mset => ?; exact: (leq_trans _ (AB _)).
 Qed.
 
-Lemma fsubset_refl A : A `<=` A. Proof. exact/fsubsetP. Qed.
-Hint Resolve fsubset_refl.
-
-Definition fincl A B (AsubB : A `<=` B) (a : A) : B :=
-  [`(fsubsetP AsubB) _ (valP a)].
-
-Definition fsub B A : {set B} := [set x : B | val x \in A].
-
-Lemma fsubE A B (AsubB : A `<=` B) :
-  fsub B A = [set fincl AsubB x | x : A].
+Lemma msetB_eq0 (A B : {mset K}) : (A `\` B == mset0) = (msubset A B).
 Proof.
-apply/setP => x; rewrite in_set; apply/idP/imsetP => [|[[a aA] aA' ->]] //.
-by move=> xA; exists [` xA]=> //; apply: val_inj.
+apply/mset_eqP/msubsetP => AB a;
+by have := AB a; rewrite !msetE -subn_eq0 => /eqP.
 Qed.
 
-Lemma fincl_fsub A B (AsubB : A `<=` B) (a : A) :
-  fincl AsubB a \in fsub B A.
-Proof. by rewrite inE /= (valP a). Qed.
+Lemma msubset_refl A : msubset A A. Proof. exact/msubsetP. Qed.
+Hint Resolve msubset_refl.
 
-Lemma in_fsub B A (b : B) : (b \in fsub B A) = (val b \in A).
-Proof. by rewrite inE. Qed.
-
-Lemma subset_fsubE C A B : A `<=` C -> B `<=` C ->
-   (fsub C A \subset fsub C B) = (A `<=` B).
+Lemma msubset_trans : transitive (@msubset K).
 Proof.
-move=> sAC sBC; apply/subsetP/fsubsetP => sAB a; last first.
-  by rewrite !inE => /sAB.
-by move=> aA; have := sAB _ (fincl_fsub sAC (MsetSub aA)); rewrite inE.
+move=> y x z /msubsetP xy /msubsetP yz ; apply/msubsetP => a.
+by apply: (leq_trans (xy _)).
 Qed.
 
-Lemma fsubset_trans : transitive (@fsubset K).
-Proof. by move=>??? s t ; apply/fsubsetP => a /(fsubsetP s) /(fsubsetP t). Qed.
+Lemma msetIidPl {A B} : reflect (A `&` B = A) (msubset A B).
+Proof.
+apply: (iffP msubsetP) => [?|<- a]; last by rewrite !msetE geq_min leqnn orbT.
+by apply/msetP => a; rewrite !msetE (minn_idPl _).
+Qed.
 
-Lemma subset_fsub A B C : A `<=` B -> B `<=` C ->
-  fsub C A \subset fsub C B.
-Proof. by move=> sAB sBC; rewrite subset_fsubE // (fsubset_trans sAB). Qed.
-
-Lemma msetIidPl {A B} : reflect (A `&` B = A) (A `<=` B).
-Proof. exact: eqP. Qed.
-
-Lemma msetIidPr {A B} : reflect (A `&` B = B) (B `<=` A).
+Lemma msetIidPr {A B} : reflect (A `&` B = B) (msubset B A).
 Proof. by rewrite msetIC; apply: msetIidPl. Qed.
 
-Lemma fsubsetIidl A B : (A `<=` A `&` B) = (A `<=` B).
+Lemma msubsetIidl A B : (msubset A (A `&` B)) = (msubset A B).
 Proof.
-by apply/fsubsetP/fsubsetP=> sAB a aA; have := sAB _ aA; rewrite !inE ?aA.
+apply/msubsetP/msubsetP=> sAB a; have := sAB a; rewrite !msetE.
+  by rewrite leq_min leqnn.
+by move/minn_idPl->.
 Qed.
 
-Lemma fsubsetIidr A B : (B `<=` A `&` B) = (B `<=` A).
-Proof. by rewrite msetIC fsubsetIidl. Qed.
+Lemma msubsetIidr A B : (msubset B (A `&` B)) = (msubset B A).
+Proof. by rewrite msetIC msubsetIidl. Qed.
 
-Lemma msetUidPr A B : reflect (A `|` B = B) (A `<=` B).
+Lemma msetUidPr A B : reflect (A `|` B = B) (msubset A B).
 Proof.
-apply: (iffP fsubsetP) => sAB; last by move=> a aA; rewrite -sAB inE aA.
-by apply/msetP => b; rewrite inE; have [/sAB|//] := boolP (_ \in _).
+apply: (iffP msubsetP) => [AB|<- a]; last by rewrite !msetE leq_max leqnn.
+by apply/msetP=> a; rewrite !msetE (maxn_idPr _).
 Qed.
 
-Lemma msetUidPl A B : reflect (A `|` B = A) (B `<=` A).
+Lemma msetUidPl A B : reflect (A `|` B = A) (msubset B A).
 Proof. by rewrite msetUC; apply/msetUidPr. Qed.
 
-Lemma fsubsetUl A B : A `<=` A `|` B.
-Proof. by apply/fsubsetP => a; rewrite inE => ->. Qed.
-Hint Resolve fsubsetUl.
+Lemma msubsetUl A B : msubset A (A `|` B).
+Proof. by apply/msubsetP=> a; rewrite !msetE leq_maxl. Qed.
+Hint Resolve msubsetUl.
 
-Lemma fsubsetUr A B : B `<=` A `|` B.
+Lemma msubsetUr A B : msubset B (A `|` B).
 Proof. by rewrite msetUC. Qed.
-Hint Resolve fsubsetUr.
+Hint Resolve msubsetUr.
 
-Lemma fsubsetU1 x A : A `<=` x |` A.
-Proof. by rewrite fsubsetUr. Qed.
-Hint Resolve fsubsetU1.
+Lemma msubsetU1 x A : msubset A (x |` A).
+Proof. by rewrite msubsetUr. Qed.
+Hint Resolve msubsetU1.
 
-Lemma fsubsetU A B C : (A `<=` B) || (A `<=` C) -> A `<=` B `|` C.
-Proof. by move=> /orP [] /fsubset_trans ->. Qed.
+Lemma msubsetU A B C : (msubset A B) || (msubset A C) -> msubset A (B `|` C).
+Proof. by move=> /orP [] /msubset_trans ->. Qed.
 
-Lemma fincl_inj A B (AsubB : A `<=` B) : injective (fincl AsubB).
-Proof. by move=> a b [eq_ab]; apply: val_inj. Qed.
-Hint Resolve fincl_inj.
-
-Lemma fsub_inj B : {in [pred A | A `<=` B] &, injective (fsub B)}.
+Lemma eqEmsubset A B : (A == B) = (msubset A B) && (msubset B A).
 Proof.
-move=> A A'; rewrite -!topredE /= => sAB sA'B /setP eqAA'; apply/msetP => a.
-apply/idP/idP => mem_a.
-  by have := eqAA' (fincl sAB (MsetSub mem_a)); rewrite !inE // => <-.
-by have := eqAA' (fincl sA'B (MsetSub mem_a)); rewrite !inE // => ->.
-Qed.
-Hint Resolve fsub_inj.
-
-Lemma eqEfsubset A B : (A == B) = (A `<=` B) && (B `<=` A).
-Proof.
-apply/eqP/andP => [-> //|[/fsubsetP AB /fsubsetP BA]].
-by apply/msetP=> x; apply/idP/idP=> [/AB|/BA].
+apply/eqP/andP => [<-|[/msubsetP AB /msubsetP BA]]; first by split.
+by apply/msetP=> a; apply/eqP; rewrite eqn_leq AB BA.
 Qed.
 
-Lemma subEfproper A B : A `<=` B = (A == B) || (A `<` B).
-Proof. by rewrite eqEfsubset -andb_orr orbN andbT. Qed.
+Lemma subEmproper A B : msubset A B = (A == B) || (mproper A B).
+Proof. by rewrite eqEmsubset -andb_orr orbN andbT. Qed.
 
-Lemma fproper_sub A B : A `<` B -> A `<=` B.
-Proof. by rewrite subEfproper orbC => ->. Qed.
+Lemma mproper_sub A B : mproper A B -> msubset A B.
+Proof. by rewrite subEmproper orbC => ->. Qed.
 
-Lemma eqVfproper A B : A `<=` B -> A = B \/ A `<` B.
-Proof. by rewrite subEfproper => /predU1P. Qed.
+Lemma eqVmproper A B : msubset A B -> A = B \/ mproper A B.
+Proof. by rewrite subEmproper => /predU1P. Qed.
 
-Lemma fproperEneq A B : A `<` B = (A != B) && (A `<=` B).
-Proof. by rewrite andbC eqEfsubset negb_and andb_orr andbN. Qed.
+Lemma mproperEneq A B : mproper A B = (A != B) && (msubset A B).
+Proof. by rewrite andbC eqEmsubset negb_and andb_orr andbN. Qed.
 
-Lemma fproper_neq A B : A `<` B -> A != B.
-Proof. by rewrite fproperEneq; case/andP. Qed.
+Lemma mproper_neq A B : mproper A B -> A != B.
+Proof. by rewrite mproperEneq; case/andP. Qed.
 
-Lemma eqEfproper A B : (A == B) = (A `<=` B) && ~~ (A `<` B).
-Proof. by rewrite negb_and negbK andb_orr andbN eqEfsubset. Qed.
+Lemma eqEmproper A B : (A == B) = (msubset A B) && ~~ (mproper A B).
+Proof. by rewrite negb_and negbK andb_orr andbN eqEmsubset. Qed.
 
-Lemma card_fsub B A : A `<=` B -> #|fsub B A| = #|` A|.
-Proof. by move=> sAB; rewrite fsubE card_imset //; apply: fincl_inj. Qed.
+(* Lemma eqEfcard A B : (A == B) = (A `<=` B) && (#|` B| <= #|` A|)%N. *)
+(* Proof. *)
+(* rewrite -(inj_in_eq (@msub_inj (A `|` B))) -?topredE //=. *)
+(* by rewrite eqEcard !(@subset_msubE (A `|` B)) ?(@card_msub (A `|` B)). *)
+(* Qed. *)
 
-Lemma eqEfcard A B : (A == B) = (A `<=` B) &&
-  (#|` B| <= #|` A|)%N.
-Proof.
-rewrite -(inj_in_eq (@fsub_inj (A `|` B))) -?topredE //=.
-by rewrite eqEcard !(@subset_fsubE (A `|` B)) ?(@card_fsub (A `|` B)).
-Qed.
+(* Lemma mproperEcard A B : *)
+(*   (A `<` B) = (A `<=` B) && (#|` A| < #|` B|)%N. *)
+(* Proof. by rewrite mproperEneq ltnNge andbC eqEfcard; case: (A `<=` B). Qed. *)
 
-Lemma fproperEcard A B :
-  (A `<` B) = (A `<=` B) && (#|` A| < #|` B|)%N.
-Proof. by rewrite fproperEneq ltnNge andbC eqEfcard; case: (A `<=` B). Qed.
+(* Lemma msubset_leqif_cards A B : A `<=` B -> (#|` A| <= #|` B| ?= iff (A == B))%N. *)
+(* Proof. *)
+(* rewrite -!(@card_msub (A `|` B)) // -(@subset_msubE (A `|` B)) //. *)
+(* by move=> /subset_leqif_cards; rewrite (inj_in_eq (@msub_inj _)) -?topredE /=. *)
+(* Qed. *)
 
-Lemma fsubset_leqif_cards A B : A `<=` B -> (#|` A| <= #|` B| ?= iff (A == B))%N.
-Proof.
-rewrite -!(@card_fsub (A `|` B)) // -(@subset_fsubE (A `|` B)) //.
-by move=> /subset_leqif_cards; rewrite (inj_in_eq (@fsub_inj _)) -?topredE /=.
-Qed.
+Lemma msub0set A : msubset mset0 A.
+Proof. by apply/msubsetP=> x; rewrite msetE. Qed.
+Hint Resolve msub0set.
 
-Lemma fsub0set A : mset0 `<=` A.
-Proof. by apply/fsubsetP=> x; rewrite inE. Qed.
-Hint Resolve fsub0set.
+Lemma msubset0 A : (msubset A mset0) = (A == mset0).
+Proof. by rewrite eqEmsubset msub0set andbT. Qed.
 
-Lemma fsubset0 A : (A `<=` mset0) = (A == mset0).
-Proof. by rewrite eqEfsubset fsub0set andbT. Qed.
+Lemma mproper0 A : (mproper mset0 A) = (A != mset0).
+Proof. by rewrite /mproper msub0set msubset0. Qed.
 
-Lemma fproper0 A : (mset0 `<` A) = (A != mset0).
-Proof. by rewrite /fproper fsub0set fsubset0. Qed.
-
-Lemma fproperE A B : (A `<` B) = (A `<=` B) && ~~ (B `<=` A).
+Lemma mproperE A B : (mproper A B) = (msubset A B) && ~~ (msubset B A).
 Proof. by []. Qed.
 
-Lemma fsubEproper A B : (A `<=` B) = (A == B) || (A `<` B).
-Proof. by rewrite fproperEneq; case: eqP => //= ->; apply: fsubset_refl. Qed.
+Lemma msubEproper A B : (msubset A B) = (A == B) || (mproper A B).
+Proof. by rewrite mproperEneq; case: eqP => //= ->; apply: msubset_refl. Qed.
 
-Lemma fsubset_leq_card A B : A `<=` B -> (#|` A| <= #|` B|)%N.
-Proof. by move=> /fsubset_leqif_cards ->. Qed.
+(* Lemma msubset_leq_card A B : msubset A B -> (#|` A| <= #|` B|)%N. *)
+(* Proof. by move=> /msubset_leqif_cards ->. Qed. *)
 
-Lemma fproper_ltn_card A B : A `<` B -> (#|` A| < #|` B|)%N.
-Proof. by rewrite fproperEcard => /andP []. Qed.
+(* Lemma mproper_ltn_card A B : A `<` B -> (#|` A| < #|` B|)%N. *)
+(* Proof. by rewrite mproperEcard => /andP []. Qed. *)
 
-Lemma fsubset_cardP A B : #|` A| = #|` B| ->
-  reflect (A =i B) (A `<=` B).
+(* Lemma msubset_cardP A B : #|` A| = #|` B| -> *)
+(*   reflect (A =i B) (A `<=` B). *)
+(* Proof. *)
+(* move=> eq_cardAB; apply: (iffP idP) => [/eqVmproper [->//|]|/msetP -> //]. *)
+(* by rewrite mproperEcard eq_cardAB ltnn andbF. *)
+(* Qed. *)
+
+Lemma mproper_sub_trans B A C : mproper A B -> msubset B C -> mproper A C.
 Proof.
-move=> eq_cardAB; apply: (iffP idP) => [/eqVfproper [->//|]|/msetP -> //].
-by rewrite fproperEcard eq_cardAB ltnn andbF.
+move=> /andP [NAB AB] BC; rewrite /mproper.
+Admitted.
+
+
+(* Lemma msub_proper_trans B A C : *)
+(*   A `<=` B -> B `<` C -> A `<` C. *)
+(* Proof. *)
+(* rewrite !mproperEcard => sAB /andP [sBC lt_BC]. *)
+(* by rewrite (msubset_trans sAB) //= (leq_ltn_trans _ lt_BC) // msubset_leq_card. *)
+(* Qed. *)
+
+Lemma msubset_neq0 A B : msubset A B -> A != mset0 -> B != mset0.
+Proof. by rewrite -!mproper0 => sAB /mproper_sub_trans->. Qed.
+
+(* msub is a morphism *)
+
+Lemma msetBDKC A B : msubset A B -> A `+` (B `\` A) = B.
+Proof. by move=> /msubsetP AB; apply/msetP=> a; rewrite !msetE subnKC. Qed.
+
+Lemma msetBDK A B : msubset A B -> B `\` A `+` A = B.
+Proof. by move=> /msubsetP AB; apply/msetP => a; rewrite !msetE subnK. Qed.
+
+Lemma msetBBK A B : msubset A B -> B `\` (B `\` A) = A.
+Proof. by move=> /msubsetP AB; apply/msetP => a; rewrite !msetE subKn. Qed.
+
+Lemma msetBD1K A B a : msubset A B -> A a < B a -> a +` (B `\` (a +` A)) = B `\` A.
+Proof.
+move=> /msubsetP AB ABa; apply/msetP => b; rewrite !msetE.
+by case: ifP => //= /eqP->; rewrite !add1n subnSK.
 Qed.
 
-Lemma fproper_sub_trans B A C : A `<` B -> B `<=` C -> A `<` C.
+Lemma subset_msetBLR A B C : (msubset (A `\` B) C) = (msubset A (B `+` C)).
 Proof.
-rewrite !fproperEcard => /andP [sAB lt_AB] sBC.
-by rewrite (fsubset_trans sAB) //= (leq_trans lt_AB) // fsubset_leq_card.
+apply/msubsetP/msubsetP => [] sABC a; 
+by have := sABC a; rewrite !msetE ?leq_subLR.
 Qed.
 
-Lemma fsub_proper_trans B A C :
-  A `<=` B -> B `<` C -> A `<` C.
+Lemma mproperP {A B} : reflect (forall x, A x < B x) (mproper A B).
+Proof. Admitted.
+
+Lemma proper_msetBRL A B C : (mproper B (C `\` A)) = (mproper (A `+` B) C).
 Proof.
-rewrite !fproperEcard => sAB /andP [sBC lt_BC].
-by rewrite (fsubset_trans sAB) //= (leq_ltn_trans _ lt_BC) // fsubset_leq_card.
+apply/mproperP/mproperP => [] sABC a;
+by have := sABC a; rewrite !msetE ?ltn_subRL.
 Qed.
 
-Lemma fsubset_neq0 A B : A `<=` B -> A != mset0 -> B != mset0.
-Proof. by rewrite -!fproper0 => sAB /fproper_sub_trans->. Qed.
+Lemma msetnP n x a : reflect (0 < n /\ x = a) (x \in msetn n a).
+Proof. by do [apply: (iffP idP); rewrite !inE] => [/andP[]|[]] -> /eqP. Qed.
 
-(* fsub is a morphism *)
-
-Lemma fsub0 A : fsub A mset0 = set0 :> {set A}.
-Proof. by apply/setP => x; rewrite !inE. Qed.
-
-Lemma fsubT A : fsub A A = [set : A].
-Proof. by apply/setP => x; rewrite !inE (valP x). Qed.
-
-Lemma fsub1 A a (aA : a \in A) : fsub A [mset a] = [set MsetSub aA] :> {set A}.
-Proof. by apply/setP=> x; rewrite !inE; congr eq_op. Qed.
-
-Lemma fsubU C A B : fsub C (A `|` B) = fsub C A :|: fsub C B.
-Proof. by apply/setP => x; rewrite !inE. Qed.
-
-Lemma fsubI C A B : fsub C (A `&` B) = fsub C A :&: fsub C B.
-Proof. by apply/setP => x; rewrite !inE. Qed.
-
-Lemma fsubD C A B : fsub C (A `\` B) = fsub C A :\: fsub C B.
-Proof. by apply/setP => x; rewrite !inE andbC. Qed.
-
-Lemma fsubD1 C A b (bC : b \in C) : fsub C (A `\ b) = fsub C A :\ MsetSub bC.
-Proof. by rewrite fsubD fsub1. Qed.
-
-Lemma fsub_eq0 A B : A `<=` B -> (fsub B A == set0) = (A == mset0).
-Proof.
-by move=> sAB; rewrite -fsub0 (inj_in_eq (@fsub_inj _)) -?topredE /=.
-Qed.
-
-Lemma mset_0Vmem A : (A = mset0) + {x : K | x \in A}.
-Proof.
-have [|[x mem_x]] := set_0Vmem (fsub A A); last first.
-  by right; exists (val x); rewrite inE // in mem_x.
-by move=> /eqP; rewrite fsub_eq0 // => /eqP; left.
-Qed.
+Lemma msetn1 n a : a \in msetn n a = (n > 0).
+Proof. by rewrite inE eqxx andbT. Qed.
 
 Lemma mset1P x a : reflect (x = a) (x \in [mset a]).
 Proof. by rewrite inE; exact: eqP. Qed.
 
-Lemma mset11 x : x \in [mset x].
-Proof. by rewrite inE. Qed.
+Lemma mset11 a : a \in [mset a]. Proof. by rewrite inE /=. Qed.
 
-Lemma mset1_inj : injective (@mset1 K).
-Proof. by move=> a b eqsab; apply/mset1P; rewrite -eqsab mset11. Qed.
+Lemma msetn_inj n : injective (@msetn K n).
+Proof. move=> a b eqsab; apply/mset1P; rewrite -eqsab mset11. Qed.
 
 Lemma mset1UP x a B : reflect (x = a \/ x \in B) (x \in a |` B).
 Proof. by rewrite !inE; exact: predU1P. Qed.
@@ -3456,15 +3531,15 @@ Proof. by rewrite inE; apply: andP. Qed.
 
 Lemma msetIS A B C : A `<=` B -> C `&` A `<=` C `&` B.
 Proof.
-move=> sAB; apply/fsubsetP=> x; rewrite !inE.
-by case: (x \in C) => //; exact: (fsubsetP sAB).
+move=> sAB; apply/msubsetP=> x; rewrite !inE.
+by case: (x \in C) => //; exact: (msubsetP sAB).
 Qed.
 
 Lemma msetSI A B C : A `<=` B -> A `&` C `<=` B `&` C.
 Proof. by move=> sAB; rewrite -!(msetIC C) msetIS. Qed.
 
 Lemma msetISS A B C D : A `<=` C -> B `<=` D -> A `&` B `<=` C `&` D.
-Proof. by move=> /(msetSI B) /fsubset_trans sAC /(msetIS C) /sAC. Qed.
+Proof. by move=> /(msetSI B) /msubset_trans sAC /(msetIS C) /sAC. Qed.
 
 (* difference *)
 
@@ -3473,18 +3548,18 @@ Proof. by rewrite inE andbC; apply: andP. Qed.
 
 Lemma msetSD A B C : A `<=` B -> A `\` C `<=` B `\` C.
 Proof.
-move=> sAB; apply/fsubsetP=> x; rewrite !inE.
-by case: (x \in C) => //; exact: (fsubsetP sAB).
+move=> sAB; apply/msubsetP=> x; rewrite !inE.
+by case: (x \in C) => //; exact: (msubsetP sAB).
 Qed.
 
 Lemma msetDS A B C : A `<=` B -> C `\` B `<=` C `\` A.
 Proof.
-move=> sAB; apply/fsubsetP=> x; rewrite !inE ![_ && (_ \in _)]andbC.
-by case: (x \in C) => //; apply: contra; exact: (fsubsetP sAB).
+move=> sAB; apply/msubsetP=> x; rewrite !inE ![_ && (_ \in _)]andbC.
+by case: (x \in C) => //; apply: contra; exact: (msubsetP sAB).
 Qed.
 
 Lemma msetDSS A B C D : A `<=` C -> D `<=` B -> A `\` B `<=` C `\` D.
-Proof. by move=> /(msetSD B) /fsubset_trans sAC /(msetDS C) /sAC. Qed.
+Proof. by move=> /(msetSD B) /msubset_trans sAC /(msetDS C) /sAC. Qed.
 
 Lemma msetD0 A : A `\` mset0 = A.
 Proof. by apply/msetP=> x; rewrite !inE. Qed.
@@ -3530,27 +3605,27 @@ Proof. by apply/msetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 (* other inclusions *)
 
-Lemma fsubsetIl A B : A `&` B `<=` A.
-Proof. by apply/fsubsetP=> x; rewrite inE => /andP []. Qed.
+Lemma msubsetIl A B : A `&` B `<=` A.
+Proof. by apply/msubsetP=> x; rewrite inE => /andP []. Qed.
 
-Lemma fsubsetIr A B : A `&` B `<=` B.
-Proof. by apply/fsubsetP=> x; rewrite inE => /andP []. Qed.
+Lemma msubsetIr A B : A `&` B `<=` B.
+Proof. by apply/msubsetP=> x; rewrite inE => /andP []. Qed.
 
-Lemma fsubsetDl A B : A `\` B `<=` A.
-Proof. by apply/fsubsetP=> x; rewrite inE => /andP []. Qed.
+Lemma msubsetDl A B : A `\` B `<=` A.
+Proof. by apply/msubsetP=> x; rewrite inE => /andP []. Qed.
 
-Lemma fsubD1set A x : A `\ x `<=` A.
-Proof. by rewrite fsubsetDl. Qed.
+Lemma msubD1set A x : A `\ x `<=` A.
+Proof. by rewrite msubsetDl. Qed.
 
-Hint Resolve fsubsetIl fsubsetIr fsubsetDl fsubD1set.
+Hint Resolve msubsetIl msubsetIr msubsetDl msubD1set.
 
 (* cardinal lemmas for msets *)
 
 Lemma cardfs0 : #|` @mset0 K| = 0.
-Proof. by rewrite -(@card_fsub mset0) // fsub0 cards0. Qed.
+Proof. by rewrite -(@card_msub mset0) // msub0 cards0. Qed.
 
 Lemma cardfs_eq0 A : (#|` A| == 0) = (A == mset0).
-Proof. by rewrite -(@card_fsub A) // cards_eq0 fsub_eq0. Qed.
+Proof. by rewrite -(@card_msub A) // cards_eq0 msub_eq0. Qed.
 
 Lemma cardfs0_eq A : #|` A| = 0 -> A = mset0.
 Proof. by move=> /eqP; rewrite cardfs_eq0 => /eqP. Qed.
@@ -3575,8 +3650,8 @@ Proof. by rewrite cardfsE undup_id. Qed.
 
 Lemma cardfsUI A B : #|` A `|` B| + #|` A `&` B| = #|` A| + #|` B|.
 Proof.
-rewrite -!(@card_fsub (A `|` B)) ?(fsubset_trans (fsubsetIl _ _)) //.
-by rewrite fsubU fsubI cardsUI.
+rewrite -!(@card_msub (A `|` B)) ?(msubset_trans (msubsetIl _ _)) //.
+by rewrite msubU msubI cardsUI.
 Qed.
 
 Lemma cardfsU A B : #|` A `|` B| = (#|` A| + #|` B| - #|` A `&` B|)%N.
@@ -3586,7 +3661,7 @@ Lemma cardfsI A B : #|` A `&` B| = (#|` A| + #|` B| - #|` A `|` B|)%N.
 Proof. by rewrite  -cardfsUI addKn. Qed.
 
 Lemma cardfsID B A : #|` A `&` B| + #|` A `\` B| = #|` A|.
-Proof. by rewrite -!(@card_fsub A) // fsubI fsubD cardsID. Qed.
+Proof. by rewrite -!(@card_msub A) // msubI msubD cardsID. Qed.
 
 Lemma cardfsD A B : #|` A `\` B| = (#|` A| - #|` A `&` B|)%N.
 Proof. by rewrite -(cardfsID B A) addKn. Qed.
@@ -3612,7 +3687,7 @@ Qed.
 Lemma cardfsU1 a A : #|` a |` A| = (a \notin A) + #|` A|.
 Proof.
 have [aA|aNA] := boolP (a \in A); first by rewrite mem_mset1U.
-rewrite cardfsU -addnBA ?fsubset_leq_card // msetIC -cardfsD.
+rewrite cardfsU -addnBA ?msubset_leq_card // msetIC -cardfsD.
 by rewrite mem_msetD1 // cardfs1.
 Qed.
 
@@ -3627,9 +3702,9 @@ Qed.
 
 (* other inclusions *)
 
-Lemma fsub1set A x : ([mset x] `<=` A) = (x \in A).
+Lemma msub1set A x : ([mset x] `<=` A) = (x \in A).
 Proof.
-rewrite -(@subset_fsubE (x |` A)) // fsub1 ?mset1U1 // => xxA.
+rewrite -(@subset_msubE (x |` A)) // msub1 ?mset1U1 // => xxA.
 by rewrite sub1set inE.
 Qed.
 
@@ -3637,13 +3712,13 @@ Lemma cardfs1P A : reflect (exists x, A = [mset x]) (#|` A| == 1).
 Proof.
 apply: (iffP idP) => [|[x ->]]; last by rewrite cardfs1.
 rewrite eq_sym eqn_leq cardfs_gt0=> /andP[/mset0Pn[x Ax] leA1].
-by exists x; apply/eqP; rewrite eq_sym eqEfcard fsub1set cardfs1 leA1 Ax.
+by exists x; apply/eqP; rewrite eq_sym eqEfcard msub1set cardfs1 leA1 Ax.
 Qed.
 
-Lemma fsubset1 A x : (A `<=` [mset x]) = (A == [mset x]) || (A == mset0).
+Lemma msubset1 A x : (A `<=` [mset x]) = (A == [mset x]) || (A == mset0).
 Proof.
 rewrite eqEfcard cardfs1 -cardfs_eq0 orbC andbC.
-by case: posnP => // A0; rewrite (cardfs0_eq A0) fsub0set.
+by case: posnP => // A0; rewrite (cardfs0_eq A0) msub0set.
 Qed.
 
 Implicit Arguments msetIidPl [A B].
@@ -3651,111 +3726,111 @@ Implicit Arguments msetIidPl [A B].
 Lemma cardfsDS A B : B `<=` A -> #|` A `\` B| = (#|` A| - #|` B|)%N.
 Proof. by rewrite cardfsD => /msetIidPr->. Qed.
 
-Lemma fsubIset A B C : (B `<=` A) || (C `<=` A) -> (B `&` C `<=` A).
-Proof. by case/orP; apply: fsubset_trans; rewrite (fsubsetIl, fsubsetIr). Qed.
+Lemma msubIset A B C : (B `<=` A) || (C `<=` A) -> (B `&` C `<=` A).
+Proof. by case/orP; apply: msubset_trans; rewrite (msubsetIl, msubsetIr). Qed.
 
-Lemma fsubsetI A B C : (A `<=` B `&` C) = (A `<=` B) && (A `<=` C).
+Lemma msubsetI A B C : (A `<=` B `&` C) = (A `<=` B) && (A `<=` C).
 Proof.
 rewrite !(sameP msetIidPl eqP) msetIA; have [-> //| ] := altP (A `&` B =P A).
 by apply: contraNF => /eqP <-; rewrite -msetIA -msetIIl msetIAC.
 Qed.
 
-Lemma fsubsetIP A B C : reflect (A `<=` B /\ A `<=` C) (A `<=` B `&` C).
-Proof. by rewrite fsubsetI; exact: andP. Qed.
+Lemma msubsetIP A B C : reflect (A `<=` B /\ A `<=` C) (A `<=` B `&` C).
+Proof. by rewrite msubsetI; exact: andP. Qed.
 
-Lemma fsubUset A B C : (B `|` C `<=` A) = (B `<=` A) && (C `<=` A).
+Lemma msubUset A B C : (B `|` C `<=` A) = (B `<=` A) && (C `<=` A).
 Proof.
 apply/idP/idP => [subA|/andP [AB CA]]; last by rewrite -[A]msetUid msetUSS.
-by rewrite !(fsubset_trans _ subA).
+by rewrite !(msubset_trans _ subA).
 Qed.
 
-Lemma fsubUsetP A B C : reflect (A `<=` C /\ B `<=` C) (A `|` B `<=` C).
-Proof. by rewrite fsubUset; exact: andP. Qed.
+Lemma msubUsetP A B C : reflect (A `<=` C /\ B `<=` C) (A `|` B `<=` C).
+Proof. by rewrite msubUset; exact: andP. Qed.
 
-Lemma fsubDset A B C : (A `\` B `<=` C) = (A `<=` B `|` C).
+Lemma msubDset A B C : (A `\` B `<=` C) = (A `<=` B `|` C).
 Proof.
-apply/fsubsetP/fsubsetP=> sABC x; rewrite !inE.
+apply/msubsetP/msubsetP=> sABC x; rewrite !inE.
   by case Bx: (x \in B) => // Ax; rewrite sABC ?in_msetD ?Bx.
 by case Bx: (x \in B) => //; move/sABC; rewrite inE Bx.
 Qed.
 
 Lemma msetU_eq0 A B : (A `|` B == mset0) = (A == mset0) && (B == mset0).
-Proof. by rewrite -!fsubset0 fsubUset. Qed.
+Proof. by rewrite -!msubset0 msubUset. Qed.
 
 Lemma setD_eq0 A B : (A `\` B == mset0) = (A `<=` B).
-Proof. by rewrite -fsubset0 fsubDset msetU0. Qed.
+Proof. by rewrite -msubset0 msubDset msetU0. Qed.
 
-Lemma fsubsetD1 A B x : (A `<=` B `\ x) = (A `<=` B) && (x \notin A).
+Lemma msubsetD1 A B x : (A `<=` B `\ x) = (A `<=` B) && (x \notin A).
 Proof.
-do !rewrite -(@subset_fsubE (x |` A `|` B)) ?fsubDset ?msetUA // 1?msetUAC //.
-rewrite fsubD1 => [|mem_x]; first by rewrite -msetUA mset1U1.
+do !rewrite -(@subset_msubE (x |` A `|` B)) ?msubDset ?msetUA // 1?msetUAC //.
+rewrite msubD1 => [|mem_x]; first by rewrite -msetUA mset1U1.
 by rewrite subsetD1 // inE.
 Qed.
 
-Lemma fsubsetD1P A B x : reflect (A `<=` B /\ x \notin A) (A `<=` B `\ x).
-Proof. by rewrite fsubsetD1; exact: andP. Qed.
+Lemma msubsetD1P A B x : reflect (A `<=` B /\ x \notin A) (A `<=` B `\ x).
+Proof. by rewrite msubsetD1; exact: andP. Qed.
 
-Lemma fsubsetPn A B : reflect (exists2 x, x \in A & x \notin B) (~~ (A `<=` B)).
+Lemma msubsetPn A B : reflect (exists2 x, x \in A & x \notin B) (~~ (A `<=` B)).
 Proof.
  rewrite -msetD_eq0; apply: (iffP (mset0Pn _)) => [[x]|[x xA xNB]].
   by rewrite inE => /andP[]; exists x.
 by exists x; rewrite inE xA xNB.
 Qed.
 
-Lemma fproperD1 A x : x \in A -> A `\ x `<` A.
+Lemma mproperD1 A x : x \in A -> A `\ x `<` A.
 Proof.
-move=> Ax; rewrite fproperE fsubsetDl; apply/fsubsetPn; exists x=> //.
+move=> Ax; rewrite mproperE msubsetDl; apply/msubsetPn; exists x=> //.
 by rewrite in_msetD1 Ax eqxx.
 Qed.
 
-Lemma fproperIr A B : ~~ (B `<=` A) -> A `&` B `<` B.
-Proof. by move=> nsAB; rewrite fproperE fsubsetIr fsubsetI negb_and nsAB. Qed.
+Lemma mproperIr A B : ~~ (B `<=` A) -> A `&` B `<` B.
+Proof. by move=> nsAB; rewrite mproperE msubsetIr msubsetI negb_and nsAB. Qed.
 
-Lemma fproperIl A B : ~~ (A `<=` B) -> A `&` B `<` A.
-Proof. by move=> nsBA; rewrite fproperE fsubsetIl fsubsetI negb_and nsBA orbT. Qed.
+Lemma mproperIl A B : ~~ (A `<=` B) -> A `&` B `<` A.
+Proof. by move=> nsBA; rewrite mproperE msubsetIl msubsetI negb_and nsBA orbT. Qed.
 
-Lemma fproperUr A B : ~~ (A `<=` B) ->  B `<` A `|` B.
-Proof. by rewrite fproperE fsubsetUr fsubUset fsubset_refl /= andbT. Qed.
+Lemma mproperUr A B : ~~ (A `<=` B) ->  B `<` A `|` B.
+Proof. by rewrite mproperE msubsetUr msubUset msubset_refl /= andbT. Qed.
 
-Lemma fproperUl A B : ~~ (B `<=` A) ->  A `<` A `|` B.
-Proof. by move=> not_sBA; rewrite msetUC fproperUr. Qed.
+Lemma mproperUl A B : ~~ (B `<=` A) ->  A `<` A `|` B.
+Proof. by move=> not_sBA; rewrite msetUC mproperUr. Qed.
 
-Lemma fproper1set A x : ([mset x] `<` A) -> (x \in A).
-Proof. by move/fproper_sub; rewrite fsub1set. Qed.
+Lemma mproper1set A x : ([mset x] `<` A) -> (x \in A).
+Proof. by move/mproper_sub; rewrite msub1set. Qed.
 
-Lemma fproperIset A B C : (B `<` A) || (C `<` A) -> (B `&` C `<` A).
-Proof. by case/orP; apply: fsub_proper_trans; rewrite (fsubsetIl, fsubsetIr). Qed.
+Lemma mproperIset A B C : (B `<` A) || (C `<` A) -> (B `&` C `<` A).
+Proof. by case/orP; apply: msub_proper_trans; rewrite (msubsetIl, msubsetIr). Qed.
 
-Lemma fproperI A B C : (A `<` B `&` C) -> (A `<` B) && (A `<` C).
+Lemma mproperI A B C : (A `<` B `&` C) -> (A `<` B) && (A `<` C).
 Proof.
 move=> pAI; apply/andP.
-by split; apply: (fproper_sub_trans pAI); rewrite (fsubsetIl, fsubsetIr).
+by split; apply: (mproper_sub_trans pAI); rewrite (msubsetIl, msubsetIr).
 Qed.
 
-Lemma fproperU A B C : (B `|` C `<` A) -> (B `<` A) && (C `<` A).
+Lemma mproperU A B C : (B `|` C `<` A) -> (B `<` A) && (C `<` A).
 Proof.
 move=> pUA; apply/andP.
-by split; apply: fsub_proper_trans pUA; rewrite (fsubsetUr, fsubsetUl).
+by split; apply: msub_proper_trans pUA; rewrite (msubsetUr, msubsetUl).
 Qed.
 
 Lemma msetI_eq0 A B : (A `&` B == mset0) = [disjoint A & B].
 Proof. by []. Qed.
 
 Lemma fdisjoint_sub {A B} : [disjoint A & B]%mset ->
-  forall C : {mset K}, [disjoint fsub C A & fsub C B]%bool.
+  forall C : {mset K}, [disjoint msub C A & msub C B]%bool.
 Proof.
 move=> disjointAB C; apply/pred0P => a /=; rewrite !inE.
 by have /eqP /msetP /(_ (val a)) := disjointAB; rewrite !inE.
 Qed.
 
-Lemma disjoint_fsub C A B : A `|` B `<=` C ->
-  [disjoint fsub C A & fsub C B]%bool = [disjoint A & B].
+Lemma disjoint_msub C A B : A `|` B `<=` C ->
+  [disjoint msub C A & msub C B]%bool = [disjoint A & B].
 Proof.
 move=> ABsubC.
 apply/idP/idP=> [/pred0P DAB|/fdisjoint_sub->//]; apply/eqP/msetP=> a.
 rewrite !inE; have [aC|] := boolP (a \in A `|` B); last first.
   by rewrite !inE => /norP [/negPf-> /negPf->].
-by have /= := DAB (MsetSub (fsubsetP ABsubC _ aC)); rewrite !inE.
+by have /= := DAB (MsetSub (msubsetP ABsubC _ aC)); rewrite !inE.
 Qed.
 
 Lemma fdisjointP {A B} :
@@ -3777,21 +3852,21 @@ Qed.
 Lemma disjoint_msetI0 A B : [disjoint A & B] -> A `&` B = mset0.
 Proof. by rewrite -msetI_eq0; move/eqP. Qed.
 
-Lemma fsubsetD A B C :
+Lemma msubsetD A B C :
   (A `<=` (B `\` C)) = (A `<=` B) && [disjoint A & C]%mset.
 Proof.
 pose D := A `|` B `|` C.
-have AD : A `<=` D by rewrite /D -msetUA fsubsetUl.
-have BD : B `<=` D by rewrite /D msetUAC fsubsetUr.
-rewrite -(@subset_fsubE D) //; last first.
-  by rewrite fsubDset (fsubset_trans BD) // fsubsetUr.
-rewrite fsubD subsetD !subset_fsubE // disjoint_fsub //.
-by rewrite /D msetUAC fsubsetUl.
+have AD : A `<=` D by rewrite /D -msetUA msubsetUl.
+have BD : B `<=` D by rewrite /D msetUAC msubsetUr.
+rewrite -(@subset_msubE D) //; last first.
+  by rewrite msubDset (msubset_trans BD) // msubsetUr.
+rewrite msubD subsetD !subset_msubE // disjoint_msub //.
+by rewrite /D msetUAC msubsetUl.
 Qed.
 
-Lemma fsubsetDP A B C :
+Lemma msubsetDP A B C :
    reflect (A `<=` B /\ [disjoint A & C]%mset) (A `<=` (B `\` C)).
-Proof. by rewrite fsubsetD; apply: andP. Qed.
+Proof. by rewrite msubsetD; apply: andP. Qed.
 
 Lemma fdisjoint_sym A B : [disjoint A & B] = [disjoint B & A].
 Proof. by rewrite -!msetI_eq0 msetIC. Qed.
@@ -3803,8 +3878,8 @@ Proof. by rewrite fdisjoint_sym; apply: fdisjointP. Qed.
 Lemma fdisjoint_trans A B C :
    A `<=` B -> [disjoint B & C] -> [disjoint A & C].
 Proof.
-move=> AsubB; rewrite -!(@disjoint_fsub (B `|` C)) ?msetSU //.
-by apply: disjoint_trans; rewrite subset_fsub.
+move=> AsubB; rewrite -!(@disjoint_msub (B `|` C)) ?msetSU //.
+by apply: disjoint_trans; rewrite subset_msub.
 Qed.
 
 Lemma fdisjoint0X A : [disjoint mset0 & A].
@@ -3815,7 +3890,7 @@ Proof. by rewrite -msetI_eq0 msetI0. Qed.
 
 Lemma fdisjoint1X x A : [disjoint [mset x] & A] = (x \notin A).
 Proof.
-rewrite -(@disjoint_fsub (x |` A)) //.
+rewrite -(@disjoint_msub (x |` A)) //.
 by rewrite (@eq_disjoint1 _ (MsetSub (mset1U1 _ _))) ?inE =>// ?; rewrite !inE.
 Qed.
 
@@ -3834,15 +3909,15 @@ Lemma fdisjointU1X x A B :
    [disjoint x |` A & B]%mset = (x \notin B) && [disjoint A & B]%mset.
 Proof. by rewrite fdisjointUX fdisjoint1X. Qed.
 
-Lemma fsubK A B : A `<=` B -> [msetval k in fsub B A] = A.
+Lemma msubK A B : A `<=` B -> [msetval k in msub B A] = A.
 Proof.
 move=> AsubB; apply/msetP => k /=; symmetry.
 have [kB|kNB] := (boolP (k \in B)).
    by rewrite in_mset_valT /= inE.
-by rewrite in_mset_valF //; apply: contraNF kNB; apply/fsubsetP.
+by rewrite in_mset_valF //; apply: contraNF kNB; apply/msubsetP.
 Qed.
 
-Lemma MsetK A (X : {set A}) : fsub A [msetval k in X] = X.
+Lemma MsetK A (X : {set A}) : msub A [msetval k in X] = X.
 Proof. by apply/setP => x; rewrite !inE. Qed.
 
 End MSetTheory.
