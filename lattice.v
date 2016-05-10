@@ -33,7 +33,7 @@ Require Import fintype tuple bigop path finset.
 (*           posetType == the type of partially ordered types                *)
 (*           orderType == the type of totally ordered types                  *)
 (*                                                                           *)
-(* PosetType ord_mixin == builds an ordtype from a mixing containing         *)
+(* POsetType ord_mixin == builds an ordtype from a mixing containing         *)
 (*                        proofs of reflexivity, antisymmetry & transitivity *)
 (*                                                                           *)
 (* We provide a canonical structure of orderType for natural numbers (nat)   *)
@@ -159,7 +159,7 @@ Reserved Notation "\join_ ( i 'in' A ) F"
            format "'[' \join_ ( i  'in'  A ) '/  '  F ']'").
 
 Module Order.
-Module POSet.
+Module POrder.
 Section ClassDef.
 Structure mixin_of T := Mixin {
   le : rel T;
@@ -203,34 +203,34 @@ Coercion eqType : type >-> Equality.type.
 Canonical eqType.
 Canonical choiceType.
 
-Notation posetType := type.
-Notation posetMixin := mixin_of.
-Notation POSetMixin := Mixin.
-Notation POSetType T m := (@pack T m _ _ id).
+Notation porderType := type.
+Notation porderMixin := mixin_of.
+Notation POrderMixin := Mixin.
+Notation POrderType T m := (@pack T m _ _ id).
 
-Notation "[ 'posetType' 'of' T 'for' cT ]" := (@clone T cT _ id)
-  (at level 0, format "[ 'posetType'  'of'  T  'for'  cT ]") : form_scope.
-Notation "[ 'posetType' 'of' T ]" := (@clone T _ _ id)
-  (at level 0, format "[ 'posetType'  'of'  T ]") : form_scope.
+Notation "[ 'porderType' 'of' T 'for' cT ]" := (@clone T cT _ id)
+  (at level 0, format "[ 'porderType'  'of'  T  'for'  cT ]") : form_scope.
+Notation "[ 'porderType' 'of' T ]" := (@clone T _ _ id)
+  (at level 0, format "[ 'porderType'  'of'  T ]") : form_scope.
 End Exports.
-End POSet.
+End POrder.
 
-Import POSet.Exports.
-Bind Scope cpo_sort with POSet.sort.
+Import POrder.Exports.
+Bind Scope cpo_sort with POrder.sort.
 
 Module Def.
 Section Def.
-Variable (T : posetType).
+Variable (T : porderType).
 
-Definition le (R : posetType) : rel R :=
-  POSet.le (POSet.class R).
+Definition le (R : porderType) : rel R :=
+  POrder.le (POrder.class R).
 Local Notation "x <= y" := (le x y) : order_scope.
 
-Definition lt (R : posetType) : rel R :=
+Definition lt (R : porderType) : rel R :=
   fun (x y : R) => (x != y) && (x <= y).
 Local Notation "x < y" := (lt x y) : order_scope.
 
-Definition comparable (R : posetType) : rel R :=
+Definition comparable (R : porderType) : rel R :=
   fun (x y : R) => (x <= y) || (y <= x).
 Local Notation "x >=< y" := (comparable x y) : order_scope.
 Local Notation "x >< y" := (~~ (x >=< y)) : order_scope.
@@ -264,7 +264,7 @@ CoInductive incomparer (x y : T) :
     true true true true false false true true
   | InComparerLt of x < y : incomparer x y
     false false true false true false true true
-  | InComparerGt of y < x : incomparer x y 
+  | InComparerGt of y < x : incomparer x y
     false false false true false true true true
   | InComparer of x >< y : incomparer x y
     false false false false false false false false.
@@ -337,12 +337,12 @@ End POSyntax.
 Definition reverse L : Type := L.
 Local Notation "L ^r" := (reverse L) (at level 2, format "L ^r") : type_scope.
 
-Module Import ReversePOSet.
-Section ReversePOSet.
+Module Import ReversePOrder.
+Section ReversePOrder.
 Canonical reverse_eqType (T : choiceType) := [eqType of T^r].
 Canonical reverse_choiceType (T : choiceType) := [choiceType of T^r].
 
-Variable T : posetType.
+Variable T : porderType.
 
 Definition reverse_le (x y : T) := (y <= x).
 
@@ -358,17 +358,17 @@ Proof. by case: T => ? [? []]. Qed.
 Fact reverse_le_anti : antisymmetric reverse_le.
 Proof. by move=> x y /andP [xy yx]; apply/le_anti/andP; split. Qed.
 
-Definition reverse_posetMixin :=
-  POSetMixin (lexx : reflexive reverse_le) reverse_le_anti 
+Definition reverse_porderMixin :=
+  POrderMixin (lexx : reflexive reverse_le) reverse_le_anti
              (fun y z x zy yx => @le_trans y x z yx zy).
-Canonical reverse_posetType := POSetType (T^r) reverse_posetMixin.
+Canonical reverse_porderType := POrderType (T^r) reverse_porderMixin.
 
-End ReversePOSet.
-End ReversePOSet.
+End ReversePOrder.
+End ReversePOrder.
 
-Module Import POSetTheory.
-Section POSetTheory.
-Context {T : posetType}.
+Module Import POrderTheory.
+Section POrderTheory.
+Context {T : porderType}.
 
 Implicit Types x y : T.
 
@@ -533,13 +533,13 @@ rewrite /leif le_eqVlt; apply: (iffP idP)=> [|[]].
 by move=> /orP[/eqP->|lxy] <-; rewrite ?eqxx // lt_eqF.
 Qed.
 
-End POSetTheory.
-End POSetTheory.
+End POrderTheory.
+End POrderTheory.
 
 Hint Resolve lexx le_refl lt_irreflexive.
 
-Definition natPOSetMixin := POSetMixin leqnn anti_leq leq_trans.
-Canonical  natPOSetType  := POSetType nat natPOSetMixin.
+Definition natPOrderMixin := POrderMixin leqnn anti_leq leq_trans.
+Canonical  natPOrderType  := POrderType nat natPOrderMixin.
 
 Lemma lenP (n m : nat): (n <= m) = (n <= m)%N.
 Proof. by []. Qed.
@@ -549,7 +549,7 @@ Proof. by rewrite lt_neqAle ltn_neqAle lenP. Qed.
 
 Module SeqLexOrder.
   Section SeqLexOrder.
-  Variable T : posetType.
+  Variable T : porderType.
 
   Implicit Types s : seq T.
 
@@ -590,7 +590,7 @@ End SeqLexOrder.
 
 Module DLattice.
   Section ClassDef.
-    Structure mixin_of (T : posetType) := Mixin {
+    Structure mixin_of (T : porderType) := Mixin {
       meet : T -> T -> T;
       join : T -> T -> T;
       _ : commutative meet;
@@ -604,11 +604,11 @@ Module DLattice.
     }.
 
     Record class_of (T : Type) := Class {
-      base  : POSet.class_of T;
-      mixin : mixin_of (POSet.Pack base T)
+      base  : POrder.class_of T;
+      mixin : mixin_of (POrder.Pack base T)
     }.
 
-    Local Coercion base : class_of >-> POSet.class_of.
+    Local Coercion base : class_of >-> POrder.class_of.
 
     Structure type := Pack { sort; _ : class_of sort; _ : Type }.
 
@@ -621,26 +621,26 @@ Module DLattice.
     Let xT := let: Pack T _ _ := cT in T.
     Notation xclass := (class : class_of xT).
 
-    Definition pack b0 (m0 : mixin_of (@POSet.Pack T b0 T)) :=
-      fun bT b & phant_id (POSet.class bT) b =>
+    Definition pack b0 (m0 : mixin_of (@POrder.Pack T b0 T)) :=
+      fun bT b & phant_id (POrder.class bT) b =>
         fun    m & phant_id m0 m => Pack (@Class T b m) T.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
-    Definition posetType := @POSet.Pack cT xclass xT.
+    Definition porderType := @POrder.Pack cT xclass xT.
   End ClassDef.
 
   Module Import Exports.
-    Coercion base      : class_of >-> POSet.class_of.
+    Coercion base      : class_of >-> POrder.class_of.
     Coercion mixin     : class_of >-> mixin_of.
     Coercion sort      : type >-> Sortclass.
     Coercion choiceType : type >-> Choice.type.
     Coercion eqType    : type >-> Equality.type.
-    Coercion posetType : type >-> POSet.type.
+    Coercion porderType : type >-> POrder.type.
 
     Canonical eqType.
     Canonical choiceType.
-    Canonical posetType.
+    Canonical porderType.
 
     Notation dlatticeType  := type.
     Notation dlatticeMixin := mixin_of.
@@ -710,7 +710,7 @@ Fact reverse_leEmeet (x y : L^r) : (x <= y) = (x `|` y == x).
 Proof. by rewrite [LHS]leEjoin joinC. Qed.
 
 Definition reverse_dlatticeMixin :=
-   @DLatticeMixin [posetType of L^r] _ _ joinC meetC
+   @DLatticeMixin [porderType of L^r] _ _ joinC meetC
   joinA meetA meetKU joinKI reverse_leEmeet joinIl.
 Canonical reverse_dlatticeType := DLatticeType L^r reverse_dlatticeMixin.
 End ReverseDLattice.
@@ -839,13 +839,13 @@ End DLatticeTheoryJoin.
 
 Module Total.
   Section ClassDef.
-    Structure mixin_of (T : posetType) := Mixin {
+    Structure mixin_of (T : porderType) := Mixin {
       _ : total (<=%O : rel T)
     }.
 
     Record class_of (T : Type) := Class {
       base  : DLattice.class_of T;
-      mixin : mixin_of (POSet.Pack base T)
+      mixin : mixin_of (POrder.Pack base T)
     }.
 
     Local Coercion base : class_of >-> DLattice.class_of.
@@ -867,7 +867,7 @@ Module Total.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
-    Definition posetType := @POSet.Pack cT xclass xT.
+    Definition porderType := @POrder.Pack cT xclass xT.
     Definition dlatticeType := @DLattice.Pack cT xclass xT.
   End ClassDef.
 
@@ -877,12 +877,12 @@ Module Total.
     Coercion sort      : type >-> Sortclass.
     Coercion choiceType : type >-> Choice.type.
     Coercion eqType    : type >-> Equality.type.
-    Coercion posetType : type >-> POSet.type.
+    Coercion porderType : type >-> POrder.type.
     Coercion dlatticeType : type >-> DLattice.type.
 
     Canonical eqType.
     Canonical choiceType.
-    Canonical posetType.
+    Canonical porderType.
     Canonical dlatticeType.
 
     Notation orderType  := type.
@@ -896,7 +896,7 @@ Import Total.Exports.
 
 Module TotalDLattice.
 Section TotalDLattice.
-Variable (T : posetType).
+Variable (T : porderType).
 Implicit Types (x y z : T).
 Hypothesis le_total : total (<=%O : rel T).
 
@@ -1000,14 +1000,14 @@ End TotalTheory.
 
 Module BDLattice.
   Section ClassDef.
-    Structure mixin_of (T : posetType) := Mixin {
+    Structure mixin_of (T : porderType) := Mixin {
       bottom : T;
       _ : forall x, bottom <= x;
     }.
 
     Record class_of (T : Type) := Class {
       base  : DLattice.class_of T;
-      mixin : mixin_of (POSet.Pack base T)
+      mixin : mixin_of (POrder.Pack base T)
     }.
 
     Local Coercion base : class_of >-> DLattice.class_of.
@@ -1029,7 +1029,7 @@ Module BDLattice.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
-    Definition posetType := @POSet.Pack cT xclass xT.
+    Definition porderType := @POrder.Pack cT xclass xT.
     Definition dlatticeType := @DLattice.Pack cT xclass xT.
   End ClassDef.
 
@@ -1039,12 +1039,12 @@ Module BDLattice.
     Coercion sort      : type >-> Sortclass.
     Coercion eqType    : type >-> Equality.type.
     Coercion choiceType : type >-> Choice.type.
-    Coercion posetType : type >-> POSet.type.
+    Coercion porderType : type >-> POrder.type.
     Coercion dlatticeType : type >-> DLattice.type.
 
     Canonical eqType.
     Canonical choiceType.
-    Canonical posetType.
+    Canonical porderType.
     Canonical dlatticeType.
 
     Notation bdlatticeType  := type.
@@ -1133,7 +1133,7 @@ Lemma leU2r_le y t x z : x `&` t = 0 -> y `|` x <= t `|` z -> x <= z.
 Proof. by rewrite joinC [_ `|` z]joinC => /leU2l_le H /H. Qed.
 
 Lemma lexUl z x y : x `&` z = 0 -> (x <= y `|` z) = (x <= y).
-Proof. 
+Proof.
 move=> xz0; apply/idP/idP=> xy; last by rewrite lexU ?xy.
 by apply: (@leU2l_le x z); rewrite ?joinxx.
 Qed.
@@ -1155,8 +1155,8 @@ by move=> /eqP xUy0; rewrite -!lex0 -!xUy0 ?leUl ?leUr.
 Qed.
 
 CoInductive eq0_xor_gt0 x : bool -> bool -> Set :=
-    Eq0NotPos : x = 0 -> eq0_xor_gt0 x true false
-  | PosNotEq0 : 0 < x -> eq0_xor_gt0 x false true.
+    Eq0NotPOs : x = 0 -> eq0_xor_gt0 x true false
+  | POsNotEq0 : 0 < x -> eq0_xor_gt0 x false true.
 
 Lemma posxP x : eq0_xor_gt0 x (x == 0) (0 < x).
 Proof. by rewrite lt0x; have [] := altP eqP; constructor; rewrite ?lt0x. Qed.
@@ -1198,7 +1198,7 @@ Proof.
 apply/eqP; rewrite eq_le leUx !le_joins ?subsetUl ?subsetUr ?andbT //.
 apply/joinsP => i; rewrite inE; move=> /orP.
 by case=> ?; rewrite lexU //; [rewrite join_sup|rewrite orbC join_sup].
-Qed.  
+Qed.
 
 Lemma join_seq (I : finType) (r : seq I) (F : I -> L) :
    \join_(i <- r) F i = \join_(i in r) F i.
@@ -1227,14 +1227,14 @@ End BDLatticeTheory.
 
 Module TBDLattice.
   Section ClassDef.
-    Structure mixin_of (T : posetType) := Mixin {
+    Structure mixin_of (T : porderType) := Mixin {
       top : T;
       _ : forall x, x <= top;
     }.
 
     Record class_of (T : Type) := Class {
       base  : BDLattice.class_of T;
-      mixin : mixin_of (POSet.Pack base T)
+      mixin : mixin_of (POrder.Pack base T)
     }.
 
     Local Coercion base : class_of >-> BDLattice.class_of.
@@ -1256,7 +1256,7 @@ Module TBDLattice.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
-    Definition posetType := @POSet.Pack cT xclass xT.
+    Definition porderType := @POrder.Pack cT xclass xT.
     Definition dlatticeType := @DLattice.Pack cT xclass xT.
     Definition bdlatticeType := @BDLattice.Pack cT xclass xT.
   End ClassDef.
@@ -1267,12 +1267,12 @@ Module TBDLattice.
     Coercion sort      : type >-> Sortclass.
     Coercion eqType    : type >-> Equality.type.
     Coercion choiceType : type >-> Choice.type.
-    Coercion posetType : type >-> POSet.type.
+    Coercion porderType : type >-> POrder.type.
     Coercion dlatticeType : type >-> DLattice.type.
     Coercion bdlatticeType : type >-> BDLattice.type.
 
     Canonical eqType.
-    Canonical posetType.
+    Canonical porderType.
     Canonical choiceType.
     Canonical dlatticeType.
     Canonical bdlatticeType.
@@ -1331,7 +1331,7 @@ Variable L : tbdlatticeType.
 
 Lemma lex1 (x : L) : x <= 1. Proof. by case: L x => [?[?[]]]. Qed.
 
-Definition reverse_bdlatticeMixin := 
+Definition reverse_bdlatticeMixin :=
   @BDLatticeMixin [dlatticeType of L^r] 1 lex1.
 Canonical reverse_bdlatticeType := BDLatticeType L^r reverse_bdlatticeMixin.
 
@@ -1456,7 +1456,7 @@ Module CBDLattice.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
-    Definition posetType := @POSet.Pack cT xclass xT.
+    Definition porderType := @POrder.Pack cT xclass xT.
     Definition dlatticeType := @DLattice.Pack cT xclass xT.
     Definition bdlatticeType := @BDLattice.Pack cT xclass xT.
   End ClassDef.
@@ -1467,12 +1467,12 @@ Module CBDLattice.
     Coercion sort      : type >-> Sortclass.
     Coercion eqType    : type >-> Equality.type.
     Coercion choiceType : type >-> Choice.type.
-    Coercion posetType : type >-> POSet.type.
+    Coercion porderType : type >-> POrder.type.
     Coercion dlatticeType : type >-> DLattice.type.
     Coercion bdlatticeType : type >-> BDLattice.type.
 
     Canonical eqType.
-    Canonical posetType.
+    Canonical porderType.
     Canonical choiceType.
     Canonical dlatticeType.
     Canonical bdlatticeType.
@@ -1627,7 +1627,7 @@ Proof. by rewrite ![_ `&` z]meetC meetxB. Qed.
 Lemma subxI x y z : x `\` (y `&` z) = (x `\` y) `|` (x `\` z).
 Proof.
 apply/eqP; rewrite eq_sub leUx !leBx //= joinIl joinA joinCA !subKU.
-rewrite joinCA -joinA [_ `|` x]joinC ![x `|` _](join_idPr _) //. 
+rewrite joinCA -joinA [_ `|` x]joinC ![x `|` _](join_idPr _) //.
 by rewrite -joinIl leUr /= meetUl {1}[_ `&` z]meetC ?meetBI joinx0.
 Qed.
 
@@ -1710,7 +1710,7 @@ Module CTBDLattice.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
-    Definition posetType := @POSet.Pack cT xclass xT.
+    Definition porderType := @POrder.Pack cT xclass xT.
     Definition dlatticeType := @DLattice.Pack cT xclass xT.
     Definition bdlatticeType := @BDLattice.Pack cT xclass xT.
     Definition tbdlatticeType := @TBDLattice.Pack cT xclass xT.
@@ -1727,14 +1727,14 @@ Module CTBDLattice.
     Coercion sort      : type >-> Sortclass.
     Coercion eqType    : type >-> Equality.type.
     Coercion choiceType : type >-> Choice.type.
-    Coercion posetType : type >-> POSet.type.
+    Coercion porderType : type >-> POrder.type.
     Coercion dlatticeType : type >-> DLattice.type.
     Coercion bdlatticeType : type >-> BDLattice.type.
     Coercion tbdlatticeType : type >-> TBDLattice.type.
     Coercion cbdlatticeType : type >-> CBDLattice.type.
 
     Canonical eqType.
-    Canonical posetType.
+    Canonical porderType.
     Canonical choiceType.
     Canonical dlatticeType.
     Canonical bdlatticeType.
@@ -1752,7 +1752,7 @@ Module CTBDLattice.
     Notation "[ 'ctbdlatticeType' 'of' T ]" := (@clone T _ _ id)
       (at level 0, format "[ 'ctbdlatticeType'  'of'  T ]") : form_scope.
 
-    Notation "[ 'default_ctbdlatticeType' 'of' T ]" := 
+    Notation "[ 'default_ctbdlatticeType' 'of' T ]" :=
       (@pack T _ _ id _ _ id (fun=> erefl))
       (at level 0, format "[ 'default_ctbdlatticeType'  'of'  T ]") : form_scope.
 
@@ -1792,7 +1792,7 @@ Lemma disj_leC x y : (x `&` y == 0) = (x <= ~` y).
 Proof. by rewrite -sub_eq0 subE complK. Qed.
 
 Lemma leC x y : (~` x <= ~` y) = (y <= x).
-Proof. 
+Proof.
 gen have leC : x y / y <= x -> ~` x <= ~` y; last first.
   by apply/idP/idP=> /leC; rewrite ?complK.
 by move=> leyx; rewrite !complE leBr.
@@ -1855,8 +1855,8 @@ Export CTBDLatticeSyntax.
 End Syntax.
 
 Module Theory.
-Export ReversePOSet.
-Export POSetTheory.
+Export ReversePOrder.
+Export POrderTheory.
 Export TotalTheory.
 Export ReverseDLattice.
 Export DLatticeTheoryMeet.
@@ -1867,7 +1867,7 @@ Export ReverseTBDLattice.
 Export TBDLatticeTheory.
 Export CTBDLatticeTheory.
 
-Export POSet.Exports.
+Export POrder.Exports.
 Export Total.Exports.
 Export DLattice.Exports.
 Export BDLattice.Exports.
@@ -1928,7 +1928,7 @@ Definition clone c of phant_id class c := @Pack set c set.
 Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (class : class_of xset).
 
-Definition pack b0 
+Definition pack b0
   (m0 : mixin_of (fun X=> @Order.CBDLattice.Pack (set X) (b0 X) (set X))) :=
   fun bT b & (forall X, phant_id (Order.CBDLattice.class (bT X)) (b X)) =>
   fun    m & phant_id m0 m => Pack (@Class set b m) set.
@@ -1948,7 +1948,7 @@ Notation xclass := (@class _ eqType_of_elementType cT : class_of eqType_of_eleme
 
 Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
-Definition posetType := @Order.POSet.Pack (cT X) (xclass X) (xset X).
+Definition porderType := @Order.POrder.Pack (cT X) (xclass X) (xset X).
 Definition dlatticeType :=
   @Order.DLattice.Pack (cT X) (xclass X) (xset X).
 Definition bdlatticeType :=
@@ -1963,13 +1963,13 @@ Coercion base      : class_of >-> Funclass.
 Coercion sort      : type >-> Funclass.
 Coercion eqType    : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
-Coercion posetType : type >-> Order.POSet.type.
+Coercion porderType : type >-> Order.POrder.type.
 Coercion dlatticeType : type >-> Order.DLattice.type.
 Coercion bdlatticeType : type >-> Order.BDLattice.type.
 Coercion cbdlatticeType : type >-> Order.CBDLattice.type.
 
 Canonical eqType.
-Canonical posetType.
+Canonical porderType.
 Canonical choiceType.
 Canonical dlatticeType.
 Canonical bdlatticeType.
@@ -2279,7 +2279,7 @@ Record class_of (set : elementType -> Type) := Class {
 }.
 
 Local Coercion base : class_of >-> Funclass.
-Definition base2 (set : elementType -> Type) 
+Definition base2 (set : elementType -> Type)
          (c : class_of set) := Semiset.Class (@mixin set c).
 Local Coercion base2 : class_of >-> Semiset.class_of.
 
@@ -2321,7 +2321,7 @@ Notation xclass := (@class _ eqType_of_elementType cT : class_of eqType_of_eleme
 
 Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
-Definition posetType := @Order.POSet.Pack (cT X) (xclass X) (xset X).
+Definition porderType := @Order.POrder.Pack (cT X) (xclass X) (xset X).
 Definition dlatticeType :=
   @Order.DLattice.Pack (cT X) (xclass X) (xset X).
 Definition bdlatticeType :=
@@ -2341,7 +2341,7 @@ Coercion base2     : class_of >-> Semiset.class_of.
 Coercion sort      : type >-> Funclass.
 Coercion eqType    : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
-Coercion posetType : type >-> Order.POSet.type.
+Coercion porderType : type >-> Order.POrder.type.
 Coercion dlatticeType : type >-> Order.DLattice.type.
 Coercion bdlatticeType : type >-> Order.BDLattice.type.
 Coercion cbdlatticeType : type >-> Order.CBDLattice.type.
@@ -2349,7 +2349,7 @@ Coercion ctbdlatticeType : type >-> Order.CTBDLattice.type.
 Coercion semisetType : type >-> Semiset.type.
 
 Canonical eqType.
-Canonical posetType.
+Canonical porderType.
 Canonical choiceType.
 Canonical dlatticeType.
 Canonical bdlatticeType.
