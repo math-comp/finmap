@@ -161,8 +161,10 @@ Reserved Notation "\join_ ( i 'in' A ) F"
 Module Order.
 Module POrder.
 Section ClassDef.
-Structure mixin_of T := Mixin {
+Structure mixin_of (T : eqType) := Mixin {
   le : rel T;
+  lt : rel T;
+  _  : forall x y, lt x y = (x != y) && (le x y);
   _  : reflexive     le;
   _  : antisymmetric le;
   _  : transitive    le
@@ -170,7 +172,7 @@ Structure mixin_of T := Mixin {
 
 Record class_of T := Class {
   base  : Choice.class_of T;
-  mixin : mixin_of T
+  mixin : mixin_of (EqType T base)
 }.
 
 Local Coercion base : class_of >-> Choice.class_of.
@@ -186,8 +188,9 @@ Definition clone c of phant_id class c := @Pack T c T.
 Let xT := let: Pack T _ _ := cT in T.
 Notation xclass := (class : class_of xT).
 
-Definition pack m :=
-  fun b bT & phant_id (Choice.class bT) b => Pack (@Class T b m) T.
+Definition pack :=
+  fun b bT & phant_id (Choice.class bT) b =>
+  fun m => Pack (@Class T b m) T.
 
 Definition choiceType := @Choice.Pack cT xclass xT.
 Definition eqType := @Equality.Pack cT xclass xT.
@@ -206,7 +209,7 @@ Canonical choiceType.
 Notation porderType := type.
 Notation porderMixin := mixin_of.
 Notation POrderMixin := Mixin.
-Notation POrderType T m := (@pack T m _ _ id).
+Notation POrderType T m := (@pack T _ _ id m).
 
 Notation "[ 'porderType' 'of' T 'for' cT ]" := (@clone T cT _ id)
   (at level 0, format "[ 'porderType'  'of'  T  'for'  cT ]") : form_scope.
@@ -222,12 +225,10 @@ Module Def.
 Section Def.
 Variable (T : porderType).
 
-Definition le (R : porderType) : rel R :=
-  POrder.le (POrder.class R).
+Definition le (R : porderType) : rel R := POrder.le (POrder.class R).
 Local Notation "x <= y" := (le x y) : order_scope.
 
-Definition lt (R : porderType) : rel R :=
-  fun (x y : R) => (x != y) && (x <= y).
+Definition lt (R : porderType) : rel R := POrder.lt (POrder.class R).
 Local Notation "x < y" := (lt x y) : order_scope.
 
 Definition comparable (R : porderType) : rel R :=
@@ -334,20 +335,18 @@ Coercion le_of_leif : leif >-> is_true.
 
 End POSyntax.
 
-Definition reverse L : Type := L.
-Local Notation "L ^r" := (reverse L) (at level 2, format "L ^r") : type_scope.
+Module Import POrderTheory.
+Section POrderTheory.
+Context {T : porderType}.
 
-Module Import ReversePOrder.
-Section ReversePOrder.
-Canonical reverse_eqType (T : choiceType) := [eqType of T^r].
-Canonical reverse_choiceType (T : choiceType) := [choiceType of T^r].
-
-Variable T : porderType.
-
-Definition reverse_le (x y : T) := (y <= x).
+Implicit Types x y : T.
 
 Lemma lexx (x : T) : x <= x.
 Proof. by case: T x => ? [? []]. Qed.
+Hint Resolve lexx.
+
+Definition le_refl : reflexive le := lexx.
+Hint Resolve le_refl.
 
 Lemma le_anti: antisymmetric (<=%O : rel T).
 Proof. by case: T => ? [? []]. Qed.
@@ -355,41 +354,20 @@ Proof. by case: T => ? [? []]. Qed.
 Lemma le_trans: transitive (<=%O : rel T).
 Proof. by case: T => ? [? []]. Qed.
 
-Fact reverse_le_anti : antisymmetric reverse_le.
-Proof. by move=> x y /andP [xy yx]; apply/le_anti/andP; split. Qed.
-
-Definition reverse_porderMixin :=
-  POrderMixin (lexx : reflexive reverse_le) reverse_le_anti
-             (fun y z x zy yx => @le_trans y x z yx zy).
-Canonical reverse_porderType := POrderType (T^r) reverse_porderMixin.
-
-End ReversePOrder.
-End ReversePOrder.
-
-Module Import POrderTheory.
-Section POrderTheory.
-Context {T : porderType}.
-
-Implicit Types x y : T.
-
-Hint Resolve lexx.
-Definition le_refl : reflexive le := @lexx T.
-Hint Resolve le_refl.
+Lemma lt_neqAle x y: (x < y) = (x != y) && (x <= y).
+Proof. by case: T x y => ? [? []]. Qed.
 
 Lemma ltxx x: x < x = false.
-Proof. by rewrite /lt eqxx. Qed.
+Proof. by rewrite lt_neqAle eqxx. Qed.
 
 Definition lt_irreflexive : irreflexive lt := ltxx.
 Hint Resolve lt_irreflexive.
-
-Lemma lt_neqAle x y: (x < y) = (x != y) && (x <= y).
-Proof. by []. Qed.
 
 Lemma le_eqVlt x y: (x <= y) = (x == y) || (x < y).
 Proof. by rewrite lt_neqAle; case: eqP => //= ->; rewrite lexx. Qed.
 
 Lemma lt_eqF x y: x < y -> x == y = false.
-Proof. by case/andP => [/negbTE->]. Qed.
+Proof. by rewrite lt_neqAle => /andP [/negbTE->]. Qed.
 
 Lemma gt_eqF x y : y < x -> x == y = false.
 Proof. by apply: contraTF => /eqP ->; rewrite ltxx. Qed.
@@ -402,7 +380,7 @@ Proof. by rewrite le_eqVlt orbC => ->. Qed.
 
 Lemma lt_le_trans y x z: x < y -> y <= z -> x < z.
 Proof.
-rewrite /lt => /andP [nexy lexy leyz]; rewrite (le_trans lexy) // andbT.
+rewrite !lt_neqAle => /andP [nexy lexy leyz]; rewrite (le_trans lexy) // andbT.
 by apply: contraNneq nexy => eqxz; rewrite eqxz eq_le leyz andbT in lexy *.
 Qed.
 
@@ -446,7 +424,7 @@ case: s => //= n s; elim: s n => //= m s IHs n.
 rewrite inE lt_neqAle negb_or IHs -!andbA.
 case sn: (n \in s); last do !bool_congr.
 rewrite andbF; apply/and5P=> [[ne_nm lenm _ _ le_ms]]; case/negP: ne_nm.
-by rewrite eq_le lenm /=; apply: (allP (order_path_min (@le_trans _) le_ms)).
+by rewrite eq_le lenm /=; apply: (allP (order_path_min le_trans le_ms)).
 Qed.
 
 Lemma eq_sorted_lt (s1 s2 : seq T) :
@@ -538,14 +516,45 @@ End POrderTheory.
 
 Hint Resolve lexx le_refl lt_irreflexive.
 
-Definition natPOrderMixin := POrderMixin leqnn anti_leq leq_trans.
+Definition reverse T : Type := T.
+Local Notation "T ^r" := (reverse T) (at level 2, format "T ^r") : type_scope.
+
+Module Import ReversePOrder.
+Section ReversePOrder.
+Canonical reverse_eqType (T : eqType) := EqType T [eqMixin of T^r].
+Canonical reverse_choiceType (T : choiceType) := [choiceType of T^r].
+
+Variable T : porderType.
+
+Definition reverse_le (x y : T) := (y <= x).
+Definition reverse_lt (x y : T) := (y < x).
+
+Lemma reverse_lt_neqAle (x y : T) : reverse_lt x y = (x != y) && (reverse_le x y).
+Proof. by rewrite eq_sym; apply: lt_neqAle. Qed.
+
+Fact reverse_le_anti : antisymmetric reverse_le.
+Proof. by move=> x y /andP [xy yx]; apply/le_anti/andP; split. Qed.
+
+Definition reverse_porderMixin :=
+  POrderMixin reverse_lt_neqAle (lexx : reflexive reverse_le) reverse_le_anti
+             (fun y z x zy yx => @le_trans _ y x z yx zy).
+Canonical reverse_porderType := POrderType (T^r) reverse_porderMixin.
+
+End ReversePOrder.
+End ReversePOrder.
+
+Definition LePOrderMixin T le rle ale tle :=
+   @POrderMixin T le _ (fun _ _ => erefl) rle ale tle.
+
+Program Definition natPOrderMixin := @POrderMixin _ leq ltn _ leqnn anti_leq leq_trans.
+Next Obligation. by rewrite ltn_neqAle. Qed.
 Canonical  natPOrderType  := POrderType nat natPOrderMixin.
 
-Lemma lenP (n m : nat): (n <= m) = (n <= m)%N.
+Lemma leEnat (n m : nat): (n <= m) = (n <= m)%N.
 Proof. by []. Qed.
 
-Lemma ltnP (n m : nat): (n < m) = (n < m)%N.
-Proof. by rewrite lt_neqAle ltn_neqAle lenP. Qed.
+Lemma ltEnat (n m : nat): (n < m) = (n < m)%N.
+Proof. by []. Qed.
 
 Module SeqLexOrder.
   Section SeqLexOrder.
