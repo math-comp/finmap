@@ -588,7 +588,7 @@ Module SeqLexOrder.
 End SeqLexOrder.
 End SeqLexOrder.
 
-Module DLattice.
+Module Lattice.
   Section ClassDef.
     Structure mixin_of (T : porderType) := Mixin {
       meet : T -> T -> T;
@@ -642,33 +642,33 @@ Module DLattice.
     Canonical choiceType.
     Canonical porderType.
 
-    Notation dlatticeType  := type.
-    Notation dlatticeMixin := mixin_of.
-    Notation DLatticeMixin := Mixin.
-    Notation DLatticeType T m := (@pack T _ m _ _ id _ id).
+    Notation latticeType  := type.
+    Notation latticeMixin := mixin_of.
+    Notation LatticeMixin := Mixin.
+    Notation LatticeType T m := (@pack T _ m _ _ id _ id).
 
-    Notation "[ 'dlatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
-      (at level 0, format "[ 'dlatticeType'  'of'  T  'for'  cT ]") : form_scope.
-    Notation "[ 'dlatticeType' 'of' T ]" := (@clone T _ _ id)
-      (at level 0, format "[ 'dlatticeType'  'of'  T ]") : form_scope.
+    Notation "[ 'latticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
+      (at level 0, format "[ 'latticeType'  'of'  T  'for'  cT ]") : form_scope.
+    Notation "[ 'latticeType' 'of' T ]" := (@clone T _ _ id)
+      (at level 0, format "[ 'latticeType'  'of'  T ]") : form_scope.
   End Exports.
-End DLattice.
+End Lattice.
 
-Export DLattice.Exports.
+Export Lattice.Exports.
 
-Definition meet {T : dlatticeType} : T -> T -> T := DLattice.meet (DLattice.class T).
-Definition join {T : dlatticeType} : T -> T -> T := DLattice.join (DLattice.class T).
+Definition meet {T : latticeType} : T -> T -> T := Lattice.meet (Lattice.class T).
+Definition join {T : latticeType} : T -> T -> T := Lattice.join (Lattice.class T).
 
-Module Import DLatticeSyntax.
+Module Import LatticeSyntax.
 
 Notation "x `&` y" :=  (meet x y).
 Notation "x `|` y" := (join x y).
 
-End DLatticeSyntax.
+End LatticeSyntax.
 
-Module Import ReverseDLattice.
-Section ReverseDLattice.
-Variable L : dlatticeType.
+Module Import ReverseLattice.
+Section ReverseLattice.
+Variable L : latticeType.
 Implicit Types (x y : L).
 
 Lemma meetC : commutative (@meet L). Proof. by case: L => [?[?[]]]. Qed.
@@ -709,16 +709,16 @@ Proof. by move=> x y z; rewrite meetUr joinIK meetUl -joinA meetUKC. Qed.
 Fact reverse_leEmeet (x y : L^r) : (x <= y) = (x `|` y == x).
 Proof. by rewrite [LHS]leEjoin joinC. Qed.
 
-Definition reverse_dlatticeMixin :=
-   @DLatticeMixin [porderType of L^r] _ _ joinC meetC
+Definition reverse_latticeMixin :=
+   @LatticeMixin [porderType of L^r] _ _ joinC meetC
   joinA meetA meetKU joinKI reverse_leEmeet joinIl.
-Canonical reverse_dlatticeType := DLatticeType L^r reverse_dlatticeMixin.
-End ReverseDLattice.
-End ReverseDLattice.
+Canonical reverse_latticeType := LatticeType L^r reverse_latticeMixin.
+End ReverseLattice.
+End ReverseLattice.
 
-Module Import DLatticeTheoryMeet.
-Section DLatticeTheoryMeet.
-Context {L : dlatticeType}.
+Module Import LatticeTheoryMeet.
+Section LatticeTheoryMeet.
+Context {L : latticeType}.
 Implicit Types (x y : L).
 
 (* lattice theory *)
@@ -776,66 +776,66 @@ Proof. by rewrite leIx ?lexx ?orbT. Qed.
 Lemma leI2 x y z t : x <= z -> y <= t -> x `&` y <= z `&` t.
 Proof. by move=> xz yt; rewrite lexI !leIx ?xz ?yt ?orbT //. Qed.
 
-End DLatticeTheoryMeet.
-End DLatticeTheoryMeet.
+End LatticeTheoryMeet.
+End LatticeTheoryMeet.
 
-Module Import DLatticeTheoryJoin.
-Section DLatticeTheoryJoin.
-Variable (L : dlatticeType).
+Module Import LatticeTheoryJoin.
+Section LatticeTheoryJoin.
+Variable (L : latticeType).
 Implicit Types (x y z : L).
 
 (* lattice theory *)
 Lemma joinAC : right_commutative (@join L).
-Proof. exact: (@meetAC [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetAC [latticeType of L^r]). Qed.
 Lemma joinCA : left_commutative (@join L).
-Proof. exact: (@meetCA [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetCA [latticeType of L^r]). Qed.
 Lemma joinACA : interchange (@join L) (@join L).
-Proof. exact: (@meetACA [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetACA [latticeType of L^r]). Qed.
 
 Lemma joinxx x : x `|` x = x.
-Proof. exact: (@meetxx [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetxx [latticeType of L^r]). Qed.
 
 Lemma joinKU y x : x `|` (x `|` y) = x `|` y.
-Proof. exact: (@meetKI [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetKI [latticeType of L^r]). Qed.
 Lemma joinUK y x : (x `|` y) `|` y = x `|` y.
-Proof. exact: (@meetIK [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetIK [latticeType of L^r]). Qed.
 Lemma joinKUC y x : x `|` (y `|` x) = x `|` y.
-Proof. exact: (@meetKIC [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetKIC [latticeType of L^r]). Qed.
 Lemma joinUKC y x : y `|` x `|` y = x `|` y.
-Proof. exact: (@meetIKC [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetIKC [latticeType of L^r]). Qed.
 
 (* interaction with order *)
 Lemma join_idPl {x y} : reflect (x `|` y = y) (x <= y).
-Proof. exact: (@meet_idPr [dlatticeType of L^r]). Qed.
+Proof. exact: (@meet_idPr [latticeType of L^r]). Qed.
 Lemma join_idPr {x y} : reflect (y `|` x = y) (x <= y).
-Proof. exact: (@meet_idPl [dlatticeType of L^r]). Qed.
+Proof. exact: (@meet_idPl [latticeType of L^r]). Qed.
 
 Lemma leUidl x y : (x `|` y <= y) = (x <= y).
-Proof. exact: (@leIidr [dlatticeType of L^r]). Qed.
+Proof. exact: (@leIidr [latticeType of L^r]). Qed.
 Lemma leUidr x y : (y `|` x <= y) = (x <= y).
-Proof. exact: (@leIidl [dlatticeType of L^r]). Qed.
+Proof. exact: (@leIidl [latticeType of L^r]). Qed.
 
 Lemma leUx x y z : (x `|` y <= z) = (x <= z) && (y <= z).
-Proof. exact: (@lexI [dlatticeType of L^r]). Qed.
+Proof. exact: (@lexI [latticeType of L^r]). Qed.
 
 Lemma lexU x y z : (x <= y) || (x <= z) -> x <= y `|` z.
-Proof. exact: (@leIx [dlatticeType of L^r]). Qed.
+Proof. exact: (@leIx [latticeType of L^r]). Qed.
 
 Lemma leUr x y : x <= y `|` x.
-Proof. exact: (@leIr [dlatticeType of L^r]). Qed.
+Proof. exact: (@leIr [latticeType of L^r]). Qed.
 
 Lemma leUl x y : x <= x `|` y.
-Proof. exact: (@leIl [dlatticeType of L^r]). Qed.
+Proof. exact: (@leIl [latticeType of L^r]). Qed.
 
 Lemma leU2 x y z t : x <= z -> y <= t -> x `|` y <= z `|` t.
-Proof. exact: (@leI2 [dlatticeType of L^r]). Qed.
+Proof. exact: (@leI2 [latticeType of L^r]). Qed.
 
 (* Distributive lattice theory *)
 Lemma joinIr : right_distributive (@join L) (@meet L).
-Proof. exact: (@meetUr [dlatticeType of L^r]). Qed.
+Proof. exact: (@meetUr [latticeType of L^r]). Qed.
 
-End DLatticeTheoryJoin.
-End DLatticeTheoryJoin.
+End LatticeTheoryJoin.
+End LatticeTheoryJoin.
 
 Module Total.
   Section ClassDef.
@@ -844,11 +844,11 @@ Module Total.
     }.
 
     Record class_of (T : Type) := Class {
-      base  : DLattice.class_of T;
+      base  : Lattice.class_of T;
       mixin : mixin_of (POrder.Pack base T)
     }.
 
-    Local Coercion base : class_of >-> DLattice.class_of.
+    Local Coercion base : class_of >-> Lattice.class_of.
 
     Structure type := Pack { sort; _ : class_of sort; _ : Type }.
 
@@ -861,29 +861,29 @@ Module Total.
     Let xT := let: Pack T _ _ := cT in T.
     Notation xclass := (class : class_of xT).
 
-    Definition pack b0 (m0 : mixin_of (@DLattice.Pack T b0 T)) :=
-      fun bT b & phant_id (DLattice.class bT) b =>
+    Definition pack b0 (m0 : mixin_of (@Lattice.Pack T b0 T)) :=
+      fun bT b & phant_id (Lattice.class bT) b =>
         fun    m & phant_id m0 m => Pack (@Class T b m) T.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
     Definition porderType := @POrder.Pack cT xclass xT.
-    Definition dlatticeType := @DLattice.Pack cT xclass xT.
+    Definition latticeType := @Lattice.Pack cT xclass xT.
   End ClassDef.
 
   Module Import Exports.
-    Coercion base      : class_of >-> DLattice.class_of.
+    Coercion base      : class_of >-> Lattice.class_of.
     Coercion mixin     : class_of >-> mixin_of.
     Coercion sort      : type >-> Sortclass.
     Coercion choiceType : type >-> Choice.type.
     Coercion eqType    : type >-> Equality.type.
     Coercion porderType : type >-> POrder.type.
-    Coercion dlatticeType : type >-> DLattice.type.
+    Coercion latticeType : type >-> Lattice.type.
 
     Canonical eqType.
     Canonical choiceType.
     Canonical porderType.
-    Canonical dlatticeType.
+    Canonical latticeType.
 
     Notation orderType  := type.
     Notation orderMixin := mixin_of.
@@ -894,8 +894,8 @@ End Total.
 
 Import Total.Exports.
 
-Module TotalDLattice.
-Section TotalDLattice.
+Module TotalLattice.
+Section TotalLattice.
 Variable (T : porderType).
 Implicit Types (x y z : T).
 Hypothesis le_total : total (<=%O : rel T).
@@ -957,10 +957,10 @@ case: (leP y z) => yz; case: (leP y x) => xy //=; first 1 last.
 - by have [] := (leP x z); rewrite ?xy ?yz.
 Qed.
 
-Definition Mixin := DLatticeMixin meetC joinC meetA joinA joinKI meetKU leEmeet meetUl.
+Definition Mixin := LatticeMixin meetC joinC meetA joinA joinKI meetKU leEmeet meetUl.
 
-End TotalDLattice.
-End TotalDLattice.
+End TotalLattice.
+End TotalLattice.
 
 Module TotalTheory.
 Section TotalTheory.
@@ -991,14 +991,14 @@ Proof. by rewrite comparable_leNgt. Qed.
 Lemma ltNge x y : (x < y) = ~~ (y <= x).
 Proof. by rewrite comparable_ltNge. Qed.
 
-Definition ltgtP := TotalDLattice.ltgtP le_total.
-Definition leP := TotalDLattice.leP le_total.
-Definition ltP := TotalDLattice.ltP le_total.
+Definition ltgtP := TotalLattice.ltgtP le_total.
+Definition leP := TotalLattice.leP le_total.
+Definition ltP := TotalLattice.ltP le_total.
 
 End TotalTheory.
 End TotalTheory.
 
-Module BDLattice.
+Module BLattice.
   Section ClassDef.
     Structure mixin_of (T : porderType) := Mixin {
       bottom : T;
@@ -1006,11 +1006,11 @@ Module BDLattice.
     }.
 
     Record class_of (T : Type) := Class {
-      base  : DLattice.class_of T;
+      base  : Lattice.class_of T;
       mixin : mixin_of (POrder.Pack base T)
     }.
 
-    Local Coercion base : class_of >-> DLattice.class_of.
+    Local Coercion base : class_of >-> Lattice.class_of.
 
     Structure type := Pack { sort; _ : class_of sort; _ : Type }.
 
@@ -1023,47 +1023,47 @@ Module BDLattice.
     Let xT := let: Pack T _ _ := cT in T.
     Notation xclass := (class : class_of xT).
 
-    Definition pack b0 (m0 : mixin_of (@DLattice.Pack T b0 T)) :=
-      fun bT b & phant_id (DLattice.class bT) b =>
+    Definition pack b0 (m0 : mixin_of (@Lattice.Pack T b0 T)) :=
+      fun bT b & phant_id (Lattice.class bT) b =>
         fun    m & phant_id m0 m => Pack (@Class T b m) T.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
     Definition porderType := @POrder.Pack cT xclass xT.
-    Definition dlatticeType := @DLattice.Pack cT xclass xT.
+    Definition latticeType := @Lattice.Pack cT xclass xT.
   End ClassDef.
 
   Module Import Exports.
-    Coercion base      : class_of >-> DLattice.class_of.
+    Coercion base      : class_of >-> Lattice.class_of.
     Coercion mixin     : class_of >-> mixin_of.
     Coercion sort      : type >-> Sortclass.
     Coercion eqType    : type >-> Equality.type.
     Coercion choiceType : type >-> Choice.type.
     Coercion porderType : type >-> POrder.type.
-    Coercion dlatticeType : type >-> DLattice.type.
+    Coercion latticeType : type >-> Lattice.type.
 
     Canonical eqType.
     Canonical choiceType.
     Canonical porderType.
-    Canonical dlatticeType.
+    Canonical latticeType.
 
-    Notation bdlatticeType  := type.
-    Notation bdlatticeMixin := mixin_of.
-    Notation BDLatticeMixin := Mixin.
-    Notation BDLatticeType T m := (@pack T _ m _ _ id _ id).
+    Notation blatticeType  := type.
+    Notation blatticeMixin := mixin_of.
+    Notation BLatticeMixin := Mixin.
+    Notation BLatticeType T m := (@pack T _ m _ _ id _ id).
 
-    Notation "[ 'bdlatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
-      (at level 0, format "[ 'bdlatticeType'  'of'  T  'for'  cT ]") : form_scope.
-    Notation "[ 'bdlatticeType' 'of' T ]" := (@clone T _ _ id)
-      (at level 0, format "[ 'bdlatticeType'  'of'  T ]") : form_scope.
+    Notation "[ 'blatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
+      (at level 0, format "[ 'blatticeType'  'of'  T  'for'  cT ]") : form_scope.
+    Notation "[ 'blatticeType' 'of' T ]" := (@clone T _ _ id)
+      (at level 0, format "[ 'blatticeType'  'of'  T ]") : form_scope.
   End Exports.
-End BDLattice.
+End BLattice.
 
-Export BDLattice.Exports.
+Export BLattice.Exports.
 
-Definition bottom (T : bdlatticeType) : T := BDLattice.bottom (BDLattice.class T).
+Definition bottom (T : blatticeType) : T := BLattice.bottom (BLattice.class T).
 
-Module Import BDLatticeSyntax.
+Module Import BLatticeSyntax.
 
 Notation "0" := (@bottom _) : order_scope.
 
@@ -1092,11 +1092,11 @@ Notation "\join_ ( i 'in' A | P ) F" :=
 Notation "\join_ ( i 'in' A ) F" :=
  (\big[@join _/0%O]_(i in A) F%N) : order_scope.
 
-End BDLatticeSyntax.
+End BLatticeSyntax.
 
-Module Import BDLatticeTheory.
-Section BDLatticeTheory.
-Variable (L : bdlatticeType).
+Module Import BLatticeTheory.
+Section BLatticeTheory.
+Variable (L : blatticeType).
 Implicit Types (x y z : L).
 
 (* Distributive lattice theory with 0 & 1*)
@@ -1222,10 +1222,10 @@ case; rewrite (andbF, andbT) // => Pi /(_ isT) dy /eqP dFi.
 by rewrite meetUr dy dFi joinxx.
 Qed.
 
-End BDLatticeTheory.
-End BDLatticeTheory.
+End BLatticeTheory.
+End BLatticeTheory.
 
-Module TBDLattice.
+Module TBLattice.
   Section ClassDef.
     Structure mixin_of (T : porderType) := Mixin {
       top : T;
@@ -1233,11 +1233,11 @@ Module TBDLattice.
     }.
 
     Record class_of (T : Type) := Class {
-      base  : BDLattice.class_of T;
+      base  : BLattice.class_of T;
       mixin : mixin_of (POrder.Pack base T)
     }.
 
-    Local Coercion base : class_of >-> BDLattice.class_of.
+    Local Coercion base : class_of >-> BLattice.class_of.
 
     Structure type := Pack { sort; _ : class_of sort; _ : Type }.
 
@@ -1250,51 +1250,51 @@ Module TBDLattice.
     Let xT := let: Pack T _ _ := cT in T.
     Notation xclass := (class : class_of xT).
 
-    Definition pack b0 (m0 : mixin_of (@BDLattice.Pack T b0 T)) :=
-      fun bT b & phant_id (BDLattice.class bT) b =>
+    Definition pack b0 (m0 : mixin_of (@BLattice.Pack T b0 T)) :=
+      fun bT b & phant_id (BLattice.class bT) b =>
         fun    m & phant_id m0 m => Pack (@Class T b m) T.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
     Definition porderType := @POrder.Pack cT xclass xT.
-    Definition dlatticeType := @DLattice.Pack cT xclass xT.
-    Definition bdlatticeType := @BDLattice.Pack cT xclass xT.
+    Definition latticeType := @Lattice.Pack cT xclass xT.
+    Definition blatticeType := @BLattice.Pack cT xclass xT.
   End ClassDef.
 
   Module Import Exports.
-    Coercion base      : class_of >-> BDLattice.class_of.
+    Coercion base      : class_of >-> BLattice.class_of.
     Coercion mixin     : class_of >-> mixin_of.
     Coercion sort      : type >-> Sortclass.
     Coercion eqType    : type >-> Equality.type.
     Coercion choiceType : type >-> Choice.type.
     Coercion porderType : type >-> POrder.type.
-    Coercion dlatticeType : type >-> DLattice.type.
-    Coercion bdlatticeType : type >-> BDLattice.type.
+    Coercion latticeType : type >-> Lattice.type.
+    Coercion blatticeType : type >-> BLattice.type.
 
     Canonical eqType.
     Canonical porderType.
     Canonical choiceType.
-    Canonical dlatticeType.
-    Canonical bdlatticeType.
+    Canonical latticeType.
+    Canonical blatticeType.
 
-    Notation tbdlatticeType  := type.
-    Notation tbdlatticeMixin := mixin_of.
-    Notation TBDLatticeMixin := Mixin.
-    Notation TBDLatticeType T m := (@pack T _ m _ _ id _ id).
+    Notation tblatticeType  := type.
+    Notation tblatticeMixin := mixin_of.
+    Notation TBLatticeMixin := Mixin.
+    Notation TBLatticeType T m := (@pack T _ m _ _ id _ id).
 
-    Notation "[ 'tbdlatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
-      (at level 0, format "[ 'tbdlatticeType'  'of'  T  'for'  cT ]") : form_scope.
-    Notation "[ 'tbdlatticeType' 'of' T ]" := (@clone T _ _ id)
-      (at level 0, format "[ 'tbdlatticeType'  'of'  T ]") : form_scope.
+    Notation "[ 'tblatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
+      (at level 0, format "[ 'tblatticeType'  'of'  T  'for'  cT ]") : form_scope.
+    Notation "[ 'tblatticeType' 'of' T ]" := (@clone T _ _ id)
+      (at level 0, format "[ 'tblatticeType'  'of'  T ]") : form_scope.
 
   End Exports.
-End TBDLattice.
+End TBLattice.
 
-Export TBDLattice.Exports.
+Export TBLattice.Exports.
 
-Definition top (T : tbdlatticeType) : T := TBDLattice.top (TBDLattice.class T).
+Definition top (T : tblatticeType) : T := TBLattice.top (TBLattice.class T).
 
-Module Import TBDLatticeSyntax.
+Module Import TBLatticeSyntax.
 
 Notation "1" := (@top _) : order_scope.
 
@@ -1323,67 +1323,67 @@ Notation "\meet_ ( i 'in' A | P ) F" :=
 Notation "\meet_ ( i 'in' A ) F" :=
  (\big[@meet _/1%O]_(i in A) F%N) : order_scope.
 
-End TBDLatticeSyntax.
+End TBLatticeSyntax.
 
-Module Import ReverseTBDLattice.
-Section ReverseTBDLattice.
-Variable L : tbdlatticeType.
+Module Import ReverseTBLattice.
+Section ReverseTBLattice.
+Variable L : tblatticeType.
 
 Lemma lex1 (x : L) : x <= 1. Proof. by case: L x => [?[?[]]]. Qed.
 
-Definition reverse_bdlatticeMixin :=
-  @BDLatticeMixin [dlatticeType of L^r] 1 lex1.
-Canonical reverse_bdlatticeType := BDLatticeType L^r reverse_bdlatticeMixin.
+Definition reverse_blatticeMixin :=
+  @BLatticeMixin [latticeType of L^r] 1 lex1.
+Canonical reverse_blatticeType := BLatticeType L^r reverse_blatticeMixin.
 
-Definition reverse_tbdlatticeMixin :=
-   @TBDLatticeMixin [dlatticeType of L^r] (0 : L) (@le0x L).
-Canonical reverse_tbdlatticeType := TBDLatticeType L^r reverse_tbdlatticeMixin.
+Definition reverse_tblatticeMixin :=
+   @TBLatticeMixin [latticeType of L^r] (0 : L) (@le0x L).
+Canonical reverse_tblatticeType := TBLatticeType L^r reverse_tblatticeMixin.
 
-End ReverseTBDLattice.
-End ReverseTBDLattice.
+End ReverseTBLattice.
+End ReverseTBLattice.
 
-Module Import TBDLatticeTheory.
-Section TBDLatticeTheory.
-Variable (L : tbdlatticeType).
+Module Import TBLatticeTheory.
+Section TBLatticeTheory.
+Variable (L : tblatticeType).
 Implicit Types (x y : L).
 
 Hint Resolve le0x lex1.
 
 Lemma meetx1 : right_id 1 (@meet L).
-Proof. exact: (@joinx0 [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@joinx0 [tblatticeType of L^r]). Qed.
 
 Lemma meet1x : left_id 1 (@meet L).
-Proof. exact: (@join0x [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@join0x [tblatticeType of L^r]). Qed.
 
 Lemma joinx1 : right_zero 1 (@join L).
-Proof. exact: (@meetx0 [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@meetx0 [tblatticeType of L^r]). Qed.
 
 Lemma join1x : left_zero 1 (@join L).
-Proof. exact: (@meet0x [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@meet0x [tblatticeType of L^r]). Qed.
 
 Lemma le1x x : (1 <= x) = (x == 1).
-Proof. exact: (@lex0 [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@lex0 [tblatticeType of L^r]). Qed.
 
 Lemma leI2l_le y t x z : y `|` z = 1 -> x `&` y <= z `&` t -> x <= z.
-Proof. rewrite joinC; exact: (@leU2l_le [tbdlatticeType of L^r]). Qed.
+Proof. rewrite joinC; exact: (@leU2l_le [tblatticeType of L^r]). Qed.
 
 Lemma leI2r_le y t x z : y `|` z = 1 -> y `&` x <= t `&` z -> x <= z.
-Proof. rewrite joinC; exact: (@leU2r_le [tbdlatticeType of L^r]). Qed.
+Proof. rewrite joinC; exact: (@leU2r_le [tblatticeType of L^r]). Qed.
 
 Lemma lexIl z x y : z `|` y = 1 -> (x `&` z <= y) = (x <= y).
-Proof. rewrite joinC; exact: (@lexUl [tbdlatticeType of L^r]). Qed.
+Proof. rewrite joinC; exact: (@lexUl [tblatticeType of L^r]). Qed.
 
 Lemma lexIr z x y : z `|` y = 1 -> (z `&` x <= y) = (x <= y).
-Proof. rewrite joinC; exact: (@lexUr [tbdlatticeType of L^r]). Qed.
+Proof. rewrite joinC; exact: (@lexUr [tblatticeType of L^r]). Qed.
 
 Lemma leI2E x y z t : x `|` t = 1 -> y `|` z = 1 ->
   (x `&` y <= z `&` t) = (x <= z) && (y <= t).
 Proof.
-by move=> ? ?; apply: (@leU2E [tbdlatticeType of L^r]); rewrite meetC.
+by move=> ? ?; apply: (@leU2E [tblatticeType of L^r]); rewrite meetC.
 Qed.
 
 Lemma meet_eq1 x y : (x `&` y == 1) = (x == 1) && (y == 1).
-Proof. exact: (@join_eq0 [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@join_eq0 [tblatticeType of L^r]). Qed.
 
 Canonical meet_monoid := Monoid.Law (@meetA _) meet1x meetx1.
 Canonical meet_comoid := Monoid.ComLaw (@meetC _).
@@ -1395,49 +1395,49 @@ Canonical meet_addoid := Monoid.AddLaw (@joinIl L) (@joinIr _).
 
 Lemma meets_inf (I : finType) (j : I) (P : pred I) (F : I -> L) :
    P j -> \meet_(i | P i) F i <= F j.
-Proof. exact: (@join_sup [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@join_sup [tblatticeType of L^r]). Qed.
 
 Lemma meets_max (I : finType) (j : I) (u : L) (P : pred I) (F : I -> L) :
    P j -> F j <= u -> \meet_(i | P i) F i <= u.
-Proof. exact: (@join_min [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@join_min [tblatticeType of L^r]). Qed.
 
 Lemma meetsP (I : finType) (l : L) (P : pred I) (F : I -> L) :
    reflect (forall i : I, P i -> l <= F i) (l <= \meet_(i | P i) F i).
-Proof. exact: (@joinsP [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@joinsP [tblatticeType of L^r]). Qed.
 
 Lemma le_meets (I : finType) (A B : {set I}) (F : I -> L) :
    A \subset B -> \meet_(i in B) F i <= \meet_(i in A) F i.
-Proof. exact: (@le_joins [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@le_joins [tblatticeType of L^r]). Qed.
 
 Lemma meets_setU (I : finType) (A B : {set I}) (F : I -> L) :
    \meet_(i in (A :|: B)) F i = \meet_(i in A) F i `&` \meet_(i in B) F i.
-Proof. exact: (@joins_setU [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@joins_setU [tblatticeType of L^r]). Qed.
 
 Lemma meet_seq (I : finType) (r : seq I) (F : I -> L) :
    \meet_(i <- r) F i = \meet_(i in r) F i.
-Proof. exact: (@join_seq [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@join_seq [tblatticeType of L^r]). Qed.
 
 Lemma meets_total (I : finType) (d : L) (P : pred I) (F : I -> L) :
    (forall i : I, P i -> d `|` F i = 1) -> d `|` \meet_(i | P i) F i = 1.
-Proof. exact: (@joins_disjoint [tbdlatticeType of L^r]). Qed.
+Proof. exact: (@joins_disjoint [tblatticeType of L^r]). Qed.
 
-End TBDLatticeTheory.
-End TBDLatticeTheory.
+End TBLatticeTheory.
+End TBLatticeTheory.
 
-Module CBDLattice.
+Module CBLattice.
   Section ClassDef.
-    Structure mixin_of (T : bdlatticeType) := Mixin {
+    Structure mixin_of (T : blatticeType) := Mixin {
       sub : T -> T -> T;
       _ : forall x y, y `&` sub x y = 0;
       _ : forall x y, (x `&` y) `|` sub x y = x
     }.
 
     Record class_of (T : Type) := Class {
-      base  : BDLattice.class_of T;
-      mixin : mixin_of (BDLattice.Pack base T)
+      base  : BLattice.class_of T;
+      mixin : mixin_of (BLattice.Pack base T)
     }.
 
-    Local Coercion base : class_of >-> BDLattice.class_of.
+    Local Coercion base : class_of >-> BLattice.class_of.
 
     Structure type := Pack { sort; _ : class_of sort; _ : Type }.
 
@@ -1450,57 +1450,57 @@ Module CBDLattice.
     Let xT := let: Pack T _ _ := cT in T.
     Notation xclass := (class : class_of xT).
 
-    Definition pack b0 (m0 : mixin_of (@BDLattice.Pack T b0 T)) :=
-      fun bT b & phant_id (BDLattice.class bT) b =>
+    Definition pack b0 (m0 : mixin_of (@BLattice.Pack T b0 T)) :=
+      fun bT b & phant_id (BLattice.class bT) b =>
         fun    m & phant_id m0 m => Pack (@Class T b m) T.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
     Definition porderType := @POrder.Pack cT xclass xT.
-    Definition dlatticeType := @DLattice.Pack cT xclass xT.
-    Definition bdlatticeType := @BDLattice.Pack cT xclass xT.
+    Definition latticeType := @Lattice.Pack cT xclass xT.
+    Definition blatticeType := @BLattice.Pack cT xclass xT.
   End ClassDef.
 
   Module Import Exports.
-    Coercion base      : class_of >-> BDLattice.class_of.
+    Coercion base      : class_of >-> BLattice.class_of.
     Coercion mixin     : class_of >-> mixin_of.
     Coercion sort      : type >-> Sortclass.
     Coercion eqType    : type >-> Equality.type.
     Coercion choiceType : type >-> Choice.type.
     Coercion porderType : type >-> POrder.type.
-    Coercion dlatticeType : type >-> DLattice.type.
-    Coercion bdlatticeType : type >-> BDLattice.type.
+    Coercion latticeType : type >-> Lattice.type.
+    Coercion blatticeType : type >-> BLattice.type.
 
     Canonical eqType.
     Canonical porderType.
     Canonical choiceType.
-    Canonical dlatticeType.
-    Canonical bdlatticeType.
+    Canonical latticeType.
+    Canonical blatticeType.
 
-    Notation cbdlatticeType  := type.
-    Notation cbdlatticeMixin := mixin_of.
-    Notation CBDLatticeMixin := Mixin.
-    Notation CBDLatticeType T m := (@pack T _ m _ _ id _ id).
+    Notation cblatticeType  := type.
+    Notation cblatticeMixin := mixin_of.
+    Notation CBLatticeMixin := Mixin.
+    Notation CBLatticeType T m := (@pack T _ m _ _ id _ id).
 
-    Notation "[ 'cbdlatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
-      (at level 0, format "[ 'cbdlatticeType'  'of'  T  'for'  cT ]") : form_scope.
-    Notation "[ 'cbdlatticeType' 'of' T ]" := (@clone T _ _ id)
-      (at level 0, format "[ 'cbdlatticeType'  'of'  T ]") : form_scope.
+    Notation "[ 'cblatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
+      (at level 0, format "[ 'cblatticeType'  'of'  T  'for'  cT ]") : form_scope.
+    Notation "[ 'cblatticeType' 'of' T ]" := (@clone T _ _ id)
+      (at level 0, format "[ 'cblatticeType'  'of'  T ]") : form_scope.
 
   End Exports.
-End CBDLattice.
+End CBLattice.
 
-Export CBDLattice.Exports.
+Export CBLattice.Exports.
 
-Definition sub {T : cbdlatticeType} : T -> T -> T := CBDLattice.sub (CBDLattice.class T).
+Definition sub {T : cblatticeType} : T -> T -> T := CBLattice.sub (CBLattice.class T).
 
-Module Import CBDLatticeSyntax.
+Module Import CBLatticeSyntax.
 Notation "x `\` y" := (sub x y).
-End CBDLatticeSyntax.
+End CBLatticeSyntax.
 
-Module Import CBDLatticeTheory.
-Section CBDLatticeTheory.
-Variable (L : cbdlatticeType).
+Module Import CBLatticeTheory.
+Section CBLatticeTheory.
+Variable (L : cblatticeType).
 Implicit Types (x y z : L).
 
 Lemma subKI x y : y `&` (x `\` y) = 0.
@@ -1671,25 +1671,25 @@ Proof.
 by move=> ?; rewrite lt_leAnge leBRL leBLR le0x meet0x eqxx joinx0 /= lt_geF.
 Qed.
 
-End CBDLatticeTheory.
-End CBDLatticeTheory.
+End CBLatticeTheory.
+End CBLatticeTheory.
 
-Module CTBDLattice.
+Module CTBLattice.
   Section ClassDef.
-    Record mixin_of (T : tbdlatticeType) (sub : T -> T -> T) := Mixin {
+    Record mixin_of (T : tblatticeType) (sub : T -> T -> T) := Mixin {
        compl : T -> T;
        _ : forall x, compl x = sub 1 x
     }.
 
     Record class_of (T : Type) := Class {
-      base  : TBDLattice.class_of T;
-      mixin1 : CBDLattice.mixin_of (BDLattice.Pack base T);
-      mixin2 : @mixin_of (TBDLattice.Pack base T) (CBDLattice.sub mixin1)
+      base  : TBLattice.class_of T;
+      mixin1 : CBLattice.mixin_of (BLattice.Pack base T);
+      mixin2 : @mixin_of (TBLattice.Pack base T) (CBLattice.sub mixin1)
     }.
 
-    Local Coercion base : class_of >-> TBDLattice.class_of.
+    Local Coercion base : class_of >-> TBLattice.class_of.
     Local Coercion base2 T (c : class_of T) :=
-      CBDLattice.Class (mixin1 c).
+      CBLattice.Class (mixin1 c).
 
     Structure type := Pack { sort; _ : class_of sort; _ : Type }.
 
@@ -1703,74 +1703,74 @@ Module CTBDLattice.
     Notation xclass := (class : class_of xT).
 
     Definition pack :=
-      fun bT b & phant_id (TBDLattice.class bT) (b : TBDLattice.class_of T) =>
-      fun m1T m1 &  phant_id (CBDLattice.class m1T) (@CBDLattice.Class T b m1) =>
-      fun (m2 : @mixin_of (@TBDLattice.Pack T b T) (CBDLattice.sub m1)) =>
+      fun bT b & phant_id (TBLattice.class bT) (b : TBLattice.class_of T) =>
+      fun m1T m1 &  phant_id (CBLattice.class m1T) (@CBLattice.Class T b m1) =>
+      fun (m2 : @mixin_of (@TBLattice.Pack T b T) (CBLattice.sub m1)) =>
       Pack (@Class T b m1 m2) T.
 
     Definition eqType := @Equality.Pack cT xclass xT.
     Definition choiceType := @Choice.Pack cT xclass xT.
     Definition porderType := @POrder.Pack cT xclass xT.
-    Definition dlatticeType := @DLattice.Pack cT xclass xT.
-    Definition bdlatticeType := @BDLattice.Pack cT xclass xT.
-    Definition tbdlatticeType := @TBDLattice.Pack cT xclass xT.
-    Definition cbdlatticeType := @CBDLattice.Pack cT xclass xT.
-    Definition tbd_cbdlatticeType :=
-      @CBDLattice.Pack tbdlatticeType xclass xT.
+    Definition latticeType := @Lattice.Pack cT xclass xT.
+    Definition blatticeType := @BLattice.Pack cT xclass xT.
+    Definition tblatticeType := @TBLattice.Pack cT xclass xT.
+    Definition cblatticeType := @CBLattice.Pack cT xclass xT.
+    Definition tbd_cblatticeType :=
+      @CBLattice.Pack tblatticeType xclass xT.
   End ClassDef.
 
   Module Import Exports.
-    Coercion base      : class_of >-> TBDLattice.class_of.
-    Coercion base2     : class_of >-> CBDLattice.class_of.
-    Coercion mixin1     : class_of >-> CBDLattice.mixin_of.
+    Coercion base      : class_of >-> TBLattice.class_of.
+    Coercion base2     : class_of >-> CBLattice.class_of.
+    Coercion mixin1     : class_of >-> CBLattice.mixin_of.
     Coercion mixin2     : class_of >-> mixin_of.
     Coercion sort      : type >-> Sortclass.
     Coercion eqType    : type >-> Equality.type.
     Coercion choiceType : type >-> Choice.type.
     Coercion porderType : type >-> POrder.type.
-    Coercion dlatticeType : type >-> DLattice.type.
-    Coercion bdlatticeType : type >-> BDLattice.type.
-    Coercion tbdlatticeType : type >-> TBDLattice.type.
-    Coercion cbdlatticeType : type >-> CBDLattice.type.
+    Coercion latticeType : type >-> Lattice.type.
+    Coercion blatticeType : type >-> BLattice.type.
+    Coercion tblatticeType : type >-> TBLattice.type.
+    Coercion cblatticeType : type >-> CBLattice.type.
 
     Canonical eqType.
     Canonical porderType.
     Canonical choiceType.
-    Canonical dlatticeType.
-    Canonical bdlatticeType.
-    Canonical tbdlatticeType.
-    Canonical cbdlatticeType.
-    Canonical tbd_cbdlatticeType.
+    Canonical latticeType.
+    Canonical blatticeType.
+    Canonical tblatticeType.
+    Canonical cblatticeType.
+    Canonical tbd_cblatticeType.
 
-    Notation ctbdlatticeType  := type.
-    Notation ctbdlatticeMixin := mixin_of.
-    Notation CTBDLatticeMixin := Mixin.
-    Notation CTBDLatticeType T m := (@pack T _ _ id _ _ id m).
+    Notation ctblatticeType  := type.
+    Notation ctblatticeMixin := mixin_of.
+    Notation CTBLatticeMixin := Mixin.
+    Notation CTBLatticeType T m := (@pack T _ _ id _ _ id m).
 
-    Notation "[ 'ctbdlatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
-      (at level 0, format "[ 'ctbdlatticeType'  'of'  T  'for'  cT ]") : form_scope.
-    Notation "[ 'ctbdlatticeType' 'of' T ]" := (@clone T _ _ id)
-      (at level 0, format "[ 'ctbdlatticeType'  'of'  T ]") : form_scope.
+    Notation "[ 'ctblatticeType' 'of' T 'for' cT ]" := (@clone T cT _ id)
+      (at level 0, format "[ 'ctblatticeType'  'of'  T  'for'  cT ]") : form_scope.
+    Notation "[ 'ctblatticeType' 'of' T ]" := (@clone T _ _ id)
+      (at level 0, format "[ 'ctblatticeType'  'of'  T ]") : form_scope.
 
-    Notation "[ 'default_ctbdlatticeType' 'of' T ]" :=
+    Notation "[ 'default_ctblatticeType' 'of' T ]" :=
       (@pack T _ _ id _ _ id (fun=> erefl))
-      (at level 0, format "[ 'default_ctbdlatticeType'  'of'  T ]") : form_scope.
+      (at level 0, format "[ 'default_ctblatticeType'  'of'  T ]") : form_scope.
 
   End Exports.
-End CTBDLattice.
+End CTBLattice.
 
-Export CTBDLattice.Exports.
+Export CTBLattice.Exports.
 
-Definition compl {T : ctbdlatticeType} : T -> T :=
-  CTBDLattice.compl (CTBDLattice.class T).
+Definition compl {T : ctblatticeType} : T -> T :=
+  CTBLattice.compl (CTBLattice.class T).
 
-Module Import CTBDLatticeSyntax.
+Module Import CTBLatticeSyntax.
 Notation "~` A" := (compl A).
-End CTBDLatticeSyntax.
+End CTBLatticeSyntax.
 
-Module Import CTBDLatticeTheory.
-Section CTBDLatticeTheory.
-Variable (L : ctbdlatticeType).
+Module Import CTBLatticeTheory.
+Section CTBLatticeTheory.
+Variable (L : ctblatticeType).
 Implicit Types (x y z : L).
 
 Lemma complE x : ~` x = 1 `\` x.
@@ -1842,38 +1842,38 @@ Lemma compl_meets (J : Type) (r : seq J) (P : pred J) (F : J -> L) :
    ~` (\meet_(j <- r | P j) F j) = \join_(j <- r | P j) ~` F j.
 Proof. by elim/big_rec2: _=> [|i x y ? <-]; rewrite ?compl1 ?complI. Qed.
 
-End CTBDLatticeTheory.
-End CTBDLatticeTheory.
+End CTBLatticeTheory.
+End CTBLatticeTheory.
 
 Module Syntax.
 Export POSyntax.
-Export DLatticeSyntax.
-Export BDLatticeSyntax.
-Export TBDLatticeSyntax.
-Export CBDLatticeSyntax.
-Export CTBDLatticeSyntax.
+Export LatticeSyntax.
+Export BLatticeSyntax.
+Export TBLatticeSyntax.
+Export CBLatticeSyntax.
+Export CTBLatticeSyntax.
 End Syntax.
 
 Module Theory.
 Export ReversePOrder.
 Export POrderTheory.
 Export TotalTheory.
-Export ReverseDLattice.
-Export DLatticeTheoryMeet.
-Export DLatticeTheoryJoin.
-Export BDLatticeTheory.
-Export CBDLatticeTheory.
-Export ReverseTBDLattice.
-Export TBDLatticeTheory.
-Export CTBDLatticeTheory.
+Export ReverseLattice.
+Export LatticeTheoryMeet.
+Export LatticeTheoryJoin.
+Export BLatticeTheory.
+Export CBLatticeTheory.
+Export ReverseTBLattice.
+Export TBLatticeTheory.
+Export CTBLatticeTheory.
 
 Export POrder.Exports.
 Export Total.Exports.
-Export DLattice.Exports.
-Export BDLattice.Exports.
-Export CBDLattice.Exports.
-Export TBDLattice.Exports.
-Export CTBDLattice.Exports.
+Export Lattice.Exports.
+Export BLattice.Exports.
+Export CBLattice.Exports.
+Export TBLattice.Exports.
+Export CTBLattice.Exports.
 
 End Theory.
 
@@ -1890,7 +1890,7 @@ Variable eqType_of_elementType : elementType -> eqType.
 Coercion eqType_of_elementType : elementType >-> eqType.
 Implicit Types (X Y : elementType).
 
-Structure mixin_of (set : elementType -> cbdlatticeType) := Mixin {
+Structure mixin_of (set : elementType -> cblatticeType) := Mixin {
   memset : forall X, set X -> X -> bool;
   set1 : forall X, X -> set X;
   _ : forall X (x : X), set1 x != 0;
@@ -1910,8 +1910,8 @@ Structure mixin_of (set : elementType -> cbdlatticeType) := Mixin {
 }.
 
 Record class_of (set : elementType -> Type) := Class {
-  base  : forall X, Order.CBDLattice.class_of (set X);
-  mixin : mixin_of (fun X => Order.CBDLattice.Pack (base X) (set X))
+  base  : forall X, Order.CBLattice.class_of (set X);
+  mixin : mixin_of (fun X => Order.CBLattice.Pack (base X) (set X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
@@ -1929,8 +1929,8 @@ Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (class : class_of xset).
 
 Definition pack b0
-  (m0 : mixin_of (fun X=> @Order.CBDLattice.Pack (set X) (b0 X) (set X))) :=
-  fun bT b & (forall X, phant_id (Order.CBDLattice.class (bT X)) (b X)) =>
+  (m0 : mixin_of (fun X=> @Order.CBLattice.Pack (set X) (b0 X) (set X))) :=
+  fun bT b & (forall X, phant_id (Order.CBLattice.class (bT X)) (b X)) =>
   fun    m & phant_id m0 m => Pack (@Class set b m) set.
 End ClassDef.
 
@@ -1949,12 +1949,12 @@ Notation xclass := (@class _ eqType_of_elementType cT : class_of eqType_of_eleme
 Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
 Definition porderType := @Order.POrder.Pack (cT X) (xclass X) (xset X).
-Definition dlatticeType :=
-  @Order.DLattice.Pack (cT X) (xclass X) (xset X).
-Definition bdlatticeType :=
-  @Order.BDLattice.Pack (cT X) (xclass X) (xset X).
-Definition cbdlatticeType :=
-  @Order.CBDLattice.Pack (cT X) (xclass X) (xset X).
+Definition latticeType :=
+  @Order.Lattice.Pack (cT X) (xclass X) (xset X).
+Definition blatticeType :=
+  @Order.BLattice.Pack (cT X) (xclass X) (xset X).
+Definition cblatticeType :=
+  @Order.CBLattice.Pack (cT X) (xclass X) (xset X).
 End CanonicalDef.
 
 Module Import Exports.
@@ -1964,16 +1964,16 @@ Coercion sort      : type >-> Funclass.
 Coercion eqType    : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
-Coercion dlatticeType : type >-> Order.DLattice.type.
-Coercion bdlatticeType : type >-> Order.BDLattice.type.
-Coercion cbdlatticeType : type >-> Order.CBDLattice.type.
+Coercion latticeType : type >-> Order.Lattice.type.
+Coercion blatticeType : type >-> Order.BLattice.type.
+Coercion cblatticeType : type >-> Order.CBLattice.type.
 
 Canonical eqType.
 Canonical porderType.
 Canonical choiceType.
-Canonical dlatticeType.
-Canonical bdlatticeType.
-Canonical cbdlatticeType.
+Canonical latticeType.
+Canonical blatticeType.
+Canonical cblatticeType.
 
 Notation semisetType  := type.
 Notation semisetMixin := mixin_of.
@@ -2273,9 +2273,9 @@ Coercion eqType_of_elementType : elementType >-> eqType.
 Implicit Types (X Y : elementType).
 
 Record class_of (set : elementType -> Type) := Class {
-  base  : forall X, Order.CTBDLattice.class_of (set X);
+  base  : forall X, Order.CTBLattice.class_of (set X);
   mixin : Semiset.mixin_of eqType_of_elementType
-                           (fun X => Order.CBDLattice.Pack (base X) (set X))
+                           (fun X => Order.CBLattice.Pack (base X) (set X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
@@ -2283,7 +2283,7 @@ Definition base2 (set : elementType -> Type)
          (c : class_of set) := Semiset.Class (@mixin set c).
 Local Coercion base2 : class_of >-> Semiset.class_of.
 
-(* Local Coercion base : class_of >-> Order.CBDLattice.class_of. *)
+(* Local Coercion base : class_of >-> Order.CBLattice.class_of. *)
 
 Structure type := Pack { sort ; _ : class_of sort;
                          _ : elementType -> Type }.
@@ -2298,8 +2298,8 @@ Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (class : class_of xset).
 
 Definition pack :=
-  fun bT (b : forall X, Order.CTBDLattice.class_of _)
-      & (forall X, phant_id (Order.CTBDLattice.class (bT X)) (b X)) =>
+  fun bT (b : forall X, Order.CTBLattice.class_of _)
+      & (forall X, phant_id (Order.CTBLattice.class (bT X)) (b X)) =>
   fun mT m & phant_id (@Semiset.class _ eqType_of_elementType mT)
                       (@Semiset.Class _ _ set b m) =>
   Pack (@Class set (fun x => b x) m) set.
@@ -2322,17 +2322,17 @@ Notation xclass := (@class _ eqType_of_elementType cT : class_of eqType_of_eleme
 Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
 Definition porderType := @Order.POrder.Pack (cT X) (xclass X) (xset X).
-Definition dlatticeType :=
-  @Order.DLattice.Pack (cT X) (xclass X) (xset X).
-Definition bdlatticeType :=
-  @Order.BDLattice.Pack (cT X) (xclass X) (xset X).
-Definition cbdlatticeType :=
-  @Order.CBDLattice.Pack (cT X) (xclass X) (xset X).
-Definition ctbdlatticeType :=
-  @Order.CTBDLattice.Pack (cT X) (xclass X) (xset X).
+Definition latticeType :=
+  @Order.Lattice.Pack (cT X) (xclass X) (xset X).
+Definition blatticeType :=
+  @Order.BLattice.Pack (cT X) (xclass X) (xset X).
+Definition cblatticeType :=
+  @Order.CBLattice.Pack (cT X) (xclass X) (xset X).
+Definition ctblatticeType :=
+  @Order.CTBLattice.Pack (cT X) (xclass X) (xset X).
 Definition semisetType := @Semiset.Pack _ _ cT xclass xset.
-Definition semiset_ctbdlatticeType :=
-  @Order.CTBDLattice.Pack (semisetType X) (xclass X) (xset X).
+Definition semiset_ctblatticeType :=
+  @Order.CTBLattice.Pack (semisetType X) (xclass X) (xset X).
 End CanonicalDef.
 
 Module Import Exports.
@@ -2342,19 +2342,19 @@ Coercion sort      : type >-> Funclass.
 Coercion eqType    : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
-Coercion dlatticeType : type >-> Order.DLattice.type.
-Coercion bdlatticeType : type >-> Order.BDLattice.type.
-Coercion cbdlatticeType : type >-> Order.CBDLattice.type.
-Coercion ctbdlatticeType : type >-> Order.CTBDLattice.type.
+Coercion latticeType : type >-> Order.Lattice.type.
+Coercion blatticeType : type >-> Order.BLattice.type.
+Coercion cblatticeType : type >-> Order.CBLattice.type.
+Coercion ctblatticeType : type >-> Order.CTBLattice.type.
 Coercion semisetType : type >-> Semiset.type.
 
 Canonical eqType.
 Canonical porderType.
 Canonical choiceType.
-Canonical dlatticeType.
-Canonical bdlatticeType.
-Canonical cbdlatticeType.
-Canonical ctbdlatticeType.
+Canonical latticeType.
+Canonical blatticeType.
+Canonical cblatticeType.
+Canonical ctblatticeType.
 Canonical semisetType.
 
 Notation setType  := type.
