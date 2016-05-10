@@ -374,7 +374,6 @@ Structure finpredType (T : choiceType) := FinPredType {
        forall p x, x \in pred_fset p = tofinpred p x}
 }.
 
-
 Canonical finpredType_predType (T : choiceType) (fpT : finpredType T) :=
   @PredType T (finpred_sort fpT) (@tofinpred T fpT)
   (let: FinPredType _ _ mem _ := fpT in mem).
