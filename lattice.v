@@ -221,7 +221,7 @@ End POrder.
 Import POrder.Exports.
 Bind Scope cpo_sort with POrder.sort.
 
-Module Def.
+Module Import POrderDef.
 Section Def.
 Variable (T : porderType).
 
@@ -271,15 +271,9 @@ CoInductive incomparer (x y : T) :
     false false false false false false false false.
 
 End Def.
-End Def.
+End POrderDef.
 
-Import Def.
 Prenex Implicits lt le leif.
-Notation lt := Def.lt.
-Notation le := Def.le.
-Notation gt := Def.gt.
-Notation ge := Def.ge.
-Notation leif := Def.leif.
 
 Module Import POSyntax.
 
@@ -556,46 +550,51 @@ Proof. by []. Qed.
 Lemma ltEnat (n m : nat): (n < m) = (n < m)%N.
 Proof. by []. Qed.
 
-Module SeqLexOrder.
-  Section SeqLexOrder.
-  Variable T : porderType.
+Module SeqLexPOrder.
+Section SeqLexPOrder.
+Variable T : porderType.
 
-  Implicit Types s : seq T.
+Implicit Types s : seq T.
 
-  Fixpoint lexi s1 s2 :=
-    if s1 is x1 :: s1' then
-      if s2 is x2 :: s2' then
-        (x1 < x2) || ((x1 == x2) && lexi s1' s2')
-      else
-        false
+Fixpoint lexi s1 s2 :=
+  if s1 is x1 :: s1' then
+    if s2 is x2 :: s2' then
+      (x1 < x2) || ((x1 == x2) && lexi s1' s2')
     else
-      true.
+      false
+  else
+    true.
 
-  Lemma lexi_le_head x sx y sy:
-    lexi (x :: sx) (y :: sy) -> x <= y.
-  Proof. by case/orP => [/ltW|/andP [/eqP-> _]]. Qed.
+Fact lexi_le_head x sx y sy:
+  lexi (x :: sx) (y :: sy) -> x <= y.
+Proof. by case/orP => [/ltW|/andP [/eqP-> _]]. Qed.
 
-  Lemma lexi_refl: reflexive lexi.
-  Proof. by elim => [|x s ih] //=; rewrite eqxx ih orbT. Qed.
+Fact lexi_refl: reflexive lexi.
+Proof. by elim => [|x s ih] //=; rewrite eqxx ih orbT. Qed.
 
-  Lemma lexi_anti: antisymmetric lexi.
-  Proof.
-  move=> x y /andP []; elim: x y => [|x sx ih] [|y sy] //=.
-  by case: comparableP => //= -> lesxsy /(ih _ lesxsy) ->.
-  Qed.
+Fact lexi_anti: antisymmetric lexi.
+Proof.
+move=> x y /andP []; elim: x y => [|x sx ih] [|y sy] //=.
+by case: comparableP => //= -> lesxsy /(ih _ lesxsy) ->.
+Qed.
 
-  Lemma lexi_trans: transitive lexi.
-  Proof.
-  elim=> [|y sy ih] [|x sx] [|z sz] //=.
-  case: (comparableP x y) => //=; case: (comparableP y z) => //=.
-  - by move=> -> -> lesxsy /(ih _ _ lesxsy) ->; rewrite eqxx orbT.
-  - by move=> ltyz ->; rewrite ltyz.
-  - by move=> -> ->.
-  - by move=> ltyz /lt_trans - /(_ _ ltyz) ->.
-  Qed.
+Fact lexi_trans: transitive lexi.
+Proof.
+elim=> [|y sy ih] [|x sx] [|z sz] //=.
+case: (comparableP x y) => //=; case: (comparableP y z) => //=.
+- by move=> -> -> lesxsy /(ih _ _ lesxsy) ->; rewrite eqxx orbT.
+- by move=> ltyz ->; rewrite ltyz.
+- by move=> -> ->.
+- by move=> ltyz /lt_trans - /(_ _ ltyz) ->.
+Qed.
 
-End SeqLexOrder.
-End SeqLexOrder.
+Definition lexi_porderMixin := LePOrderMixin lexi_refl lexi_anti lexi_trans.
+Canonical lexi_porderType := POrderType (seq T) lexi_porderMixin.
+
+End SeqLexPOrder.
+End SeqLexPOrder.
+
+Canonical SeqLexPOrder.lexi_porderType.
 
 Module Lattice.
   Section ClassDef.
@@ -665,8 +664,10 @@ End Lattice.
 
 Export Lattice.Exports.
 
+Module Import LatticeDef.
 Definition meet {T : latticeType} : T -> T -> T := Lattice.meet (Lattice.class T).
 Definition join {T : latticeType} : T -> T -> T := Lattice.join (Lattice.class T).
+End LatticeDef.
 
 Module Import LatticeSyntax.
 
@@ -1070,7 +1071,9 @@ End BLattice.
 
 Export BLattice.Exports.
 
+Module Import BLatticeDef.
 Definition bottom (T : blatticeType) : T := BLattice.bottom (BLattice.class T).
+End BLatticeDef.
 
 Module Import BLatticeSyntax.
 
@@ -1301,7 +1304,9 @@ End TBLattice.
 
 Export TBLattice.Exports.
 
+Module Import TBLatticeDef.
 Definition top (T : tblatticeType) : T := TBLattice.top (TBLattice.class T).
+End TBLatticeDef.
 
 Module Import TBLatticeSyntax.
 
@@ -1501,7 +1506,9 @@ End CBLattice.
 
 Export CBLattice.Exports.
 
+Module Import CBLatticeDef.
 Definition sub {T : cblatticeType} : T -> T -> T := CBLattice.sub (CBLattice.class T).
+End CBLatticeDef.
 
 Module Import CBLatticeSyntax.
 Notation "x `\` y" := (sub x y).
@@ -1770,8 +1777,10 @@ End CTBLattice.
 
 Export CTBLattice.Exports.
 
+Module Import CTBLatticeDef.
 Definition compl {T : ctblatticeType} : T -> T :=
   CTBLattice.compl (CTBLattice.class T).
+End CTBLatticeDef.
 
 Module Import CTBLatticeSyntax.
 Notation "~` A" := (compl A).
@@ -1853,6 +1862,15 @@ Proof. by elim/big_rec2: _=> [|i x y ? <-]; rewrite ?compl1 ?complI. Qed.
 
 End CTBLatticeTheory.
 End CTBLatticeTheory.
+
+Module Def.
+Export POrderDef.
+Export LatticeDef.
+Export BLatticeDef.
+Export TBLatticeDef.
+Export CBLatticeDef.
+Export CTBLatticeDef.
+End Def.
 
 Module Syntax.
 Export POSyntax.
