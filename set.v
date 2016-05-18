@@ -165,6 +165,7 @@ Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
 
 Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
+Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
 Definition porderType :=
  @Order.POrder.Pack ddisp (cT X) (xclass X) (xset X).
 Definition latticeType :=
@@ -176,16 +177,18 @@ Definition cblatticeType :=
 End CanonicalDef.
 
 Module Import Exports.
-Coercion mixin     : class_of >-> mixin_of.
-Coercion base      : class_of >-> Funclass.
-Coercion sort      : type >-> Funclass.
-Coercion eqType    : type >-> Equality.type.
+Coercion mixin      : class_of >-> mixin_of.
+Coercion base       : class_of >-> Funclass.
+Coercion sort       : type >-> Funclass.
+Coercion eqType     : type >-> Equality.type.
+Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
 Coercion latticeType : type >-> Order.Lattice.type.
 Coercion blatticeType : type >-> Order.BLattice.type.
 Coercion cblatticeType : type >-> Order.CBLattice.type.
 
 Canonical eqType.
+Canonical choiceType.
 Canonical porderType.
 Canonical latticeType.
 Canonical blatticeType.
@@ -552,6 +555,7 @@ Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
 
 Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
+Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X) (xset X).
 Definition latticeType :=
   @Order.Lattice.Pack ddisp (cT X) (xclass X) (xset X).
@@ -571,6 +575,7 @@ Coercion base      : class_of >-> Funclass.
 Coercion base2     : class_of >-> Semiset.class_of.
 Coercion sort      : type >-> Funclass.
 Coercion eqType    : type >-> Equality.type.
+Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
 Coercion latticeType : type >-> Order.Lattice.type.
 Coercion blatticeType : type >-> Order.BLattice.type.
@@ -579,6 +584,7 @@ Coercion ctblatticeType : type >-> Order.CTBLattice.type.
 Coercion semisetType : type >-> Semiset.type.
 
 Canonical eqType.
+Canonical choiceType.
 Canonical porderType.
 Canonical latticeType.
 Canonical blatticeType.

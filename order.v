@@ -286,11 +286,11 @@ Structure mixin_of (T : eqType) := Mixin {
 }.
 
 Record class_of T := Class {
-  base  : Equality.class_of T;
+  base  : Choice.class_of T;
   mixin : mixin_of (EqType T base)
 }.
 
-Local Coercion base : class_of >-> Equality.class_of.
+Local Coercion base : class_of >-> Choice.class_of.
 
 Structure type (disp : unit) := Pack { sort; _ : class_of sort; _ : Type }.
 
@@ -305,19 +305,22 @@ Let xT := let: Pack T _ _ := cT in T.
 Notation xclass := (class : class_of xT).
 
 Definition pack disp :=
-  fun b bT & phant_id (Equality.class bT) b =>
+  fun b bT & phant_id (Choice.class bT) b =>
   fun m => Pack disp (@Class T b m) T.
 
 Definition eqType := @Equality.Pack cT xclass xT.
+Definition choiceType := @Choice.Pack cT xclass xT.
 End ClassDef.
 
 Module Import Exports.
-Coercion base   : class_of >-> Equality.class_of.
+Coercion base   : class_of >-> Choice.class_of.
 Coercion mixin  : class_of >-> mixin_of.
 Coercion sort   : type >-> Sortclass.
 Coercion eqType : type >-> Equality.type.
+Coercion choiceType : type >-> Choice.type.
 
 Canonical eqType.
+Canonical choiceType.
 
 Notation porderType := type.
 Notation porderMixin := mixin_of.
@@ -642,6 +645,7 @@ Module Import ReversePOSyntax.
 
 Notation "<=^r%O" := (@le (reverse_display _) _) : order_scope.
 Notation ">=^r%O" := (@ge (reverse_display _) _)  : order_scope.
+Notation ">=^r%O" := (@ge (reverse_display _) _)  : order_scope.
 Notation "<^r%O" := (@lt (reverse_display _) _) : order_scope.
 Notation ">^r%O" := (@gt (reverse_display _) _) : order_scope.
 Notation "<?=^r%O" := (@leif (reverse_display _) _) : order_scope.
@@ -721,54 +725,6 @@ End ReversePOrder.
 Definition LePOrderMixin T le rle ale tle :=
    @POrderMixin T le _ (fun _ _ => erefl) rle ale tle.
 
-Module SeqLexPOrder.
-Section SeqLexPOrder.
-Context {display : unit}.
-Local Notation porderType := (porderType display).
-Variable T : porderType.
-
-Implicit Types s : seq T.
-
-Fixpoint lexi s1 s2 :=
-  if s1 is x1 :: s1' then
-    if s2 is x2 :: s2' then
-      (x1 < x2) || ((x1 == x2) && lexi s1' s2')
-    else
-      false
-  else
-    true.
-
-Fact lexi_le_head x sx y sy:
-  lexi (x :: sx) (y :: sy) -> x <= y.
-Proof. by case/orP => [/ltW|/andP [/eqP-> _]]. Qed.
-
-Fact lexi_refl: reflexive lexi.
-Proof. by elim => [|x s ih] //=; rewrite eqxx ih orbT. Qed.
-
-Fact lexi_anti: antisymmetric lexi.
-Proof.
-move=> x y /andP []; elim: x y => [|x sx ih] [|y sy] //=.
-by case: comparableP => //= -> lesxsy /(ih _ lesxsy) ->.
-Qed.
-
-Fact lexi_trans: transitive lexi.
-Proof.
-elim=> [|y sy ih] [|x sx] [|z sz] //=.
-case: (comparableP x y) => //=; case: (comparableP y z) => //=.
-- by move=> -> -> lesxsy /(ih _ _ lesxsy) ->; rewrite eqxx orbT.
-- by move=> ltyz ->; rewrite ltyz.
-- by move=> -> ->.
-- by move=> ltyz /lt_trans - /(_ _ ltyz) ->.
-Qed.
-
-Definition lexi_porderMixin := LePOrderMixin lexi_refl lexi_anti lexi_trans.
-Canonical lexi_porderType := POrderType display (seq T) lexi_porderMixin.
-
-End SeqLexPOrder.
-End SeqLexPOrder.
-
-Canonical SeqLexPOrder.lexi_porderType.
-
 Module Lattice.
 Section ClassDef.
 
@@ -810,6 +766,7 @@ Definition pack b0 (m0 : mixin_of (@POrder.Pack disp T b0 T)) :=
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
 Definition eqType := @Equality.Pack cT xclass xT.
+Definition choiceType := @Choice.Pack cT xclass xT.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 End ClassDef.
 
@@ -818,9 +775,11 @@ Coercion base      : class_of >-> POrder.class_of.
 Coercion mixin     : class_of >-> mixin_of.
 Coercion sort      : type >-> Sortclass.
 Coercion eqType    : type >-> Equality.type.
+Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> POrder.type.
 
 Canonical eqType.
+Canonical choiceType.
 Canonical porderType.
 
 Notation latticeType  := type.
@@ -1067,6 +1026,7 @@ Definition pack b0 (m0 : mixin_of (@Lattice.Pack disp T b0 T)) :=
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
 Definition eqType := @Equality.Pack cT xclass xT.
+Definition choiceType := @Choice.Pack cT xclass xT.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 End ClassDef.
@@ -1075,10 +1035,12 @@ Module Import Exports.
 Coercion base      : class_of >-> Lattice.class_of.
 Coercion sort      : type >-> Sortclass.
 Coercion eqType    : type >-> Equality.type.
+Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> POrder.type.
 Coercion latticeType : type >-> Lattice.type.
 
 Canonical eqType.
+Canonical choiceType.
 Canonical porderType.
 Canonical latticeType.
 
@@ -1238,6 +1200,7 @@ Definition pack b0 (m0 : mixin_of (@Lattice.Pack disp T b0 T)) :=
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
 Definition eqType := @Equality.Pack cT xclass xT.
+Definition choiceType := @Choice.Pack cT xclass xT.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 End ClassDef.
@@ -1247,10 +1210,12 @@ Coercion base      : class_of >-> Lattice.class_of.
 Coercion mixin     : class_of >-> mixin_of.
 Coercion sort      : type >-> Sortclass.
 Coercion eqType    : type >-> Equality.type.
+Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> POrder.type.
 Coercion latticeType : type >-> Lattice.type.
 
 Canonical eqType.
+Canonical choiceType.
 Canonical porderType.
 Canonical latticeType.
 
@@ -1473,6 +1438,7 @@ Definition pack b0 (m0 : mixin_of (@BLattice.Pack disp T b0 T)) :=
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
 Definition eqType := @Equality.Pack cT xclass xT.
+Definition choiceType := @Choice.Pack cT xclass xT.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 Definition blatticeType := @BLattice.Pack disp cT xclass xT.
@@ -1488,6 +1454,7 @@ Coercion latticeType : type >-> Lattice.type.
 Coercion blatticeType : type >-> BLattice.type.
 
 Canonical eqType.
+Canonical choiceType.
 Canonical porderType.
 Canonical latticeType.
 Canonical blatticeType.
@@ -1745,6 +1712,7 @@ Definition pack b0 (m0 : mixin_of (@BLattice.Pack disp T b0 T)) :=
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
 Definition eqType := @Equality.Pack cT xclass xT.
+Definition choiceType := @Choice.Pack cT xclass xT.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 Definition blatticeType := @BLattice.Pack disp cT xclass xT.
@@ -1755,11 +1723,13 @@ Coercion base      : class_of >-> BLattice.class_of.
 Coercion mixin     : class_of >-> mixin_of.
 Coercion sort      : type >-> Sortclass.
 Coercion eqType    : type >-> Equality.type.
+Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> POrder.type.
 Coercion latticeType : type >-> Lattice.type.
 Coercion blatticeType : type >-> BLattice.type.
 
 Canonical eqType.
+Canonical choiceType.
 Canonical porderType.
 Canonical latticeType.
 Canonical blatticeType.
@@ -2010,6 +1980,7 @@ Definition pack :=
   Pack (@Class disp T b m1 m2) T.
 
 Definition eqType := @Equality.Pack cT xclass xT.
+Definition choiceType := @Choice.Pack cT xclass xT.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 Definition blatticeType := @BLattice.Pack disp cT xclass xT.
@@ -2026,6 +1997,7 @@ Coercion mixin1     : class_of >-> CBLattice.mixin_of.
 Coercion mixin2     : class_of >-> mixin_of.
 Coercion sort      : type >-> Sortclass.
 Coercion eqType    : type >-> Equality.type.
+Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> POrder.type.
 Coercion latticeType : type >-> Lattice.type.
 Coercion blatticeType : type >-> BLattice.type.
@@ -2033,6 +2005,7 @@ Coercion tblatticeType : type >-> TBLattice.type.
 Coercion cblatticeType : type >-> CBLattice.type.
 
 Canonical eqType.
+Canonical choiceType.
 Canonical porderType.
 Canonical latticeType.
 Canonical blatticeType.
@@ -2208,6 +2181,55 @@ Notation "\max_ ( i 'in' A ) F" :=
 End NatOrder.
 End NatOrder.
 
+
+Module SeqLexPOrder.
+Section SeqLexPOrder.
+Context {display : unit}.
+Local Notation porderType := (porderType display).
+Variable T : porderType.
+
+Implicit Types s : seq T.
+
+Fixpoint lexi s1 s2 :=
+  if s1 is x1 :: s1' then
+    if s2 is x2 :: s2' then
+      (x1 < x2) || ((x1 == x2) && lexi s1' s2')
+    else
+      false
+  else
+    true.
+
+Fact lexi_le_head x sx y sy:
+  lexi (x :: sx) (y :: sy) -> x <= y.
+Proof. by case/orP => [/ltW|/andP [/eqP-> _]]. Qed.
+
+Fact lexi_refl: reflexive lexi.
+Proof. by elim => [|x s ih] //=; rewrite eqxx ih orbT. Qed.
+
+Fact lexi_anti: antisymmetric lexi.
+Proof.
+move=> x y /andP []; elim: x y => [|x sx ih] [|y sy] //=.
+by case: comparableP => //= -> lesxsy /(ih _ lesxsy) ->.
+Qed.
+
+Fact lexi_trans: transitive lexi.
+Proof.
+elim=> [|y sy ih] [|x sx] [|z sz] //=.
+case: (comparableP x y) => //=; case: (comparableP y z) => //=.
+- by move=> -> -> lesxsy /(ih _ _ lesxsy) ->; rewrite eqxx orbT.
+- by move=> ltyz ->; rewrite ltyz.
+- by move=> -> ->.
+- by move=> ltyz /lt_trans - /(_ _ ltyz) ->.
+Qed.
+
+Definition lexi_porderMixin := LePOrderMixin lexi_refl lexi_anti lexi_trans.
+Canonical lexi_porderType := POrderType display (seq T) lexi_porderMixin.
+
+End SeqLexPOrder.
+End SeqLexPOrder.
+
+Canonical SeqLexPOrder.lexi_porderType.
+
 Module Def.
 Export POrderDef.
 Export LatticeDef.
@@ -2241,6 +2263,7 @@ Export ReverseTBLattice.
 Export TBLatticeTheory.
 Export CTBLatticeTheory.
 Export NatOrder.
+Export SeqLexPOrder.
 
 Export POrder.Exports.
 Export Total.Exports.
