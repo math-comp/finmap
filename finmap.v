@@ -95,6 +95,7 @@ Require Import choice path finset finfun fintype bigop.
 (* Operation on function with finite support, i.e. finmap with default value *)
 (* for elements outside of the support. Contrarly to finmap, these are total *)
 (* function, so we provide a coercion to Funclass                            *)
+(*  {fsfun x : K => f x} := fsfun f == the type of fsfun with default f      *)
 (*              [fsfun of default] == the default fsfun                      *)
 (* [fsfun of default | x : A => F] == the fsfun which takes value F on A     *)
 (*                                    x has type A                           *)
@@ -1489,9 +1490,6 @@ Qed.
 Lemma fsetU_eq0 A B : (A `|` B == fset0) = (A == fset0) && (B == fset0).
 Proof. by rewrite -!fsubset0 fsubUset. Qed.
 
-Lemma fsetB_eq0 A B : (A `\` B == fset0) = (A `<=` B).
-Proof. by rewrite -fsubset0 fsubDset fsetU0. Qed.
-
 Lemma fsubsetD1 A B x : (A `<=` B `\ x) = (A `<=` B) && (x \notin A).
 Proof.
 do !rewrite -(@subset_fsubE (x |` A `|` B)) ?fsubDset ?fsetUA // 1?fsetUAC //.
@@ -2460,67 +2458,67 @@ Definition inE := (inE, mem_codomf, mem_catf, mem_remfF,
                    mem_remf, mem_remf1, mem_setf).
 End FinmapInE.
 
-Section FinSFunDef.
+Section FsfunDef.
 
 Variables (K : choiceType) (V : eqType) (default : K -> V).
 
-Record finsfun := FinSFun {
-  fmap_of_finsfun : {fmap K -> V};
-  _ : [forall k : domf fmap_of_finsfun,
-       fmap_of_finsfun k != default (val k)]
+Record fsfun := Fsfun {
+  fmap_of_fsfun : {fmap K -> V};
+  _ : [forall k : domf fmap_of_fsfun,
+       fmap_of_fsfun k != default (val k)]
 }.
 
-Canonical finsfun_subType := Eval hnf in [subType for fmap_of_finsfun].
-Definition finsfun_eqMixin := [eqMixin of finsfun by <:].
-Canonical  finsfun_eqType := EqType finsfun finsfun_eqMixin.
+Canonical fsfun_subType := Eval hnf in [subType for fmap_of_fsfun].
+Definition fsfun_eqMixin := [eqMixin of fsfun by <:].
+Canonical  fsfun_eqType := EqType fsfun fsfun_eqMixin.
 
-Fact finsfun_subproof (f : finsfun) :
-  forall (k : K) (kf : k \in fmap_of_finsfun f),
-  (fmap_of_finsfun f).[kf]%fmap != default k.
+Fact fsfun_subproof (f : fsfun) :
+  forall (k : K) (kf : k \in fmap_of_fsfun f),
+  (fmap_of_fsfun f).[kf]%fmap != default k.
 Proof.
 case:f => f f_stable k kf /=.
 exact: (forallP f_stable [` kf]).
 Qed.
 
-Definition fun_of_finsfun (f : finsfun) (k : K) :=
-  odflt (default k) (fmap_of_finsfun f).[? k]%fmap.
+Definition fun_of_fsfun (f : fsfun) (k : K) :=
+  odflt (default k) (fmap_of_fsfun f).[? k]%fmap.
 
-Coercion fun_of_finsfun : finsfun >-> Funclass.
+Coercion fun_of_fsfun : fsfun >-> Funclass.
 
-Definition finsupp f := domf (fmap_of_finsfun f).
+Definition finsupp f := domf (fmap_of_fsfun f).
 
 Lemma mem_finsupp f (k : K) : (k \in finsupp f) = (f k != default k).
 Proof.
-rewrite /fun_of_finsfun; case: fndP; rewrite ?eqxx //=.
-by move=> kf; rewrite finsfun_subproof.
+rewrite /fun_of_fsfun; case: fndP; rewrite ?eqxx //=.
+by move=> kf; rewrite fsfun_subproof.
 Qed.
 
 Lemma memNfinsupp f (k : K) : (k \notin finsupp f) = (f k == default k).
 Proof. by rewrite mem_finsupp negbK. Qed.
 
-Lemma finsfun_dflt f (k : K) : k \notin finsupp f -> f k = default k.
+Lemma fsfun_dflt f (k : K) : k \notin finsupp f -> f k = default k.
 Proof. by rewrite mem_finsupp negbK => /eqP. Qed.
 
-CoInductive finsfun_spec f (k : K) : V -> bool -> Type :=
-  | FinsfunOut : k \notin finsupp f -> finsfun_spec f k (default k) false
-  | FinsfunIn  (kf : k \in finsupp f) : finsfun_spec f k (f k) true.
+CoInductive fsfun_spec f (k : K) : V -> bool -> Type :=
+  | FsfunOut : k \notin finsupp f -> fsfun_spec f k (default k) false
+  | FsfunIn  (kf : k \in finsupp f) : fsfun_spec f k (f k) true.
 
-Lemma finsuppP f (k : K) : finsfun_spec f k (f k) (k \in finsupp f).
+Lemma finsuppP f (k : K) : fsfun_spec f k (f k) (k \in finsupp f).
 Proof.
 have [kf|kNf] := boolP (_ \in _); first by constructor.
-by rewrite finsfun_dflt // ; constructor.
+by rewrite fsfun_dflt // ; constructor.
 Qed.
 
-Lemma finsfunP (f g : finsfun) : f =1 g <-> f = g.
+Lemma fsfunP (f g : fsfun) : f =1 g <-> f = g.
 Proof.
 split=> [eq_fg|->//]; apply/val_inj/fmapP => k.
 have := eq_fg k; rewrite /(f _) /(g _) /=.
 case: fndP; case: fndP => //= kf kg; first by move->.
-  by move/eqP/negPn; rewrite finsfun_subproof.
-by move/eqP/negPn; rewrite eq_sym finsfun_subproof.
+  by move/eqP/negPn; rewrite fsfun_subproof.
+by move/eqP/negPn; rewrite eq_sym fsfun_subproof.
 Qed.
 
-Lemma finsfun_injective_inP  (f : finsfun) (T : {fset K}) :
+Lemma fsfun_injective_inP  (f : fsfun) (T : {fset K}) :
   reflect {in T &, injective f} (injectiveb [ffun x : T => f (val x)]).
 Proof.
 apply: (iffP (@injectiveP _ _ _)) => f_inj a b; last first.
@@ -2529,39 +2527,41 @@ move=> aT bT eq_ga_gb; have := f_inj.[aT].[bT]; rewrite !ffunE /=.
 by move=> /(_ eq_ga_gb) /(congr1 val).
 Qed.
 
-Definition finsfun_of_can_ffun (T : {fset K}) (g : {ffun T -> V})
+Definition fsfun_of_can_ffun (T : {fset K}) (g : {ffun T -> V})
           (can_g : forall k : T,  g k != default (val k)) :=
-  @FinSFun (FinMap g) (appP forallP idP can_g).
+  @Fsfun (FinMap g) (appP forallP idP can_g).
 
-Lemma finsfun_of_can_ffunE (T : {fset K}) (g : {ffun T -> V})
+Lemma fsfun_of_can_ffunE (T : {fset K}) (g : {ffun T -> V})
           (can_g : forall k : T ,  g k != default (val k))
           (k : K) (kg : k \in T) :
-  (finsfun_of_can_ffun can_g) k = g.[kg].
-Proof. by rewrite/fun_of_finsfun in_fnd. Qed.
+  (fsfun_of_can_ffun can_g) k = g.[kg].
+Proof. by rewrite/fun_of_fsfun in_fnd. Qed.
 
-End FinSFunDef.
+End FsfunDef.
 
-Module Type FinsfunSig.
-Section FinsfunSig.
+Notation "{fsfun x : T => dflt }" := (fsfun (fun x : T => dflt))
+  (x ident, only parsing) : type_scope.
+Notation "{fsfun x => dflt }" := {fsfun x : _ => dflt}
+  (x ident, only parsing) : type_scope.
+Notation "{fsfun=> dflt }" := (fsfun (fun=> dflt))
+  (format "{fsfun=> dflt }") : type_scope.
+
+Module Type FsfunSig.
+Section FsfunSig.
 Variables (K : choiceType) (V : eqType) (default : K -> V).
 
-(* Parameter zero : finsfun default. *)
-(* Axiom zeroE : zero =1 default. *)
-
-Parameter of_ffun : forall (S : {fset K}), (S -> V) -> finsfun default.
+Parameter of_ffun : forall (S : {fset K}), (S -> V) -> fsfun default.
 Variables (S : {fset K}) (h : S -> V).
 Axiom of_ffunE : forall x, of_ffun h x = odflt (default x) (omap h (insub x)).
 
-End FinsfunSig.
-End FinsfunSig.
+End FsfunSig.
+End FsfunSig.
 
-Module Finsfun : FinsfunSig.
-Section FinsfunOfFinfun.
+Module Fsfun : FsfunSig.
+Section FsfunOfFinfun.
 
 Variables (K : choiceType) (V : eqType) (default : K -> V)
           (S : {fset K}) (h : S -> V).
-
-(* Definition zero := [ *)
 
 Let fmap :=
   [fmap a : [fsetval a in {: S} | h a != default (val a)]
@@ -2573,11 +2573,11 @@ rewrite ffunE; have /in_fset_valP [a_in_S] := valP a.
 by have -> : [` a_in_S] = fincl (fset_sub_val _) a by exact/val_inj.
 Qed.
 
-Definition of_ffun := finsfun_of_can_ffun fmapP.
+Definition of_ffun := fsfun_of_can_ffun fmapP.
 
 Lemma of_ffunE x : of_ffun x = odflt (default x) (omap h (insub x)).
 Proof.
-rewrite /fun_of_finsfun /=.
+rewrite /fun_of_fsfun /=.
 case: insubP => /= [u _ <-|xNS]; last first.
   case: fndP => //= kf; rewrite !ffunE /=.
   by set y := (X in h X); rewrite (valP y) in xNS.
@@ -2586,165 +2586,161 @@ case: fndP => /= [kf|].
 by rewrite inE /= -topredE /= negbK => /eqP ->.
 Qed.
 
-End FinsfunOfFinfun.
-End Finsfun.
+End FsfunOfFinfun.
+End Fsfun.
 
-Fact finsfun_key : unit. Proof. exact: tt. Qed.
+Fact fsfun_key : unit. Proof. exact: tt. Qed.
 
-Definition finsfun_of_ffun (K : choiceType) (V : eqType) (default : K -> V)
-  key (S : {fset K}) (h : S -> V) := locked_with key (Finsfun.of_ffun default h).
+Definition fsfun_of_ffun (K : choiceType) (V : eqType) (default : K -> V)
+  key (S : {fset K}) (h : S -> V) := locked_with key (Fsfun.of_ffun default h).
 
-(* Module Import FinsfunInE. *)
-(* Definition inE := (inE, mem_finsupp, memNfinsupp). *)
-(* End FinsfunInE. *)
+Definition fsfun_choiceMixin (K V : choiceType) (d : K -> V) :=
+  [choiceMixin of fsfun d by <:].
+Canonical  fsfun_choiceType (K V : choiceType) (d : K -> V) :=
+  ChoiceType (fsfun d) (fsfun_choiceMixin d).
 
-Definition finsfun_choiceMixin (K V : choiceType) (d : K -> V) :=
-  [choiceMixin of finsfun d by <:].
-Canonical  finsfun_choiceType (K V : choiceType) (d : K -> V) :=
-  ChoiceType (finsfun d) (finsfun_choiceMixin d).
+Delimit Scope fsfun_scope with fsfun.
 
-Delimit Scope finsfun_scope with finsfun.
-
-Notation "[ 'finsfun' 'of' default & key | x : aT => F ]" :=
-  (finsfun_of_ffun default key (fun x : aT => F))
+Notation "[ 'fsfun' 'of' default & key | x : aT => F ]" :=
+  (fsfun_of_ffun default key (fun x : aT => F))
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' 'of' default | x : aT => F ]" :=
-  [finsfun of default & finsfun_key | x : aT => F]
+Notation "[ 'fsfun' 'of' default | x : aT => F ]" :=
+  [fsfun of default & fsfun_key | x : aT => F]
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' & key | x : aT => F ]" := [finsfun of _ & key | x : aT => F ]
+Notation "[ 'fsfun' & key | x : aT => F ]" := [fsfun of _ & key | x : aT => F ]
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' x : aT => F ]" := [finsfun of _ | x : aT => F ]
+Notation "[ 'fsfun' x : aT => F ]" := [fsfun of _ | x : aT => F ]
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' 'of' default & key | : aT => F ]" :=
-  [finsfun of default & key | _ : aT => F ]
+Notation "[ 'fsfun' 'of' default & key | : aT => F ]" :=
+  [fsfun of default & key | _ : aT => F ]
   (at level 0, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' 'of' default | : aT => F ]" :=
-  [finsfun of default | _ : aT => F ]
+Notation "[ 'fsfun' 'of' default | : aT => F ]" :=
+  [fsfun of default | _ : aT => F ]
   (at level 0, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' & key | : aT => F ]" := [finsfun & key | _ : aT => F ]
+Notation "[ 'fsfun' & key | : aT => F ]" := [fsfun & key | _ : aT => F ]
   (at level 0, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' : aT => F ]" := [finsfun _ : aT => F ]
+Notation "[ 'fsfun' : aT => F ]" := [fsfun _ : aT => F ]
   (at level 0, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' 'of' default & key | x => F ]" :=
-  [finsfun of default & key | x : _ => F ]
+Notation "[ 'fsfun' 'of' default & key | x => F ]" :=
+  [fsfun of default & key | x : _ => F ]
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' 'of' default | x => F ]" :=
-  [finsfun of default | x : _ => F ]
+Notation "[ 'fsfun' 'of' default | x => F ]" :=
+  [fsfun of default | x : _ => F ]
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' & key | x => F ]" := [finsfun of _ & key | x : _ => F ]
+Notation "[ 'fsfun' & key | x => F ]" := [fsfun of _ & key | x : _ => F ]
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' x => F ]" := [finsfun of _ | x : _ => F ]
-  (at level 0, x ident, format "[ 'finsfun'  x  =>  F ]") : fun_scope.
+Notation "[ 'fsfun' x => F ]" := [fsfun of _ | x : _ => F ]
+  (at level 0, x ident, format "[ 'fsfun'  x  =>  F ]") : fun_scope.
 
-Notation "[ 'finsfun' 'of' default & key | => F ]" :=
-  [finsfun of default & key | _ => F]
+Notation "[ 'fsfun' 'of' default & key | => F ]" :=
+  [fsfun of default & key | _ => F]
   (at level 0, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' 'of' default | => F ]" := [finsfun of default | _ => F]
+Notation "[ 'fsfun' 'of' default | => F ]" := [fsfun of default | _ => F]
   (at level 0, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' & key | => F ]" := [finsfun of _ & key | => F]
+Notation "[ 'fsfun' & key | => F ]" := [fsfun of _ & key | => F]
   (at level 0, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' => F ]" := [finsfun of _ | => F]
-  (at level 0, format "[ 'finsfun'  =>   F ]") : fun_scope.
+Notation "[ 'fsfun' => F ]" := [fsfun of _ | => F]
+  (at level 0, format "[ 'fsfun'  =>   F ]") : fun_scope.
 
-Definition finsfun_of_fun (K : choiceType) (V : eqType)
+Definition fsfun_of_fun (K : choiceType) (V : eqType)
   default key  (S : {fset K}) (h : K -> V) :=
-  [finsfun of default & key | x : S => h (val x)].
+  [fsfun of default & key | x : S => h (val x)].
 
-Notation "[ 'finsfun' 'of' default & key | x 'in' aT => F ]" :=
-  (finsfun_of_fun default key aT (fun x => F))
+Notation "[ 'fsfun' 'of' default & key | x 'in' aT => F ]" :=
+  (fsfun_of_fun default key aT (fun x => F))
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' 'of' default | x 'in' aT => F ]" :=
-  [finsfun of default & finsfun_key | x in aT => F ]
+Notation "[ 'fsfun' 'of' default | x 'in' aT => F ]" :=
+  [fsfun of default & fsfun_key | x in aT => F ]
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' & key | x 'in' aT => F ]" := [finsfun of _ & key | x in aT => F ]
+Notation "[ 'fsfun' & key | x 'in' aT => F ]" := [fsfun of _ & key | x in aT => F ]
   (at level 0, x ident, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' x 'in' aT => F ]" := [finsfun of _ | x in aT => F ]
-  (at level 0, x ident, format "[ 'finsfun'  x  'in'  aT  =>  F ]") : fun_scope.
+Notation "[ 'fsfun' x 'in' aT => F ]" := [fsfun of _ | x in aT => F ]
+  (at level 0, x ident, format "[ 'fsfun'  x  'in'  aT  =>  F ]") : fun_scope.
 
-Fact finsfun0_key : unit. Proof. exact: tt. Qed.
-Notation "[ 'finsfun' 'of' default ]" := (finsfun_of_ffun default finsfun0_key [fmap])
+Fact fsfun0_key : unit. Proof. exact: tt. Qed.
+Notation "[ 'fsfun' 'of' default ]" := (fsfun_of_ffun default fsfun0_key [fmap])
   (at level 0, only parsing) : fun_scope.
 
-Notation "[ 'finsfun' ]" := [finsfun of _]
- (at level 0, format "[ 'finsfun' ]") : fun_scope.
+Notation "[ 'fsfun' ]" := [fsfun of _]
+ (at level 0, format "[ 'fsfun' ]") : fun_scope.
 
-Section FinSFunTheory.
+Section FsfunTheory.
 Variables (K : choiceType) (V : eqType) (default : K -> V) (key : unit).
 
-Lemma finsfun_ffun (S : {fset K}) (h : S -> V) (x : K) :
-  [finsfun of default & key | a : S => h a] x =
+Lemma fsfun_ffun (S : {fset K}) (h : S -> V) (x : K) :
+  [fsfun of default & key | a : S => h a] x =
   odflt (default x) (omap h (insub x)).
-Proof. by rewrite locked_withE Finsfun.of_ffunE. Qed.
+Proof. by rewrite locked_withE Fsfun.of_ffunE. Qed.
 
-Lemma finsfun_fun (S : {fset K}) (h : K -> V) (x : K) :
-  [finsfun of default & key | a in S => h a] x =
+Lemma fsfun_fun (S : {fset K}) (h : K -> V) (x : K) :
+  [fsfun of default & key | a in S => h a] x =
    if x \in S then h x else (default x).
-Proof. by rewrite finsfun_ffun; case: insubP => //= [u -> ->|/negPf ->]. Qed.
+Proof. by rewrite fsfun_ffun; case: insubP => //= [u -> ->|/negPf ->]. Qed.
 
-Lemma finsfun0E : [finsfun of default] =1 default.
-Proof. by move=> x; rewrite locked_withE Finsfun.of_ffunE insubF ?inE. Qed.
+Lemma fsfun0E : [fsfun of default] =1 default.
+Proof. by move=> x; rewrite locked_withE Fsfun.of_ffunE insubF ?inE. Qed.
 
-Definition finsfunE := (finsfun_fun, finsfun0E).
+Definition fsfunE := (fsfun_fun, fsfun0E).
 
-Lemma finsupp0 : finsupp [finsfun of default] = fset0.
-Proof. by apply/fsetP => x; rewrite !inE mem_finsupp finsfunE eqxx. Qed.
+Lemma finsupp0 : finsupp [fsfun of default] = fset0.
+Proof. by apply/fsetP => x; rewrite !inE mem_finsupp fsfunE eqxx. Qed.
 
-Lemma finsfun0_inj : injective default -> injective [finsfun of default].
-Proof. by move=> def_inj x y; rewrite !finsfunE => /def_inj. Qed.
+Lemma fsfun0_inj : injective default -> injective [fsfun of default].
+Proof. by move=> def_inj x y; rewrite !fsfunE => /def_inj. Qed.
 
-Lemma in_finsupp0 x : x \in finsupp [finsfun of default] = false.
+Lemma in_finsupp0 x : x \in finsupp [fsfun of default] = false.
 Proof. by rewrite finsupp0 inE. Qed.
 
-End FinSFunTheory.
+End FsfunTheory.
 
-Module Import FinsfunInE2.
+Module Import FsfunInE2.
 Definition inE := (inE, in_finsupp0).
-End FinsfunInE2.
+End FsfunInE2.
 
-Section FinSFunIdTheory.
+Section FsfunIdTheory.
 
 Variables (K : choiceType).
-Implicit Types (f g : finsfun (@id K)).
+Implicit Types (f g : {fsfun x : K => x}).
 
-Fact finsfun_comp_key : unit. Proof. exact: tt. Qed.
-Definition finsfun_comp g f :=
-  [finsfun of id & finsfun_comp_key | k in finsupp f `|` finsupp g => g (f k)].
+Fact fsfun_comp_key : unit. Proof. exact: tt. Qed.
+Definition fsfun_comp g f :=
+  [fsfun of id & fsfun_comp_key | k in finsupp f `|` finsupp g => g (f k)].
 
-Notation "g \o f" := (finsfun_comp g f) : finsfun_scope.
+Notation "g \o f" := (fsfun_comp g f) : fsfun_scope.
 
-Lemma fscompE g f : (g \o f)%finsfun =1 g \o f.
+Lemma fscompE g f : (g \o f)%fsfun =1 g \o f.
 Proof.
-move=> k; rewrite finsfun_ffun; case: insubP => //= [u _ <- //|].
-by rewrite inE => /norP [kNf kNg]; rewrite !finsfun_dflt.
+move=> k; rewrite fsfun_ffun; case: insubP => //= [u _ <- //|].
+by rewrite inE => /norP [kNf kNg]; rewrite !fsfun_dflt.
 Qed.
 
-Lemma fscomp0f : left_id [finsfun of (@id K)] finsfun_comp.
-Proof. by move=> f; apply/finsfunP=> k; rewrite fscompE /= finsfun0E. Qed.
+Lemma fscomp0f : left_id [fsfun of (@id K)] fsfun_comp.
+Proof. by move=> f; apply/fsfunP=> k; rewrite fscompE /= fsfun0E. Qed.
 
-Lemma fscompA : associative finsfun_comp.
-Proof. by move=> f g h; apply/finsfunP => k; rewrite !fscompE /= !fscompE. Qed.
+Lemma fscompA : associative fsfun_comp.
+Proof. by move=> f g h; apply/fsfunP => k; rewrite !fscompE /= !fscompE. Qed.
 
-Lemma fscomp_inj g f : injective f -> injective g -> injective (g \o f)%finsfun.
+Lemma fscomp_inj g f : injective f -> injective g -> injective (g \o f)%fsfun.
 Proof. by move=> f_inj g_inj k k'; rewrite !fscompE => /= /g_inj /f_inj. Qed.
 
-Definition fsinjectiveb : pred (finsfun (@id K)) :=
+Definition fsinjectiveb : pred {fsfun x : K => x} :=
   [pred f | (injectiveb [ffun a : finsupp f => f (val a)])
             && [forall a : finsupp f, f (val a) \in finsupp f]].
 
@@ -2754,7 +2750,7 @@ Let equivalent (Ps : seq Prop) :=
       if Qs is Q :: Qs then (P -> Q) /\ (aux Q  Qs) else P -> P0
   in aux P0 Ps else True.
 
-Lemma fsinjective_subproof (f : finsfun (@id K)) :
+Lemma fsinjective_subproof f :
   equivalent [:: injective f
               ; let S := finsupp f in
                 {in S &, injective f} /\ forall a : S, f (val a) \in S
@@ -2767,25 +2763,24 @@ split => /= [f_inj|]; last split=> [[f_inj f_st]|[S fS [f_inj f_st]] a b].
 - by exists (finsupp f)=> //; apply: fsubset_refl.
 have Nfinsupp := contra (fsubsetP fS _).
 wlog /andP [aS bNS] : a b / (a \in S) && (b \notin S) => [hwlog|]; last first.
-  rewrite (finsfun_dflt (Nfinsupp _ bNS)) => fb_eq_a.
+  rewrite (fsfun_dflt (Nfinsupp _ bNS)) => fb_eq_a.
   by move: bNS; rewrite -fb_eq_a (f_st.[aS]).
 have [[aS|aNS] [bS|bNS]] := (boolP (a \in S), boolP (b \in S)); first 3 last.
-- by rewrite !finsfun_dflt // ?Nfinsupp.
+- by rewrite !fsfun_dflt // ?Nfinsupp.
 - exact: f_inj.
 - by apply: hwlog; rewrite aS.
 by move=> fab; symmetry; apply: hwlog; rewrite // bS.
 Qed.
 
-Lemma fsinjectiveP (f : finsfun (@id K)) :
-  reflect (injective f) (fsinjectiveb f).
+Lemma fsinjectiveP f : reflect (injective f) (fsinjectiveb f).
 Proof.
 have [H1 [H2 H3]]:= fsinjective_subproof f.
 rewrite /fsinjectiveb; apply: (iffP idP)=> [|].
-  by move=> /andP [/finsfun_injective_inP ? /forallP ?]; apply/H3/H2.
-by move=> /H1 [/finsfun_injective_inP ? /forallP ?]; apply/andP.
+  by move=> /andP [/fsfun_injective_inP ? /forallP ?]; apply/H3/H2.
+by move=> /H1 [/fsfun_injective_inP ? /forallP ?]; apply/andP.
 Qed.
 
-Lemma fsinjectivebP (f : finsfun (@id K)) :
+Lemma fsinjectivebP f :
   reflect (exists2 S : {fset K}, (finsupp f `<=` S)
            & {in S &, injective f} /\ forall a : S, f (val a) \in S)
         (fsinjectiveb f).
@@ -2794,7 +2789,7 @@ have [H1 [H2 H3]]:= fsinjective_subproof f.
 by apply: (iffP (fsinjectiveP _)) => //; by move=> /H1 /H2.
 Qed.
 
-End FinSFunIdTheory.
+End FsfunIdTheory.
 
 Notation "\bigcup_ ( i <- r | P ) F" :=
   (\big[@fsetU _/fset0]_(i <- r | P%fset) F%fset) : fset_scope.
@@ -2857,5 +2852,4 @@ Proof. by apply: big_pred0 => -[j hj]; have := hj; rewrite in_fset0. Qed.
 
 End BigFSet.
 
-(* Export the last inE *)
 Definition inE := inE.
