@@ -13,7 +13,7 @@ Require Import choice path finset finfun fintype bigop.
 Require Import finmap.
 
 (*****************************************************************************)
-(* This file provides a representation of multisets based on finsfun         *)
+(* This file provides a representation of multisets based on fsfun         *)
 (*****************************************************************************)
 
 Delimit Scope mset_scope with mset.
@@ -22,19 +22,19 @@ Local Open Scope fmap_scope.
 Local Open Scope mset_scope.
 Local Open Scope nat_scope.
 
-Definition multiset (T : choiceType) := finsfun ((fun=>0) : T -> nat).
+Definition multiset (T : choiceType) := {fsfun _ : T => 0 : nat}.
 Definition multiset_of (T : choiceType) of phant T := @multiset T.
 Notation "'{mset' T }" := (@multiset_of _ (Phant T))
   (format "'{mset'  T }") : mset_scope.
 
-Notation "[ 'mset' & key | x 'in' aT => F ]" := ([finsfun & key | x in aT => F ] : {mset _})
+Notation "[ 'mset' & key | x 'in' aT => F ]" := ([fsfun & key | x in aT => F ] : {mset _})
   (at level 0, x ident, only parsing) : mset_scope.
-Notation "[ 'mset' x 'in' aT => F ]" := ([finsfun x in aT => F ] : {mset _})
+Notation "[ 'mset' x 'in' aT => F ]" := ([fsfun x in aT => F ] : {mset _})
   (at level 0, x ident, format "[ 'mset'  x  'in'  aT  =>  F ]") : mset_scope.
 
 Identity Coercion multiset_multiset_of : multiset_of >-> multiset.
 Coercion fset_of_multiset (T : choiceType) (A : multiset T) : finSet T :=
-  domf (fmap_of_finsfun A).
+  domf (fmap_of_fsfun A).
 Canonical multiset_predType (K : choiceType) :=  Eval hnf in mkPredType
   (@pred_of_finset K \o @fset_of_multiset K : multiset K -> pred K).
 Canonical mset_finpredType (T: choiceType) :=
@@ -45,7 +45,7 @@ Section MultisetOps.
 Context {K : choiceType}.
 Implicit Types (a b c : K) (A B C D : {mset K}) (s : seq K).
 
-Definition mset0 : {mset K} := [finsfun].
+Definition mset0 : {mset K} := [fsfun].
 
 Fact msetn_key : unit. Proof. exact: tt. Qed.
 Definition msetn n a := [mset & msetn_key | x in [fset a] => n].
@@ -108,7 +108,7 @@ Context {K : choiceType}.
 Implicit Types (a b c : K) (A B C D : {mset K}) (s : seq K).
 
 Lemma msetP {A B} : A =1 B <-> A = B.
-Proof. exact: finsfunP. Qed.
+Proof. exact: fsfunP. Qed.
 
 Lemma in_mset a A : (a \in A) = (A a > 0).
 Proof. by rewrite mem_finsupp lt0n. Qed.
@@ -129,10 +129,10 @@ Lemma mset_eqP {A B} : reflect (A =1 B) (A == B).
 Proof. exact: (equivP eqP (iff_sym msetP)). Qed.
 
 Lemma mset0E a : mset0 a = 0.
-Proof. by rewrite /mset0 finsfunE. Qed.
+Proof. by rewrite /mset0 fsfunE. Qed.
 
 Lemma msetnE n a b : (msetn n a) b = if b == a then n else 0.
-Proof. by rewrite finsfunE inE. Qed.
+Proof. by rewrite fsfunE inE. Qed.
 
 Lemma msetnxx n a : (msetn n a) a = n. Proof. by rewrite msetnE eqxx. Qed.
 
@@ -140,16 +140,16 @@ Lemma msetE2 A B a :
  ((A `+` B) a = A a + B a) * ((A `|` B) a = maxn (A a) (B a))
 * ((A `&` B) a = minn (A a) (B a)) * ((A `\` B) a = (A a) - (B a)).
 Proof.
-rewrite !finsfunE !inE -!mset_neq0; case: ifPn => //.
+rewrite !fsfunE !inE -!mset_neq0; case: ifPn => //.
 by rewrite negb_or !negbK => /andP [/eqP-> /eqP->].
 Qed.
 
 Lemma mset_seqE s a : (seq_mset s) a = count (pred1 a) s.
-Proof. by rewrite finsfunE seq_fsetE; case: ifPn => // /count_memPn ->. Qed.
+Proof. by rewrite fsfunE seq_fsetE; case: ifPn => // /count_memPn ->. Qed.
 
 Lemma msetME A B (u : K * K) : (A `*` B) u = A u.1 * B u.2.
 Proof.
-rewrite !finsfunE inE; case: ifPn => //=.
+rewrite !fsfunE inE; case: ifPn => //=.
 by rewrite negb_and !memNfinsupp => /orP [] /eqP->; rewrite ?muln0.
 Qed.
 
