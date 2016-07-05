@@ -1688,6 +1688,23 @@ Proof. by move=> f_inj; rewrite card_in_imfset //= => x y ? ?; apply: f_inj. Qed
 
 End Card.
 
+Section Enum.
+
+Lemma enum_fset0 (T : choiceType) :
+  enum [finType of fset0] = [::] :> seq (@fset0 T).
+Proof. by rewrite enumT unlock. Qed.
+
+Lemma enum_fset1 (T : choiceType) (x : T) :
+  enum [finType of [fset x]] = [:: [`fset11 x]].
+Proof.
+apply/perm_eq_small=> //; apply/uniq_perm_eq => //.
+  by apply/enum_uniq.
+case=> [y hy]; rewrite mem_seq1 mem_enum /in_mem /=.
+by rewrite eqE /=; rewrite in_fset1 in hy.
+Qed.
+
+End Enum.
+
 Section ImfsetTh.
 Variables (K V : choiceType).
 Implicit Types (f : K -> V) (g : V -> K) (A : {fset K}).
@@ -1758,6 +1775,96 @@ by move=> X Y /fsetP eqXY; apply/setP => x; have := eqXY (val x); rewrite !inE.
 Qed.
 
 End PowerSetTheory.
+
+Section BigFSet.
+Variable (R : Type) (idx : R) (op : Monoid.law idx).
+Variable (I : choiceType).
+
+Lemma big_fset0 (P : pred fset0) (F : @fset0 I -> R) :
+  \big[op/idx]_(i : fset0 | P i) F i = idx.
+Proof. by rewrite /index_enum -enumT /= enum_fset0 big_nil. Qed.
+
+Lemma big_fset1 (a : I) (F : [fset a] -> R) :
+  \big[op/idx]_(i : [fset a]) F i = F (FSetSub (fset11 a)).
+Proof. by rewrite /index_enum -enumT enum_fset1 big_seq1. Qed.
+
+End BigFSet.
+
+Notation "\bigcup_ ( i <- r | P ) F" :=
+  (\big[@fsetU _/fset0]_(i <- r | P%fset) F%fset) : fset_scope.
+
+Notation "\bigcup_ ( i <- r ) F" :=
+  (\big[@fsetU _/fset0]_(i <- r) F%fset) : fset_scope.
+
+Notation "\bigcup_ ( i | P ) F" :=
+  (\big[@fsetU _/fset0]_(i | P) F%fset) : fset_scope.
+
+Notation "\bigcup_ ( i 'in' A | P ) F" :=
+  (\big[@fsetU _/fset0]_(i in A | P) F%fset) : fset_scope.
+
+Notation "\bigcup_ ( i 'in' A ) F" :=
+  (\big[@fsetU _/fset0]_(i in A) F%fset) : fset_scope.
+
+Section FSetMonoids.
+
+Import Monoid.
+Variable (T : choiceType).
+
+Canonical fsetU_monoid := Law (@fsetUA T) (@fset0U T) (@fsetU0 T).
+Canonical fsetU_comoid := ComLaw (@fsetUC T).
+
+End FSetMonoids.
+Section BigFOpsFin.
+
+Variables (T : choiceType) (I : finType).
+Implicit Types (P : pred I) (A B : {fset I}) (F :  I -> {fset T}).
+
+Lemma bigfcup_sup j P F : P j -> F j `<=` \bigcup_(i | P i) F i.
+Proof. by move=> Pj; rewrite (bigD1 j) //= fsubsetUl. Qed.
+
+Lemma bigfcupP x F P :
+  reflect (exists2 i : I, P i & x \in F i) (x \in (\bigcup_(i | P i) F i)).
+Proof.
+apply: (iffP idP) => [|[i Pi]]; last first.
+  apply: fsubsetP x; exact: bigfcup_sup.
+by elim/big_rec: _ => [|i _ Pi _ /fsetUP[|//]]; [rewrite in_fset0 | exists i].
+Qed.
+
+Lemma bigfcupsP (U : {fset T}) P F :
+  reflect (forall i : I, P i -> F i `<=` U)
+          (\bigcup_(i | P i) F i `<=` U).
+Proof.
+apply: (iffP idP) => [sFU i Pi| sFU].
+  by apply: fsubset_trans sFU; apply: bigfcup_sup.
+by apply/fsubsetP=> x /bigfcupP[i Pi]; apply: (fsubsetP (sFU i Pi)).
+Qed.
+
+End BigFOpsFin.
+
+Section BigFSetIncl.
+Variables (R : Type) (idx : R) (op : Monoid.com_law idx).
+Variables (T : choiceType) (A B : {fset T}) (F : T -> R).
+
+Lemma big_fset_incl :  A `<=` B ->
+  (forall x, x \in B -> x \notin A -> F x = idx) ->
+  \big[op/idx]_(x : A) F (val x) = \big[op/idx]_(x : B) F (val x).
+Proof.
+move=> subAB Fid; symmetry; rewrite [in LHS](bigID [pred x | val x \in A]).
+rewrite [X in op _ X]big1 ?Monoid.mulm1; last by move=> x /Fid -> /= //.
+have [->|/fset0Pn [a aA]] := eqVneq A fset0; first by rewrite big_fset0 big1.
+have aB : a \in B by apply: fsubsetP aA.
+pose h (x : A) : B := insubd [` aB] (val x).
+pose h' (x : B) : A := insubd [` aA] (val x).
+rewrite (reindex h) /=; last first.
+  exists h' => x; rewrite !inE => xA; apply/val_inj; move: xA; rewrite !val_insubd.
+    by rewrite (fsubsetP subAB) ?fsvalP.
+  by move=> ->; rewrite fsvalP.
+by apply: eq_big => x; rewrite -?val_eqE !val_insubd ?(fsubsetP subAB) ?fsvalP.
+Qed.
+
+End BigFSetIncl.
+
+Implicit Arguments big_fset_incl [R idx op T A B].
 
 Section DefMap.
 Variables (K : choiceType) (V : Type).
@@ -1916,6 +2023,9 @@ split=> [fnd_fg|-> //]; apply: getfP => [|k kMf kMg].
   by apply/fsetP => x; rewrite -!fndSome fnd_fg.
 by apply: Some_inj; rewrite !Some_fnd.
 Qed.
+
+Lemma fnd_fmap0 V k : ([fmap] : {fmap K -> V}).[? k] = None.
+Proof. by rewrite not_fnd // in_fset0. Qed.
 
 Lemma mem_setf V (f : {fmap K -> V}) (k0 : K) (v0 : V) :
   f.[k0 <- v0] =i predU1 k0 (mem (domf f)).
@@ -2790,66 +2900,5 @@ by apply: (iffP (fsinjectiveP _)) => //; by move=> /H1 /H2.
 Qed.
 
 End FsfunIdTheory.
-
-Notation "\bigcup_ ( i <- r | P ) F" :=
-  (\big[@fsetU _/fset0]_(i <- r | P%fset) F%fset) : fset_scope.
-
-Notation "\bigcup_ ( i <- r ) F" :=
-  (\big[@fsetU _/fset0]_(i <- r) F%fset) : fset_scope.
-
-Notation "\bigcup_ ( i | P ) F" :=
-  (\big[@fsetU _/fset0]_(i | P) F%fset) : fset_scope.
-
-Notation "\bigcup_ ( i 'in' A | P ) F" :=
-  (\big[@fsetU _/fset0]_(i in A | P) F%fset) : fset_scope.
-
-Notation "\bigcup_ ( i 'in' A ) F" :=
-  (\big[@fsetU _/fset0]_(i in A) F%fset) : fset_scope.
-
-Section FSetMonoids.
-
-Import Monoid.
-Variable (T : choiceType).
-
-Canonical fsetU_monoid := Law (@fsetUA T) (@fset0U T) (@fsetU0 T).
-Canonical fsetU_comoid := ComLaw (@fsetUC T).
-
-End FSetMonoids.
-
-Section BigFOpsFin.
-
-Variables (T : choiceType) (I : finType).
-Implicit Types (P : pred I) (A B : {fset I}) (F :  I -> {fset T}).
-
-Lemma bigfcup_sup j P F : P j -> F j `<=` \bigcup_(i | P i) F i.
-Proof. by move=> Pj; rewrite (bigD1 j) //= fsubsetUl. Qed.
-
-Lemma bigfcupP x F P :
-  reflect (exists2 i : I, P i & x \in F i) (x \in (\bigcup_(i | P i) F i)).
-Proof.
-apply: (iffP idP) => [|[i Pi]]; last first.
-  apply: fsubsetP x; exact: bigfcup_sup.
-by elim/big_rec: _ => [|i _ Pi _ /fsetUP[|//]]; [rewrite in_fset0 | exists i].
-Qed.
-
-Lemma bigfcupsP (U : {fset T}) P F :
-  reflect (forall i : I, P i -> F i `<=` U)
-          (\bigcup_(i | P i) F i `<=` U).
-Proof.
-apply: (iffP idP) => [sFU i Pi| sFU].
-  by apply: fsubset_trans sFU; apply: bigfcup_sup.
-by apply/fsubsetP=> x /bigfcupP[i Pi]; apply: (fsubsetP (sFU i Pi)).
-Qed.
-
-End BigFOpsFin.
-
-Section BigFSet.
-Variable (R : Type) (idx : R) (op : Monoid.law idx).
-
-Lemma big_fset0 (T : choiceType) (P : pred _) (F : _ -> R) :
-  \big[op/idx]_(i : @fset0 T | P i) F i = idx :> R.
-Proof. by apply: big_pred0 => -[j hj]; have := hj; rewrite in_fset0. Qed.
-
-End BigFSet.
 
 Definition inE := inE.
