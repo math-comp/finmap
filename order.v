@@ -2680,6 +2680,39 @@ End CTBLatticeTheory.
 End CTBLatticeTheory.
 
 (*************)
+(* Subtypes  *)
+(*************)
+
+Section SubPOrder.
+Context {display : unit}.
+Local Notation porderType := (porderType display).
+Variables (T : porderType) (P : pred T) (sT : subType P).
+
+Fact sub_refl : reflexive (fun (x y : sT) => (val x) <= (val y)).
+Proof. by move=> x; apply: lexx. Qed.
+
+Fact sub_anti : antisymmetric (fun (x y : sT) => (val x) <= (val y)).
+Proof. by move=> x y /le_anti; apply val_inj. Qed.
+
+Fact sub_trans : transitive (fun (x y : sT) => (val x) <= (val y)).
+Proof. by move=> x y z; apply le_trans. Qed.
+
+Definition sub_porderMixin := LePOrderMixin sub_refl sub_anti sub_trans.
+Canonical sub_porderType := POrderType display sT sub_porderMixin.
+
+Lemma sub_porder_leE (i j : sT) : (i <= j) = (val i <= val j).
+Proof. by []. Qed.
+
+Lemma sub_porder_ltE (i j : sT) : (i < j) = (val i < val j).
+Proof. by rewrite !lt_neqAle -sub_porder_leE. Qed.
+
+End SubPOrder.
+Notation "[ 'pordMixin' 'of' T 'by' <: ]" :=
+  (sub_porderMixin _ : porderMixin T)
+  (at level 0, format "[ 'pordMixin'  'of'  T  'by'  <: ]") : form_scope.
+
+
+(*************)
 (* INSTANCES *)
 (*************)
 
