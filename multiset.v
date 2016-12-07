@@ -34,7 +34,7 @@ Notation "[ 'mset' x 'in' aT => F ]" := ([fsfun x in aT => F ] : {mset _})
 
 Identity Coercion multiset_multiset_of : multiset_of >-> multiset.
 Coercion fset_of_multiset (T : choiceType) (A : multiset T) : finSet T :=
-  domf (fmap_of_fsfun A).
+  finsupp A.
 Canonical multiset_predType (K : choiceType) :=  Eval hnf in mkPredType
   (@pred_of_finset K \o @fset_of_multiset K : multiset K -> pred K).
 Canonical mset_finpredType (T: choiceType) :=
@@ -569,14 +569,14 @@ apply/eqP/andP => [<-|[/msubsetP AB /msubsetP BA]]; first by split.
 by apply/msetP=> a; apply/eqP; rewrite eqn_leq AB BA.
 Qed.
 
-Lemma subEmproper A B : A `<=` B = (A == B) || (A `<` B).
+Lemma msubEproper A B : A `<=` B = (A == B) || (A `<` B).
 Proof. by rewrite eqEmsubset -andb_orr orbN andbT. Qed.
 
 Lemma mproper_sub A B : A `<` B -> A `<=` B.
-Proof. by rewrite subEmproper orbC => ->. Qed.
+Proof. by rewrite msubEproper orbC => ->. Qed.
 
 Lemma eqVmproper A B : A `<=` B -> A = B \/ A `<` B.
-Proof. by rewrite subEmproper => /predU1P. Qed.
+Proof. by rewrite msubEproper => /predU1P. Qed.
 
 Lemma mproperEneq A B : A `<` B = (A != B) && (A `<=` B).
 Proof. by rewrite andbC eqEmsubset negb_and andb_orr andbN. Qed.
@@ -586,22 +586,6 @@ Proof. by rewrite mproperEneq; case/andP. Qed.
 
 Lemma eqEmproper A B : (A == B) = (A `<=` B) && ~~ (A `<` B).
 Proof. by rewrite negb_and negbK andb_orr andbN eqEmsubset. Qed.
-
-(* Lemma eqEfcard A B : (A == B) = (A `<=` B) && (#|` B| <= #|` A|)%N. *)
-(* Proof. *)
-(* rewrite -(inj_in_eq (@msub_inj (A `|` B))) -?topredE //=. *)
-(* by rewrite eqEcard !(@subset_msubE (A `|` B)) ?(@card_msub (A `|` B)). *)
-(* Qed. *)
-
-(* Lemma mproperEcard A B : *)
-(*   (A `<` B) = (A `<=` B) && (#|` A| < #|` B|)%N. *)
-(* Proof. by rewrite mproperEneq ltnNge andbC eqEfcard; case: (A `<=` B). Qed. *)
-
-(* Lemma msubset_leqif_cards A B : A `<=` B -> (#|` A| <= #|` B| ?= iff (A == B))%N. *)
-(* Proof. *)
-(* rewrite -!(@card_msub (A `|` B)) // -(@subset_msubE (A `|` B)) //. *)
-(* by move=> /subset_leqif_cards; rewrite (inj_in_eq (@msub_inj _)) -?topredE /=. *)
-(* Qed. *)
 
 Lemma msub0set A : msubset mset0 A.
 Proof. by apply/msubsetP=> x; rewrite msetE. Qed.
@@ -616,34 +600,18 @@ Proof. by rewrite /mproper msub0set msubset0. Qed.
 Lemma mproperE A B : (A `<` B) = (A `<=` B) && ~~ (msubset B A).
 Proof. by []. Qed.
 
-Lemma msubEproper A B : (A `<=` B) = (A == B) || (A `<` B).
-Proof. by rewrite mproperEneq; case: eqP => //= ->; apply: msubset_refl. Qed.
-
-(* Lemma msubset_leq_card A B : A `<=` B -> (#|` A| <= #|` B|)%N. *)
-(* Proof. by move=> /msubset_leqif_cards ->. Qed. *)
-
-(* Lemma mproper_ltn_card A B : A `<` B -> (#|` A| < #|` B|)%N. *)
-(* Proof. by rewrite mproperEcard => /andP []. Qed. *)
-
-(* Lemma msubset_cardP A B : #|` A| = #|` B| -> *)
-(*   reflect (A =i B) (A `<=` B). *)
-(* Proof. *)
-(* move=> eq_cardAB; apply: (iffP idP) => [/eqVmproper [->//|]|/msetP -> //]. *)
-(* by rewrite mproperEcard eq_cardAB ltnn andbF. *)
-(* Qed. *)
-
-Lemma mproper_sub_trans B A C : A `<` B -> msubset B C -> A `<` C.
+Lemma mproper_sub_trans B A C : A `<` B -> B `<=` C -> A `<` C.
 Proof.
-move=> /andP [NAB AB] BC; rewrite /mproper.
-Admitted.
+move=> /andP [AB NBA] BC; rewrite /mproper (msubset_trans AB) //=.
+by apply: contra NBA=> /(msubset_trans _)->.
+Qed.
 
-
-(* Lemma msub_proper_trans B A C : *)
-(*   A `<=` B -> B `<` C -> A `<` C. *)
-(* Proof. *)
-(* rewrite !mproperEcard => sAB /andP [sBC lt_BC]. *)
-(* by rewrite (msubset_trans sAB) //= (leq_ltn_trans _ lt_BC) // msubset_leq_card. *)
-(* Qed. *)
+Lemma msub_proper_trans B A C :
+  A `<=` B -> B `<` C -> A `<` C.
+Proof.
+move=> AB /andP [CB NCB]; rewrite /mproper (msubset_trans AB) //=.
+by apply: contra NCB=> /msubset_trans->.
+Qed.
 
 Lemma msubset_neq0 A B : A `<=` B -> A != mset0 -> B != mset0.
 Proof. by rewrite -!mproper0 => sAB /mproper_sub_trans->. Qed.
@@ -671,14 +639,19 @@ apply/msubsetP/msubsetP => [] sABC a;
 by have := sABC a; rewrite !msetE ?leq_subLR.
 Qed.
 
-Lemma mproperP {A B} : reflect (forall x, A x < B x) (A `<` B).
-Proof. Admitted.
+(* Lemma mproperP {A B} : reflect ((forall x, A x <= B x) /\ (exists x, A x < B x)) *)
+(*                                (A `<` B). *)
+(* Proof. *)
+(* apply: (iffP idP); rewrite mproperEneq. *)
+(*   move=> /andP[neqAB /msubsetP]; split=> //. *)
 
-Lemma proper_msetBRL A B C : (B `<` (C `\` A)) = ((A `+` B) `<` C).
-Proof.
-apply/mproperP/mproperP => [] sABC a;
-by have := sABC a; rewrite !msetE ?ltn_subRL.
-Qed.
+(*  Admitted. *)
+
+(* Lemma proper_msetBRL A B C : (B `<` (C `\` A)) = ((A `+` B) `<` C). *)
+(* Proof. *)
+(* apply/mproperP/mproperP => [] sABC a; *)
+(* by have := sABC a; rewrite !msetE ?ltn_subRL. *)
+(* Qed. *)
 
 Lemma msetnP n x a : reflect (0 < n /\ x = a) (x \in msetn n a).
 Proof. by do [apply: (iffP idP); rewrite !inE] => [/andP[]|[]] -> /eqP. Qed.
