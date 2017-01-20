@@ -403,6 +403,8 @@ End Def.
 End POrderDef.
 
 Prenex Implicits lt le leif.
+Arguments ge {_ _}.
+Arguments gt {_ _}.
 
 Module Import POSyntax.
 
