@@ -691,32 +691,32 @@ Definition bottom {disp : unit} {T : blatticeType disp} : T :=
 End BLatticeDef.
 
 Module Import BLatticeSyntax.
-Local Notation "0" := bottom.
+Notation "0" := bottom : order_scope.
 
 Notation "\join_ ( i <- r | P ) F" :=
-  (\big[@join _ _/0%O]_(i <- r | P%B) F%N) : order_scope.
+  (\big[@join _ _/0%O]_(i <- r | P%B) F%O) : order_scope.
 Notation "\join_ ( i <- r ) F" :=
-  (\big[@join _ _/0%O]_(i <- r) F%N) : order_scope.
+  (\big[@join _ _/0%O]_(i <- r) F%O) : order_scope.
 Notation "\join_ ( i | P ) F" :=
-  (\big[@join _ _/0%O]_(i | P%B) F%N) : order_scope.
+  (\big[@join _ _/0%O]_(i | P%B) F%O) : order_scope.
 Notation "\join_ i F" :=
-  (\big[@join _ _/0%O]_i F%N) : order_scope.
+  (\big[@join _ _/0%O]_i F%O) : order_scope.
 Notation "\join_ ( i : I | P ) F" :=
-  (\big[@join _ _/0%O]_(i : I | P%B) F%N) (only parsing) : order_scope.
+  (\big[@join _ _/0%O]_(i : I | P%B) F%O) (only parsing) : order_scope.
 Notation "\join_ ( i : I ) F" :=
-  (\big[@join _ _/0%O]_(i : I) F%N) (only parsing) : order_scope.
+  (\big[@join _ _/0%O]_(i : I) F%O) (only parsing) : order_scope.
 Notation "\join_ ( m <= i < n | P ) F" :=
- (\big[@join _ _/0%O]_(m <= i < n | P%B) F%N) : order_scope.
+ (\big[@join _ _/0%O]_(m <= i < n | P%B) F%O) : order_scope.
 Notation "\join_ ( m <= i < n ) F" :=
- (\big[@join _ _/0%O]_(m <= i < n) F%N) : order_scope.
+ (\big[@join _ _/0%O]_(m <= i < n) F%O) : order_scope.
 Notation "\join_ ( i < n | P ) F" :=
- (\big[@join _ _/0%O]_(i < n | P%B) F%N) : order_scope.
+ (\big[@join _ _/0%O]_(i < n | P%B) F%O) : order_scope.
 Notation "\join_ ( i < n ) F" :=
- (\big[@join _ _/0%O]_(i < n) F%N) : order_scope.
+ (\big[@join _ _/0%O]_(i < n) F%O) : order_scope.
 Notation "\join_ ( i 'in' A | P ) F" :=
- (\big[@join _ _/0%O]_(i in A | P%B) F%N) : order_scope.
+ (\big[@join _ _/0%O]_(i in A | P%B) F%O) : order_scope.
 Notation "\join_ ( i 'in' A ) F" :=
- (\big[@join _ _/0%O]_(i in A) F%N) : order_scope.
+ (\big[@join _ _/0%O]_(i in A) F%O) : order_scope.
 
 End BLatticeSyntax.
 
@@ -799,32 +799,32 @@ End TBLatticeDef.
 
 Module Import TBLatticeSyntax.
 
-Local Notation "1" := top.
+Notation "1" := top : order_scope.
 
 Notation "\meet_ ( i <- r | P ) F" :=
-  (\big[meet/1]_(i <- r | P%B) F%N) : order_scope.
+  (\big[meet/1]_(i <- r | P%B) F%O) : order_scope.
 Notation "\meet_ ( i <- r ) F" :=
-  (\big[meet/1]_(i <- r) F%N) : order_scope.
+  (\big[meet/1]_(i <- r) F%O) : order_scope.
 Notation "\meet_ ( i | P ) F" :=
-  (\big[meet/1]_(i | P%B) F%N) : order_scope.
+  (\big[meet/1]_(i | P%B) F%O) : order_scope.
 Notation "\meet_ i F" :=
-  (\big[meet/1]_i F%N) : order_scope.
+  (\big[meet/1]_i F%O) : order_scope.
 Notation "\meet_ ( i : I | P ) F" :=
-  (\big[meet/1]_(i : I | P%B) F%N) (only parsing) : order_scope.
+  (\big[meet/1]_(i : I | P%B) F%O) (only parsing) : order_scope.
 Notation "\meet_ ( i : I ) F" :=
-  (\big[meet/1]_(i : I) F%N) (only parsing) : order_scope.
+  (\big[meet/1]_(i : I) F%O) (only parsing) : order_scope.
 Notation "\meet_ ( m <= i < n | P ) F" :=
- (\big[meet/1]_(m <= i < n | P%B) F%N) : order_scope.
+ (\big[meet/1]_(m <= i < n | P%B) F%O) : order_scope.
 Notation "\meet_ ( m <= i < n ) F" :=
- (\big[meet/1]_(m <= i < n) F%N) : order_scope.
+ (\big[meet/1]_(m <= i < n) F%O) : order_scope.
 Notation "\meet_ ( i < n | P ) F" :=
- (\big[meet/1]_(i < n | P%B) F%N) : order_scope.
+ (\big[meet/1]_(i < n | P%B) F%O) : order_scope.
 Notation "\meet_ ( i < n ) F" :=
- (\big[meet/1]_(i < n) F%N) : order_scope.
+ (\big[meet/1]_(i < n) F%O) : order_scope.
 Notation "\meet_ ( i 'in' A | P ) F" :=
- (\big[meet/1]_(i in A | P%B) F%N) : order_scope.
+ (\big[meet/1]_(i in A | P%B) F%O) : order_scope.
 Notation "\meet_ ( i 'in' A ) F" :=
- (\big[meet/1]_(i in A) F%N) : order_scope.
+ (\big[meet/1]_(i in A) F%O) : order_scope.
 
 End TBLatticeSyntax.
 
@@ -2283,54 +2283,54 @@ Local Notation join := (@join (reverse_display _) _).
 Local Notation meet := (@meet (reverse_display _) _).
 
 Notation "\join^r_ ( i <- r | P ) F" :=
-  (\big[join/0]_(i <- r | P%B) F%N) : order_scope.
+  (\big[join/0]_(i <- r | P%B) F%O) : order_scope.
 Notation "\join^r_ ( i <- r ) F" :=
-  (\big[join/0]_(i <- r) F%N) : order_scope.
+  (\big[join/0]_(i <- r) F%O) : order_scope.
 Notation "\join^r_ ( i | P ) F" :=
-  (\big[join/0]_(i | P%B) F%N) : order_scope.
+  (\big[join/0]_(i | P%B) F%O) : order_scope.
 Notation "\join^r_ i F" :=
-  (\big[join/0]_i F%N) : order_scope.
+  (\big[join/0]_i F%O) : order_scope.
 Notation "\join^r_ ( i : I | P ) F" :=
-  (\big[join/0]_(i : I | P%B) F%N) (only parsing) : order_scope.
+  (\big[join/0]_(i : I | P%B) F%O) (only parsing) : order_scope.
 Notation "\join^r_ ( i : I ) F" :=
-  (\big[join/0]_(i : I) F%N) (only parsing) : order_scope.
+  (\big[join/0]_(i : I) F%O) (only parsing) : order_scope.
 Notation "\join^r_ ( m <= i < n | P ) F" :=
- (\big[join/0]_(m <= i < n | P%B) F%N) : order_scope.
+ (\big[join/0]_(m <= i < n | P%B) F%O) : order_scope.
 Notation "\join^r_ ( m <= i < n ) F" :=
- (\big[join/0]_(m <= i < n) F%N) : order_scope.
+ (\big[join/0]_(m <= i < n) F%O) : order_scope.
 Notation "\join^r_ ( i < n | P ) F" :=
- (\big[join/0]_(i < n | P%B) F%N) : order_scope.
+ (\big[join/0]_(i < n | P%B) F%O) : order_scope.
 Notation "\join^r_ ( i < n ) F" :=
- (\big[join/0]_(i < n) F%N) : order_scope.
+ (\big[join/0]_(i < n) F%O) : order_scope.
 Notation "\join^r_ ( i 'in' A | P ) F" :=
- (\big[join/0]_(i in A | P%B) F%N) : order_scope.
+ (\big[join/0]_(i in A | P%B) F%O) : order_scope.
 Notation "\join^r_ ( i 'in' A ) F" :=
- (\big[join/0]_(i in A) F%N) : order_scope.
+ (\big[join/0]_(i in A) F%O) : order_scope.
 
 Notation "\meet^r_ ( i <- r | P ) F" :=
-  (\big[meet/1]_(i <- r | P%B) F%N) : order_scope.
+  (\big[meet/1]_(i <- r | P%B) F%O) : order_scope.
 Notation "\meet^r_ ( i <- r ) F" :=
-  (\big[meet/1]_(i <- r) F%N) : order_scope.
+  (\big[meet/1]_(i <- r) F%O) : order_scope.
 Notation "\meet^r_ ( i | P ) F" :=
-  (\big[meet/1]_(i | P%B) F%N) : order_scope.
+  (\big[meet/1]_(i | P%B) F%O) : order_scope.
 Notation "\meet^r_ i F" :=
-  (\big[meet/1]_i F%N) : order_scope.
+  (\big[meet/1]_i F%O) : order_scope.
 Notation "\meet^r_ ( i : I | P ) F" :=
-  (\big[meet/1]_(i : I | P%B) F%N) (only parsing) : order_scope.
+  (\big[meet/1]_(i : I | P%B) F%O) (only parsing) : order_scope.
 Notation "\meet^r_ ( i : I ) F" :=
-  (\big[meet/1]_(i : I) F%N) (only parsing) : order_scope.
+  (\big[meet/1]_(i : I) F%O) (only parsing) : order_scope.
 Notation "\meet^r_ ( m <= i < n | P ) F" :=
- (\big[meet/1]_(m <= i < n | P%B) F%N) : order_scope.
+ (\big[meet/1]_(m <= i < n | P%B) F%O) : order_scope.
 Notation "\meet^r_ ( m <= i < n ) F" :=
- (\big[meet/1]_(m <= i < n) F%N) : order_scope.
+ (\big[meet/1]_(m <= i < n) F%O) : order_scope.
 Notation "\meet^r_ ( i < n | P ) F" :=
- (\big[meet/1]_(i < n | P%B) F%N) : order_scope.
+ (\big[meet/1]_(i < n | P%B) F%O) : order_scope.
 Notation "\meet^r_ ( i < n ) F" :=
- (\big[meet/1]_(i < n) F%N) : order_scope.
+ (\big[meet/1]_(i < n) F%O) : order_scope.
 Notation "\meet^r_ ( i 'in' A | P ) F" :=
- (\big[meet/1]_(i in A | P%B) F%N) : order_scope.
+ (\big[meet/1]_(i in A | P%B) F%O) : order_scope.
 Notation "\meet^r_ ( i 'in' A ) F" :=
- (\big[meet/1]_(i in A) F%N) : order_scope.
+ (\big[meet/1]_(i in A) F%O) : order_scope.
 
 End ReverseTBLatticeSyntax.
 End ReverseTBLatticeSyntax.
@@ -2705,6 +2705,7 @@ Canonical natOrderType := OrderType nat leq_total.
 
 Definition natBLatticeMixin := BLatticeMixin leq0n.
 Canonical natBLatticeType := BLatticeType nat natBLatticeMixin.
+End NatOrder.
 
 Notation "@max" := (@join nat_display).
 Notation max := (@join nat_display _).
@@ -2712,31 +2713,30 @@ Notation "@min" := (@meet nat_display).
 Notation min := (@meet nat_display _).
 
 Notation "\max_ ( i <- r | P ) F" :=
-  (\big[@max _/0%O]_(i <- r | P%B) F%N) : order_scope.
+  (\big[@join nat_display _/0%O]_(i <- r | P%B) F%O) : order_scope.
 Notation "\max_ ( i <- r ) F" :=
-  (\big[@max _/0%O]_(i <- r) F%N) : order_scope.
+  (\big[@join nat_display _/0%O]_(i <- r) F%O) : order_scope.
 Notation "\max_ ( i | P ) F" :=
-  (\big[@max _/0%O]_(i | P%B) F%N) : order_scope.
+  (\big[@join nat_display _/0%O]_(i | P%B) F%O) : order_scope.
 Notation "\max_ i F" :=
-  (\big[@max _/0%O]_i F%N) : order_scope.
+  (\big[@join nat_display _/0%O]_i F%O) : order_scope.
 Notation "\max_ ( i : I | P ) F" :=
-  (\big[@max _/0%O]_(i : I | P%B) F%N) (only parsing) : order_scope.
+  (\big[@join nat_display _/0%O]_(i : I | P%B) F%O) (only parsing) : order_scope.
 Notation "\max_ ( i : I ) F" :=
-  (\big[@max _/0%O]_(i : I) F%N) (only parsing) : order_scope.
+  (\big[@join nat_display _/0%O]_(i : I) F%O) (only parsing) : order_scope.
 Notation "\max_ ( m <= i < n | P ) F" :=
- (\big[@max _/0%O]_(m <= i < n | P%B) F%N) : order_scope.
+ (\big[@join nat_display _/0%O]_(m <= i < n | P%B) F%O) : order_scope.
 Notation "\max_ ( m <= i < n ) F" :=
- (\big[@max _/0%O]_(m <= i < n) F%N) : order_scope.
+ (\big[@join nat_display _/0%O]_(m <= i < n) F%O) : order_scope.
 Notation "\max_ ( i < n | P ) F" :=
- (\big[@max _/0%O]_(i < n | P%B) F%N) : order_scope.
+ (\big[@join nat_display _/0%O]_(i < n | P%B) F%O) : order_scope.
 Notation "\max_ ( i < n ) F" :=
- (\big[@max _/0%O]_(i < n) F%N) : order_scope.
+ (\big[@join nat_display _/0%O]_(i < n) F%O) : order_scope.
 Notation "\max_ ( i 'in' A | P ) F" :=
- (\big[@max _/0%O]_(i in A | P%B) F%N) : order_scope.
+ (\big[@join nat_display _/0%O]_(i in A | P%B) F%O) : order_scope.
 Notation "\max_ ( i 'in' A ) F" :=
- (\big[@max _/0%O]_(i in A) F%N) : order_scope.
+ (\big[@join nat_display _/0%O]_(i in A) F%O) : order_scope.
 
-End NatOrder.
 End NatOrder.
 
 
