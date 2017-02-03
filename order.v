@@ -23,6 +23,7 @@ Require Import ssreflect ssrbool eqtype ssrfun ssrnat choice seq.
 From mathcomp
 Require Import fintype tuple bigop path finset.
 
+(* DOCUMENTATION OUTDATED, THE NEW ONE IS COMMING SOON *)
 
 (*****************************************************************************)
 (* This files definies a ordered and decidable relations on a                *)
