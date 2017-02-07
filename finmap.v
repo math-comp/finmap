@@ -12,7 +12,7 @@ Require Import choice path finset finfun fintype bigop.
 
 (*****************************************************************************)
 (* This file provides a representation of finitely supported maps where      *)
-(* the keys K lie in an ordType and the values V in an arbitrary type.       *)
+(* the keys K lie in a choiceType and the values V in an arbitrary type.     *)
 (*                                                                           *)
 (*         {fset K} == finite sets of elements of K                          *)
 (*    {fmap K -> V} == finitely supported maps from K to V.                  *)
