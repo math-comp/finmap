@@ -49,7 +49,7 @@ Require Import choice path finset finfun fintype bigop.
 (* represented by elements A (resp B) from {fset K}.                         *)
 (*                                                                           *)
 (*    [fset x in p | P] == the set of all x of type K, such that             *)
-(*                         x \in A and P x where P is a predicate on K       *)
+(*                         x \in p and P x where P is a predicate on K       *)
 (*  [fset x in p | P & Q] := [set x in p | P && Q].                          *)
 (*                                                                           *)
 (* [fset E | x in p] == the set of all the values of the expression E, for x *)
