@@ -562,8 +562,8 @@ Notation "[ 'fset' x 'in' A | P & Q ]" := [fset x in A | P && Q]
 
 Section Ops.
 
-Context {K : choiceType}.
-Implicit Types (a b c : K) (A B C D : {fset K}) (s : seq K).
+Context {K K': choiceType}.
+Implicit Types (a b c : K) (A B C D : {fset K}) (E : {fset K'}) (s : seq K).
 
 Definition fset0 : {fset K} :=
   @mkFinSet K [::] (introT eqP (@sort_keys_nil K)).
@@ -578,8 +578,8 @@ Definition fsetI A B := [fset x in A | x \in B].
 
 Definition fsetD A B := [fset x in A | x \notin B].
 
-Definition fsetM A B := seq_fset
-  [seq (x, y) | x <- enum_fset A, y <- enum_fset B].
+Definition fsetM A E := seq_fset
+  [seq (x, y) | x <- enum_fset A, y <- enum_fset E].
 
 Definition fsubset A B := fsetI A B == A.
 
@@ -777,8 +777,9 @@ End imfset2.
 
 Section Theory.
 
-Variables (K : choiceType).
-Implicit Types (a b x : K) (A B C D : {fset K}) (pA pB pC : pred K) (s : seq K).
+Variables (K K': choiceType).
+Implicit Types (a b x : K) (A B C D : {fset K}) (E : {fset K'})
+         (pA pB pC : pred K) (s : seq K).
 
 Lemma fsetP {A B} : A =i B <-> A = B.
 Proof. by split=> [eqAB|-> //]; apply/val_inj/canonical_eq_keys => //= a. Qed.
@@ -816,7 +817,7 @@ Proof. by rewrite in_fset andbC. Qed.
 Lemma in_fsetD1 A b a : (a \in A `\ b) = (a != b) && (a \in A).
 Proof. by rewrite in_fsetD in_fset1. Qed.
 
-Lemma in_fsetM A B (u : K * K) : (u \in A `*` B) = (u.1 \in A) && (u.2 \in B).
+Lemma in_fsetM A E (u : K * K') : (u \in A `*` E) = (u.1 \in A) && (u.2 \in E).
 Proof.
 rewrite seq_fsetE; apply/allpairsP/idP => [[[/= a b] [aA bB -> /=]]|].
   by rewrite aA bB.
