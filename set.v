@@ -205,7 +205,7 @@ Canonical cblatticeType.
 Notation semisetType  := type.
 Notation semisetMixin := mixin_of.
 Notation SemisetMixin := Mixin.
-Notation SemisetType set m := (@pack _ _ _ set _ m _ _ (fun=> id) _ id).
+Notation SemisetType set m := (@pack _ _ set _ _ m _ _ (fun=> id) _ id).
 
 Notation "[ 'semisetType' 'of' set 'for' cset ]" := (@clone _ _ set _ cset _ _ erefl id)
   (at level 0, format "[ 'semisetType'  'of'  set  'for'  cset ]") : form_scope.
@@ -292,11 +292,14 @@ Notation "[ 'set' a ]" := (set1 a)
 Notation "[ 'set' a : T ]" := [set (a : T)]
   (at level 0, a at level 99, format "[ 'set'  a   :  T ]") : abstract_set_scope.
 
-End SemisetSyntax.
-
 Notation "a |: y" := ([set a] :|: y) : abstract_set_scope.
 Notation "x :\ a" := (x :\: [set a]) : abstract_set_scope.
 Notation "[ 'set' a1 ; a2 ; .. ; an ]" := (setU .. (a1 |: [set a2]) .. [set an]).
+
+Notation "f @: A" := (imset f A) (at level 24) : abstract_set_scope.
+
+End SemisetSyntax.
+
 
 Module Import SemisetTheory.
 Section SemisetTheory.
@@ -1257,6 +1260,7 @@ End setX.
 End setTheory.
 End setTheory.
 
+
 (* Module FinSemiset. *)
 (* Section ClassDef. *)
 (* Variable elementType : Type. *)
@@ -1793,4 +1797,25 @@ End setTheory.
 (* Lemma enum_set1 a : enum [set a] = [:: a]. *)
 (* Proof. by rewrite (eq_enum (in_set _)) enum1. Qed. *)
 
+Module Theory.
+
+Export Semiset.Exports.
+Export set.Exports.
+Export SetSyntax.
+Export SemisetSyntax.
+Export SemisetTheory.
+Export setTheory.
+
+End Theory.
+
 End SET.
+
+(* Section Finset. *)
+(* Require Import finmap. *)
+(* Import SET.Theory. *)
+
+(* Definition finset_latticeMixin *)
+
+(* Definition finset_semisetType := SemisetType finSet . *)
+
+(* End Finset. *)
