@@ -1687,6 +1687,17 @@ Lemma card_imfset (T K : choiceType) (f : T -> K)
    injective f -> #|` (imfset f p)| = #|` A|.
 Proof. by move=> f_inj; rewrite card_in_imfset //= => x y ? ?; apply: f_inj. Qed.
 
+Lemma leq_imfset_card (T K : choiceType) (f : T -> K) (P : pred T) (A : {fset T})
+  (p : finmempred P A) : (#|` imfset f p| <= #|` A|)%N.
+Proof.
+have vP (x : A) : P (val x) by rewrite -(finmempredE p) (valP x).
+rewrite (leq_trans _ (leq_imset_card (fun x : A => [` in_imfset f p (vP x)]) _)) //.
+apply/subset_leq_card/subsetP=> /= x _; apply/imsetP => /=.
+have /imfsetP [t Pt x_def] := valP x.
+have tA : t \in A by rewrite (finmempredE p).
+by exists [` tA] => //; apply/val_inj.
+Qed.
+
 End Card.
 
 Section Enum.
