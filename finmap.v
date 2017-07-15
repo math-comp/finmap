@@ -1225,7 +1225,13 @@ by move/negPf=> nBa; apply/fsetP=> x; rewrite !inE; case: eqP => // ->.
 Qed.
 
 Lemma fset2P x a b : reflect (x = a \/ x = b) (x \in [fset a; b]).
-Proof. by rewrite !inE; apply: (iffP orP) => [] [] /eqP; intuition. Qed.
+Proof.
+rewrite !inE; apply: (iffP orP) => [] [] /eqP ->. 
+      by left. 
+    by right. 
+  by left. 
+by right. 
+Qed.
 
 Lemma in_fset2 x a b : (x \in [fset a; b]) = (x == a) || (x == b).
 Proof. by rewrite !inE. Qed.
