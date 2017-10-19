@@ -2306,7 +2306,7 @@ Local Notation "f + g" := (catf f g) : fset_scope.
 
 Lemma domf_cat f g : domf (f + g) = domf f `|` domf g.
 Proof.
-by apply/fsetP=> x; rewrite !inE; case: (boolP (_ \in _)); rewrite ?orbT.
+by apply/fsetP=> x; rewrite !inE; case: (boolP (_ \in domf _)); rewrite ?orbT.
 Qed.
 
 Lemma mem_catf f g k : k \in domf (f + g) = (k \in f) || (k \in g).
@@ -2440,7 +2440,7 @@ Lemma restrict_catfsI f g h : f + g = f + h -> g.[& domf h] = h.[& domf g].
 Proof.
 move=> /fmapP eq_fg_fh; apply/fmapP => k; have := eq_fg_fh k.
 rewrite !fnd_cat !fnd_restrict.
-by do ![case: (boolP (_ \in _)) => ? //=] => _; rewrite not_fnd.
+by do ![case: (boolP (_ \in domf _)) => ? //=] => _; rewrite not_fnd.
 Qed.
 
 Lemma disjoint_catfsI h f g :
