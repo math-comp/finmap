@@ -1226,11 +1226,7 @@ Qed.
 
 Lemma fset2P x a b : reflect (x = a \/ x = b) (x \in [fset a; b]).
 Proof.
-rewrite !inE; apply: (iffP orP) => [] [] /eqP ->. 
-      by left. 
-    by right. 
-  by left. 
-by right. 
+by rewrite !inE; apply: (iffP orP) => [] [] /eqP ->; [left|right|left|right].
 Qed.
 
 Lemma in_fset2 x a b : (x \in [fset a; b]) = (x == a) || (x == b).
