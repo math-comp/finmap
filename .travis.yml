@@ -3,6 +3,16 @@ dist: trusty
 language: coq
 cache:
   apt: true
+env:
+  global:
+  - NJOBS=2
+  # system is == 4.02.3
+  - COMPILER="system"
+  # Main test targets
+  matrix:
+  - COQ_VERSION="8.6"
+  - COQ_VERSION="8.7"
+  - COQ_VERSION="dev"
 install:
 - sudo add-apt-repository --yes ppa:avsm/ppa
 - sudo apt-get update -qq
@@ -13,8 +23,8 @@ install:
 - opam remote add coq-extra-dev https://coq.inria.fr/opam/extra-dev
 - opam remote add coq-core-dev  https://coq.inria.fr/opam/core-dev
 - opam remote add coq-released  https://coq.inria.fr/opam/released
-- opam pin add -y -v coq 8.6
-- opam install -y -v coq-mathcomp-ssreflect.dev
+- opam pin add -y -v coq ${COQ_VERSION}
+- opam install -j ${NJOBS} -y -v coq-mathcomp-ssreflect.dev
 - opam list
 script:
 - opam pin add -y -vvv .
