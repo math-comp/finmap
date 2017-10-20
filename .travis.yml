@@ -12,7 +12,6 @@ env:
   matrix:
   - COQ_VERSION="8.6"
   - COQ_VERSION="8.7"
-  - COQ_VERSION="dev"
 install:
 - sudo add-apt-repository --yes ppa:avsm/ppa
 - sudo apt-get update -qq
