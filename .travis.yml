@@ -25,8 +25,9 @@ install:
 - opam remote add coq-extra-dev https://coq.inria.fr/opam/extra-dev
 - opam remote add coq-core-dev  https://coq.inria.fr/opam/core-dev
 - opam remote add coq-released  https://coq.inria.fr/opam/released
-- opam pin add -y -v coq ${COQ_VERSION}
-- opam install -j ${NJOBS} -y -v coq-mathcomp-ssreflect.dev
+- opam pin add -nvy coq --kind version ${COQ_VERSION}
+- opam install -j ${NJOBS} -yv coq
+- opam install -j ${NJOBS} -yv coq-mathcomp-ssreflect.dev
 - opam list
 script:
 - opam pin add -y -vvv .
