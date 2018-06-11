@@ -54,7 +54,7 @@ Require Import fintype tuple bigop path finset.
 (* 2. (x < y), (x <= y), ... mean what they are expected to.                 *)
 (*  These convention are compatible with haskell's,                          *)
 (*   where ((< y) x) = (x < y) = ((<) x y),                                  *)
-(*   except that we write <%R instead of (<).                                *)
+(*   except that we write <%O instead of (<).                                *)
 (*****************************************************************************)
 
 Set Implicit Arguments.

@@ -859,7 +859,7 @@ Proof.
 apply: (iffP subsetP) => [sAB | <- x /setIP[] //].
 by apply/setP=> x; rewrite inE; apply/andb_idr/sAB.
 Qed.
-Implicit Arguments setIidPl [A B].
+Arguments setIidPl {A B}.
 
 Lemma setIidPr A B : reflect (A :&: B = B) (B \subset A).
 Proof. by rewrite setIC; apply: setIidPl. Qed.

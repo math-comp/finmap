@@ -1457,7 +1457,7 @@ rewrite eqEfcard cardfs1 -cardfs_eq0 orbC andbC.
 by case: posnP => // A0; rewrite (cardfs0_eq A0) fsub0set.
 Qed.
 
-Implicit Arguments fsetIidPl [A B].
+Arguments fsetIidPl {A B}.
 
 Lemma cardfsDS A B : B `<=` A -> #|` A `\` B| = (#|` A| - #|` B|)%N.
 Proof. by rewrite cardfsD => /fsetIidPr->. Qed.
@@ -1878,7 +1878,7 @@ Qed.
 
 End BigFSetIncl.
 
-Implicit Arguments big_fset_incl [R idx op T A B].
+Arguments big_fset_incl {R idx op T A B}.
 
 Section DefMap.
 Variables (K : choiceType) (V : Type).
