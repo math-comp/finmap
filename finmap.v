@@ -1097,6 +1097,9 @@ Proof. by rewrite andbC eqEfsubset negb_and andb_orr andbN. Qed.
 Lemma fproper_neq A B : A `<` B -> A != B.
 Proof. by rewrite fproperEneq; case/andP. Qed.
 
+Lemma fproper_irrefl A : ~~ (A `<` A).
+Proof. by rewrite fproperEneq eqxx. Qed.
+
 Lemma eqEfproper A B : (A == B) = (A `<=` B) && ~~ (A `<` B).
 Proof. by rewrite negb_and negbK andb_orr andbN eqEfsubset. Qed.
 
@@ -1301,13 +1304,13 @@ Proof. by move=> /(fsetSI B) /fsubset_trans sAC /(fsetIS C) /sAC. Qed.
 Lemma fsetDP A B x : reflect (x \in A /\ x \notin B) (x \in A `\` B).
 Proof. by rewrite inE andbC; apply: andP. Qed.
 
-Lemma fsetSD A B C : A `<=` B -> A `\` C `<=` B `\` C.
+Lemma fsetSD C A B : A `<=` B -> A `\` C `<=` B `\` C.
 Proof.
 move=> sAB; apply/fsubsetP=> x; rewrite !inE.
 by case: (x \in C) => //; exact: (fsubsetP sAB).
 Qed.
 
-Lemma fsetDS A B C : A `<=` B -> C `\` B `<=` C `\` A.
+Lemma fsetDS C A B : A `<=` B -> C `\` B `<=` C `\` A.
 Proof.
 move=> sAB; apply/fsubsetP=> x; rewrite !inE ![_ && (_ \in _)]andbC.
 by case: (x \in C) => //; apply: contra; exact: (fsubsetP sAB).
@@ -1325,7 +1328,7 @@ Proof. by apply/fsetP=> x; rewrite !inE andbF. Qed.
 Lemma fsetDv A : A `\` A = fset0.
 Proof. by apply/fsetP=> x; rewrite !inE andNb. Qed.
 
-Lemma fsetID A B : A `&` B `|` A `\` B = A.
+Lemma fsetID B A : A `&` B `|` A `\` B = A.
 Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
 Lemma fsetDUl A B C : (A `|` B) `\` C = (A `\` C) `|` (B `\` C).
@@ -1352,6 +1355,9 @@ Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 Lemma fsetDDr A B C : A `\` (B `\` C) = (A `\` B) `|` (A `&` C).
 Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
+Lemma fsetDK A B : B `<=` A -> A `\` (A `\` B) = B.
+Proof. by rewrite fsetDDr => /fsetIidPr->; rewrite fsetDv fset0U. Qed.
+
 Lemma fsetUDl (A B C : {fset K}) : A `|` (B `\` C) = (A `|` B) `\` (C `\` A).
 Proof. by apply/fsetP=> x; rewrite !inE; do ?case: (_ \in _). Qed.
 
@@ -1371,6 +1377,12 @@ Proof. by apply/fsubsetP=> x; rewrite inE => /andP []. Qed.
 
 Lemma fsubD1set A x : A `\ x `<=` A.
 Proof. by rewrite fsubsetDl. Qed.
+
+Lemma fsubsetD2l C A B : A `<=` C -> B `<=` C -> (C `\` B `<=` C `\` A) = (A `<=` B).
+Proof.
+move=> sAC sBC; apply/idP/idP; last exact: fsetDS.
+by move=> /(@fsetDS C); rewrite !fsetDK //; apply; apply: fsubsetDl.
+Qed.
 
 Hint Resolve fsubsetIl fsubsetIr fsubsetDl fsubD1set.
 
@@ -1565,6 +1577,20 @@ move=> pUA; apply/andP.
 by split; apply: fsub_proper_trans pUA; rewrite (fsubsetUr, fsubsetUl).
 Qed.
 
+Lemma fsetDpS C A B : B `<=` C ->  A `<` B -> C `\` B `<` C `\` A.
+Proof.
+move=> subBC subAB; rewrite fproperEneq fsetDS 1?fproper_sub// andbT.
+apply/negP => /eqP /(congr1 (fsetD C)); rewrite !fsetDK // => [eqAB//|].
+ by rewrite eqAB (negPf (fproper_irrefl _)) in subAB.
+by apply: fsubset_trans subBC; apply: fproper_sub.
+Qed.
+
+Lemma fproperD2l C A B : A `<=` C -> B `<=` C -> (C `\` B `<` C `\` A) = (A `<` B).
+Proof.
+move=> sAC sBC; apply/idP/idP; last exact: fsetDpS.
+by move=> /(@fsetDpS C); rewrite !fsetDK //; apply; apply: fsubsetDl.
+Qed.
+
 Lemma fsetI_eq0 A B : (A `&` B == fset0) = [disjoint A & B].
 Proof. by []. Qed.
 
@@ -1673,6 +1699,10 @@ Lemma FSetK A (X : {set A}) : fsub A [fsetval k in X] = X.
 Proof. by apply/setP => x; rewrite !inE. Qed.
 
 End Theory.
+Hint Resolve fsubset_refl.
+Hint Resolve fsubset_trans.
+Hint Resolve fproper_irrefl.
+Hint Resolve fsub0set.
 
 Module Import FSetInE.
 Definition inE := (inE, in_fsetE).
@@ -1849,27 +1879,36 @@ Canonical fsetU_comoid := ComLaw (@fsetUC T).
 End FSetMonoids.
 Section BigFOpsFin.
 
-Variables (T : choiceType) (I : finType).
-Implicit Types (P : pred I) (A B : {fset I}) (F :  I -> {fset T}).
+Variables (T : choiceType) (I : eqType) (r : seq I).
+Implicit Types (P : pred I) (F :  I -> {fset T}).
 
-Lemma bigfcup_sup j P F : P j -> F j `<=` \bigcup_(i | P i) F i.
-Proof. by move=> Pj; rewrite (bigD1 j) //= fsubsetUl. Qed.
+Lemma bigcup_undup P F :
+   \bigcup_(i <- undup r | P i) F i = \bigcup_(i <- r | P i) F i.
+Proof. by rewrite big_undup => //= A; rewrite fsetUid. Qed.
+
+Lemma bigfcup_sup j P F : j \in r -> P j -> F j `<=` \bigcup_(i <- r | P i) F i.
+Proof.
+move=> jr Pj; rewrite -bigcup_undup big_mkcond.
+by rewrite (bigD1_seq j) ?mem_undup ?undup_uniq ?Pj //= fsubsetUl.
+Qed.
 
 Lemma bigfcupP x F P :
-  reflect (exists2 i : I, P i & x \in F i) (x \in (\bigcup_(i | P i) F i)).
+  reflect (exists2 i : I, (i \in r) && P i & x \in F i) (x \in \bigcup_(i <- r | P i) F i).
 Proof.
-apply: (iffP idP) => [|[i Pi]]; last first.
-  apply: fsubsetP x; exact: bigfcup_sup.
-by elim/big_rec: _ => [|i _ Pi _ /fsetUP[|//]]; [rewrite in_fset0 | exists i].
+apply: (iffP idP) => [|[i /andP[ri Pi]]]; last first.
+  by apply: fsubsetP x; rewrite bigfcup_sup.
+rewrite big_seq_cond; elim/big_rec: _ => [|i _ /andP[ri Pi] _ /fsetUP[|//]].
+  by rewrite in_fset0.
+by exists i; rewrite ?ri.
 Qed.
 
 Lemma bigfcupsP (U : {fset T}) P F :
-  reflect (forall i : I, P i -> F i `<=` U)
-          (\bigcup_(i | P i) F i `<=` U).
+  reflect (forall i : I, i \in r ->P i -> F i `<=` U)
+          (\bigcup_(i <- r | P i) F i `<=` U).
 Proof.
-apply: (iffP idP) => [sFU i Pi| sFU].
+apply: (iffP idP) => [sFU i ri Pi| sFU].
   by apply: fsubset_trans sFU; apply: bigfcup_sup.
-by apply/fsubsetP=> x /bigfcupP[i Pi]; apply: (fsubsetP (sFU i Pi)).
+by apply/fsubsetP=> x /bigfcupP[i /andP[ri Pi]]; apply/fsubsetP/sFU.
 Qed.
 
 End BigFOpsFin.
