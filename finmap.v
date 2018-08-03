@@ -346,7 +346,8 @@ Local Open Scope fset_scope.
 
 Notation "[` kf ]" := (FSetSub kf) (format "[`  kf ]") : fset_scope.
 
-Lemma fsetsubE (T : choiceType) (A : {fset T}) (x : A) (xA : val x \in A) : [` xA] = x.
+Lemma fsetsubE (T : choiceType) (A : {fset T}) (x : A) (xA : val x \in A) :
+ [` xA] = x.
 Proof. by apply/val_inj => /=. Qed.
 
 Definition fset_predT {T : choiceType} {A : {fset T}} := @predT {: A}.
@@ -775,22 +776,22 @@ have [a _ <- /=|kNA] := insubP; first by rewrite val_in_fset.
 by apply/imfsetP => [] [a _ k_def]; move: kNA; rewrite k_def [_ \in _]valP.
 Qed.
 
-Lemma in_fset_valT A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) (kA : k \in A) :
+Lemma in_fset_valT A (X : pred A) (Y : {fset A}) (p : finmempred X Y)
+  (k : K) (kA : k \in A) :
   (k \in imfset val p) = X [` kA].
 Proof. by rewrite in_fset_val insubT in_finmempred. Qed.
 
 Lemma in_fset_valP A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) :
   reflect {kA : k \in A & X [` kA]} (k \in imfset val p).
 Proof.
-have [kX|kNX] := boolP (k \in imfset val p); constructor; last first.
-  by move=> [kA]; move: kNX; rewrite in_fset_valT => /negPf->.
-move: kX; rewrite in_fset_val; case: insubP => [[u uP] _ <- Xu|//]; exists uP.
-by rewrite in_finmempred in Xu.
+apply: (iffP (imfsetP _ _ _)) => [|[kA xkA]]; last by exists [`kA].
+by move=> /sig2_eqW[/= x Xx ->]; exists (valP x); rewrite fsetsubE.
 Qed.
 
-Lemma in_fset_valF A (X : pred A) (Y : {fset A}) (p : finmempred X Y) (k : K) : k \notin A ->
+Lemma in_fset_valF A (X : pred A) (Y : {fset A})
+  (p : finmempred X Y) (k : K) : k \notin A ->
   (k \in imfset val p) = false.
-Proof. by apply: contraNF => /in_fset_valP []. Qed.
+Proof. by apply: contraNF => /imfsetP[/= a Xa->]. Qed.
 
 End imfset2.
 
@@ -1770,7 +1771,7 @@ End Enum.
 
 Section ImfsetTh.
 Variables (K V : choiceType).
-Implicit Types (f : K -> V) (g : V -> K) (A : {fset K}).
+Implicit Types (f : K -> V) (g : V -> K) (A V : {fset K}).
 
 Lemma imfset_id (A : {fset K}) : id @` A = A.
 Proof. by apply/fsetP=> a; rewrite !inE. Qed.
@@ -1782,10 +1783,12 @@ apply/fsetP=> a; apply/imfsetP/imfsetP=> [[/= x xA ->]|].
 by move=> [/= x /imfsetP [/= y yA ->] ->]; exists y.
 Qed.
 
-Lemma subset_imfset f A B : A `<=` B -> f @` A `<=` f @` B.
+Lemma subset_imfset f  (P Q : pred K) A B
+  (p : finmempred P A) (q : finmempred Q B):
+  {subset P <= Q} -> imfset f p `<=` imfset f q.
 Proof.
-move=> /fsubsetP AB; apply/fsubsetP => x /imfsetP [y /= yA ->].
-by rewrite in_imfset //= AB.
+move=> subPQ; apply/fsubsetP=> x /imfsetP [y /= yA ->].
+by rewrite in_imfset //= [Q y]subPQ.
 Qed.
 
 Lemma eq_imfset (f f' : K -> V) (P Q : pred K) (A B : {fset K})
@@ -1837,6 +1840,8 @@ rewrite card_imfset ?card_finset; first by rewrite card_powerset cardsE.
 by move=> X Y /fsetP eqXY; apply/setP => x; have := eqXY (val x); rewrite !inE.
 Qed.
 
+
+
 End PowerSetTheory.
 
 Section BigFSet.
@@ -1877,23 +1882,24 @@ Canonical fsetU_monoid := Law (@fsetUA T) (@fset0U T) (@fsetU0 T).
 Canonical fsetU_comoid := ComLaw (@fsetUC T).
 
 End FSetMonoids.
-Section BigFOpsFin.
+Section BigFOpsSeq.
 
 Variables (T : choiceType) (I : eqType) (r : seq I).
 Implicit Types (P : pred I) (F :  I -> {fset T}).
 
-Lemma bigcup_undup P F :
+Lemma bigfcup_undup P F :
    \bigcup_(i <- undup r | P i) F i = \bigcup_(i <- r | P i) F i.
 Proof. by rewrite big_undup => //= A; rewrite fsetUid. Qed.
 
 Lemma bigfcup_sup j P F : j \in r -> P j -> F j `<=` \bigcup_(i <- r | P i) F i.
 Proof.
-move=> jr Pj; rewrite -bigcup_undup big_mkcond.
+move=> jr Pj; rewrite -bigfcup_undup big_mkcond.
 by rewrite (bigD1_seq j) ?mem_undup ?undup_uniq ?Pj //= fsubsetUl.
 Qed.
 
 Lemma bigfcupP x F P :
-  reflect (exists2 i : I, (i \in r) && P i & x \in F i) (x \in \bigcup_(i <- r | P i) F i).
+  reflect (exists2 i : I, (i \in r) && P i & x \in F i)
+          (x \in \bigcup_(i <- r | P i) F i).
 Proof.
 apply: (iffP idP) => [|[i /andP[ri Pi]]]; last first.
   by apply: fsubsetP x; rewrite bigfcup_sup.
@@ -1903,7 +1909,7 @@ by exists i; rewrite ?ri.
 Qed.
 
 Lemma bigfcupsP (U : {fset T}) P F :
-  reflect (forall i : I, i \in r ->P i -> F i `<=` U)
+  reflect (forall i : I, i \in r -> P i -> F i `<=` U)
           (\bigcup_(i <- r | P i) F i `<=` U).
 Proof.
 apply: (iffP idP) => [sFU i ri Pi| sFU].
@@ -1911,7 +1917,7 @@ apply: (iffP idP) => [sFU i ri Pi| sFU].
 by apply/fsubsetP=> x /bigfcupP[i /andP[ri Pi]]; apply/fsubsetP/sFU.
 Qed.
 
-End BigFOpsFin.
+End BigFOpsSeq.
 
 Section BigFSetIncl.
 Variables (R : Type) (idx : R) (op : Monoid.com_law idx).
@@ -1937,6 +1943,258 @@ Qed.
 End BigFSetIncl.
 
 Arguments big_fset_incl {R idx op T A B}.
+
+(* ** Induction Principles *)
+Lemma finSet_rect (T : choiceType) (P : {fset T} -> Type) :
+  P fset0 -> (forall X, (forall Y, Y `<` X -> P Y) -> P X) -> forall X, P X.
+Proof.
+move=> P0 Psub X; move: (leqnn #|` X|); move: (X in Y in _ <= Y) => Y.
+elim: card X => [|n IHn] {Y} X; first by rewrite leqn0 cardfs_eq0 => /eqP->.
+move=> Xleq; apply: Psub => Y XsubY; apply: IHn.
+by rewrite -ltnS (leq_trans _ Xleq) // fproper_ltn_card.
+Qed.
+
+Lemma fset_bounded_coind (T : choiceType) (P : {fset T} -> Type) (U : {fset T}):
+  (forall X, (forall Y, Y `<=` U -> X `<` Y -> P Y) -> P X) ->
+   forall X, X `<=` U -> P X.
+Proof.
+move=> Psuper X XsubU; rewrite -[X](fsetDK XsubU)//.
+have {XsubU}: (U `\` X) `<=` U by rewrite fsubsetDl.
+elim: (_ `\` X) => {X} [|X IHX] XsubU.
+  rewrite fsetD0; apply: Psuper => Y /fsub_proper_trans UY/UY.
+  by rewrite fproperEneq eqxx.
+apply: Psuper => Y /fsetDK<-; rewrite fproperD2l ?fsubsetDl //.
+by move=> /IHX; apply; rewrite fsubsetDl.
+Qed.
+
+(** ** Fixpoints *)
+
+Lemma iter_fix T (f : T -> T) x n : f x = x -> iter n f x = x.
+Proof. by move=> fixf; elim: n => //= n ->. Qed.
+
+Section SetFixpoint.
+(** Least Fixpoints *)
+Section Least.
+Variables (T : finType) (F : {set T} -> {set T}).
+Hypothesis (F_mono : {homo F : X Y / X \subset Y}).
+
+Let n := #|T|.
+Notation iterF := (fun i => iter i F set0).
+
+Lemma set_iterF_sub i : iterF i \subset iterF i.+1.
+Proof. by elim: i => [| i IHi]; rewrite /= ?sub0set ?F_mono. Qed.
+
+Lemma set_iterF_mono : {homo iterF : i j / i <= j >-> i \subset j}.
+Proof.
+by apply: homo_leq => //[???|]; [apply: subset_trans|apply: set_iterF_sub].
+Qed.
+
+Definition set_fix := iterF n.
+
+Lemma set_fixK : F set_fix = set_fix.
+Proof.
+suff /'exists_eqP[x /= e]: [exists k : 'I_n.+1, iterF k == iterF k.+1].
+  by rewrite /set_fix -(subnK (leq_ord x)) iter_add iter_fix.
+apply: contraT; rewrite negb_exists => /forallP /(_ (Ordinal _)) /= neq_iter.
+suff iter_big k : k <= n.+1 -> k <= #|iter k F set0|.
+  by have := iter_big _ (leqnn _); rewrite ltnNge max_card.
+elim: k => [|k IHk] k_lt //=; apply: (leq_ltn_trans (IHk (ltnW k_lt))).
+by rewrite proper_card// properEneq// set_iterF_sub neq_iter.
+Qed.
+Hint Resolve set_fixK.
+
+Lemma set_fixKn k : iter k F set_fix = set_fix.
+Proof. by rewrite iter_fix. Qed.
+
+Lemma iter_sub_fix k : iterF k \subset set_fix.
+Proof.
+have [/set_iterF_mono//|/ltnW/subnK<-] := leqP k n;
+by rewrite iter_add set_fixKn.
+Qed.
+
+Lemma fix_order_proof x : x \in set_fix -> exists n, x \in iterF n.
+Proof. by move=> x_fix; exists n. Qed.
+
+Definition fix_order (x : T) :=
+ if (x \in set_fix) =P true isn't ReflectT x_fix then 0
+ else (ex_minn (fix_order_proof x_fix)).
+
+Lemma fix_order_le_max (x : T) : fix_order x <= n.
+Proof.
+rewrite /fix_order; case: eqP => //= x_in.
+by case: ex_minnP => //= ??; apply.
+Qed.
+
+Lemma in_iter_fix_orderE (x : T) :
+  (x \in iterF (fix_order x)) = (x \in set_fix).
+Proof.
+rewrite /fix_order; case: eqP; last by move=>/negP/negPf->; rewrite inE.
+by move=> x_in; case: ex_minnP => m ->; rewrite x_in.
+Qed.
+
+Lemma fix_order_gt0 (x : T) : (fix_order x > 0) = (x \in set_fix).
+Proof.
+rewrite /fix_order; case: eqP => [x_in|/negP/negPf->//].
+by rewrite x_in; case: ex_minnP => -[|m]; rewrite ?inE//= => _; apply.
+Qed.
+
+Lemma fix_order_eq0 (x : T) : (fix_order x == 0) = (x \notin set_fix).
+Proof. by rewrite -fix_order_gt0 -ltnNge ltnS leqn0. Qed.
+
+Lemma in_iter_fixE (x : T) k : (x \in iterF k) = (0 < fix_order x <= k).
+Proof.
+rewrite /fix_order; case: eqP => //= [x_in|/negP xNin]; last first.
+  by apply: contraNF xNin; apply/subsetP/iter_sub_fix.
+case: ex_minnP => -[|m]; rewrite ?inE// => xm mP.
+by apply/idP/idP=> [/mP//|lt_mk]; apply: subsetP xm; apply: set_iterF_mono.
+Qed.
+
+Lemma in_iter (x : T) k : x \in set_fix -> fix_order x <= k -> x \in iterF k.
+Proof. by move=> x_in xk; rewrite in_iter_fixE fix_order_gt0 x_in xk. Qed.
+
+Lemma notin_iter (x : T) k : k < fix_order x -> x \notin iterF k.
+Proof. by move=> k_le; rewrite in_iter_fixE negb_and orbC -ltnNge k_le. Qed.
+
+Lemma fix_order_small x k : x \in iterF k -> fix_order x <= k.
+Proof. by rewrite in_iter_fixE => /andP[]. Qed.
+
+Lemma fix_order_big x k : x \in set_fix -> x \notin iterF k -> fix_order x > k.
+Proof. by move=> x_in; rewrite in_iter_fixE fix_order_gt0 x_in /= -ltnNge. Qed.
+
+Lemma le_fix_order (x y : T) : y \in iterF (fix_order x) ->
+  fix_order y <= fix_order x.
+Proof. exact: fix_order_small. Qed.
+
+End Least.
+
+Section Greatest.
+Variables (T : finType) (F : {set T} -> {set T}).
+Hypothesis (F_mono : {homo F : X Y / X \subset Y}).
+
+Notation n := #|T|.
+Definition funsetC X := ~: (F (~: X)).
+Notation G := funsetC.
+Lemma funsetC_mono : {homo G : X Y / X \subset Y}.
+Proof. by move=> *; rewrite subCset setCK F_mono// subCset setCK. Qed.
+Hint Resolve funsetC_mono.
+
+Definition set_cofix := ~: set_fix G.
+
+Lemma set_cofixK : F set_cofix = set_cofix.
+Proof. by rewrite /set_cofix -[in RHS]set_fixK ?setCK. Qed.
+
+End Greatest.
+
+End SetFixpoint.
+
+Section Fixpoints.
+Variables (T : choiceType) (U : {fset T}).
+
+Definition sub_fun (F : {fset T} -> {fset T}) (X : {set U}) : {set U} :=
+  fsub U (F [fsetval x in X]).
+
+Lemma fset_fsub X : X `<=` U -> [fsetval x in fsub U X] = X.
+Proof.
+move=> XU; apply/fsetP => x; apply/in_fset_valP/idP.
+  by move=> [xU/=]; rewrite in_fsub.
+by move=> xX; exists (fsubsetP XU x xX); rewrite /= in_fsub.
+Qed.
+
+Variable (F : {fset T} -> {fset T}).
+Hypothesis (F_mono : {homo F : X Y / X `<=` Y}) (F_bound : {homo F : X / X `<=` U}).
+
+Notation Fsub := (sub_fun F).
+Notation iterF := (fun i => iter i F fset0).
+
+Lemma Fsub_mono : {homo Fsub : X Y / X \subset Y}.
+Proof.
+move=> X Y subXY; apply: subset_fsub; last by apply/F_bound/fset_sub_val.
+by apply/F_mono/subset_imfset/subsetP.
+Qed.
+Hint Resolve Fsub_mono.
+
+Definition fset_fix := [fsetval x in set_fix Fsub].
+
+Lemma fset_iterFE i : iterF i = [fsetval x in iter i Fsub set0].
+Proof.
+elim: i => [|i /= -> /=]; last by rewrite fset_fsub // F_bound//= fset_sub_val.
+by apply/fsetP=> x; rewrite in_fset_val /=; case: insub=> //= ?; rewrite !inE.
+Qed.
+
+Lemma fset_iterF_sub i : iterF i `<=` U.
+Proof. by rewrite /= fset_iterFE fset_sub_val. Qed.
+
+Lemma fset_fixK : F fset_fix = fset_fix.
+Proof.
+by rewrite /fset_fix -[in RHS]set_fixK// fset_fsub// F_bound//= fset_sub_val.
+Qed.
+Hint Resolve fset_fixK.
+
+Lemma fset_fixKn k : iter k F fset_fix = fset_fix.
+Proof. by rewrite iter_fix. Qed.
+
+Lemma iter_sub_ffix k : iterF k `<=` fset_fix.
+Proof.
+by rewrite /fset_fix !fset_iterFE; apply/subset_imfset/subsetP/iter_sub_fix.
+Qed.
+
+Definition ffix_order (x : T) :=
+ if x \in U =P true is ReflectT xU then fix_order Fsub [` xU] else 0.
+
+Lemma ffix_order_le_max (x : T) : ffix_order x <= #|` U|.
+Proof.
+by rewrite /ffix_order; case: eqP => //= x_in; rewrite fix_order_le_max.
+Qed.
+
+Lemma in_iter_ffix_orderE (x : T) :
+  (x \in iterF (ffix_order x)) = (x \in fset_fix).
+Proof.
+rewrite /ffix_order; case: eqP => [xU|/negP xNU]; last first.
+  by rewrite !inE /fset_fix in_fset_valF.
+by rewrite fset_iterFE !in_fset_valT /= in_iter_fix_orderE.
+Qed.
+
+Lemma ffix_order_gt0 (x : T) : (ffix_order x > 0) = (x \in fset_fix).
+Proof.
+rewrite /ffix_order; case: eqP => [xU|/negP xNU]; last by rewrite in_fset_valF.
+by rewrite fix_order_gt0 in_fset_valT.
+Qed.
+
+Lemma ffix_order_eq0 (x : T) : (ffix_order x == 0) = (x \notin fset_fix).
+Proof. by rewrite -ffix_order_gt0 -ltnNge ltnS leqn0. Qed.
+
+Lemma in_iter_ffixE (x : T) k : (x \in iterF k) = (0 < ffix_order x <= k).
+Proof.
+rewrite /ffix_order fset_iterFE; case: eqP => [xU|/negP xNU];
+by [rewrite in_fset_valF|rewrite in_fset_valT /= in_iter_fixE].
+Qed.
+
+Lemma in_iter_ffix (x : T) k : x \in fset_fix -> ffix_order x <= k ->
+  x \in iterF k.
+Proof. by move=> x_in xk; rewrite in_iter_ffixE ffix_order_gt0 x_in xk. Qed.
+
+Lemma notin_iter_ffix (x : T) k : k < ffix_order x -> x \notin iterF k.
+Proof. by move=> k_le; rewrite in_iter_ffixE negb_and orbC -ltnNge k_le. Qed.
+
+Lemma ffix_order_small x k : x \in iterF k -> ffix_order x <= k.
+Proof. by rewrite in_iter_ffixE => /andP[]. Qed.
+
+Lemma ffix_order_big x k : x \in fset_fix -> x \notin iterF k ->
+   ffix_order x > k.
+Proof. by move=> x_in; rewrite in_iter_ffixE ffix_order_gt0 x_in -ltnNge. Qed.
+
+Lemma le_ffix_order (x y : T) : y \in iterF (ffix_order x) ->
+  ffix_order y <= ffix_order x.
+Proof. exact: ffix_order_small. Qed.
+
+End Fixpoints.
+
+
+(* apply/apply/fsetP=> x /=. *)
+(* apply//in_fset_valP. *)
+(* rewrite -IHi /=. *)
+(* rewrite in_imfset. *)
+
 
 Section DefMap.
 Variables (K : choiceType) (V : Type).
