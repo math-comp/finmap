@@ -3651,7 +3651,7 @@ Lemma fsinjP {f} : [<->
         /\ forall a : S, f (val a) \in S].
 Proof.
 do ?[apply: AllIffConj] => [f_inj|[f_inj f_st]|[S fS [f_inj f_st]] a b].
- - split=> [a b ? ?|a]; first exact: f_inj.
+- split=> [a b ? ?|a]; first exact: f_inj.
   rewrite mem_finsupp (inj_eq f_inj) -mem_finsupp; apply/valP.
 - by exists (finsupp f)=> //; apply: fsubset_refl.
 have Nfinsupp := contra (fsubsetP fS _).
@@ -3670,7 +3670,7 @@ Proof.
 apply: equivP (fsinjP 1 0) => /=;
 by apply: (iffP andP)=> -[/fsfun_injective_inP ? /forallP ?].
 Qed.
- 
+
 Lemma fsinjectivebP f :
   reflect (exists2 S : {fset K}, (finsupp f `<=` S)
            & {in S &, injective f} /\ forall a : S, f (val a) \in S)
@@ -3684,5 +3684,3 @@ Arguments fsinjectiveP {K f}.
 Arguments fsinjectivebP {K f}.
 
 Definition inE := inE.
-
-
