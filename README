@@ -1,6 +1,6 @@
-       A finset and finmap DRAFT library
-       ---------------------------------
-
+[![Build Status](https://travis-ci.org/math-comp/finmap.svg?branch=master)](https://travis-ci.org/math-comp/finmap)
+       A finset and finmap library
+       ---------------------------
 AUTHOR
 ======
 Cyril Cohen
