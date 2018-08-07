@@ -49,12 +49,10 @@ Notation "[ 'mset' x 'in' aT => F ]" := ([fsfun x in aT => F ] : {mset _})
   (at level 0, x ident, format "[ 'mset'  x  'in'  aT  =>  F ]") : mset_scope.
 
 Identity Coercion multiset_multiset_of : multiset_of >-> multiset.
-Coercion fset_of_multiset (T : choiceType) (A : multiset T) : finSet T :=
-  finsupp A.
 Canonical multiset_predType (K : choiceType) :=  Eval hnf in mkPredType
-  (@pred_of_finset K \o @fset_of_multiset K : multiset K -> pred K).
+  (@pred_of_finset K \o (@finsupp _ _ _) : multiset K -> pred K).
 Canonical mset_finpredType (T: choiceType) :=
-  mkFinPredType (multiset T) (fun _ _ => erefl).
+  mkFinPredType (multiset T) (@finsupp _ _ _) (fun _ => fset_uniq _) (fun _ _ => erefl).
 
 Section MultisetOps.
 
@@ -71,21 +69,21 @@ Definition seq_mset (s : seq K) :=
   [mset & seq_mset_key | x in seq_fset s => count (pred1 x) s].
 
 Fact msetU_key : unit. Proof. exact: tt. Qed.
-Definition msetU A B := [mset & msetU_key | x in A `|` B => maxn (A x) (B x)].
+Definition msetU A B := [mset & msetU_key | x in finsupp A `|` finsupp B => maxn (A x) (B x)].
 
 Fact msetI_key : unit. Proof. exact: tt. Qed.
-Definition msetI A B := [mset & msetI_key | x in A `|` B => minn (A x) (B x)].
+Definition msetI A B := [mset & msetI_key | x in finsupp A `|` finsupp B => minn (A x) (B x)].
 
 Fact msetD_key : unit. Proof. exact: tt. Qed.
-Definition msetD A B := [mset & msetD_key | x in A `|` B => A x + B x].
+Definition msetD A B := [mset & msetD_key | x in finsupp A `|` finsupp B => A x + B x].
 
 Fact msetB_key : unit. Proof. exact: tt. Qed.
-Definition msetB A B := [mset & msetB_key | x in A `|` B => A x - B x].
+Definition msetB A B := [mset & msetB_key | x in finsupp A `|` finsupp B => A x - B x].
 
 Fact msetM_key : unit. Proof. exact: tt. Qed.
-Definition msetM A B := [mset & msetM_key | x in A `*` B => A x.1 * B x.2].
+Definition msetM A B := [mset & msetM_key | x in finsupp A `*` finsupp B => A x.1 * B x.2].
 
-Definition msubset A B := [forall x : A, A (val x) <= B (val x)].
+Definition msubset A B := [forall x : finsupp A, A (val x) <= B (val x)].
 
 Definition mproper A B := msubset A B && ~~ msubset B A.
 
@@ -489,7 +487,7 @@ Proof. by apply/msetP=> a; rewrite !msetE maxnE. Qed.
 
 Lemma msubsetP {A B} : reflect (forall x, A x <= B x) (A `<=` B).
 Proof.
-by apply: (iffP forallP)=> // ? x; case: (in_fsetP A x) => // /mset_eq0P->.
+by apply: (iffP forallP)=> // ? x; case: (in_fsetP (finsupp A) x) => // /mset_eq0P->.
 Qed.
 
 Lemma msubset_subset {A B} : A `<=` B -> {subset A <= B}.
