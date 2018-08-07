@@ -784,15 +784,6 @@ Lemma in_imfset2  (T1 : choiceType) (T2 : T1 -> choiceType)
    in_mem x p1 -> in_mem y (p2 x) -> f x y \in imfset2 f p1 p2.
 Proof. by move=> xD1 yD2; apply/imfset2P; exists x => //; exists y. Qed.
 
-Lemma eq_Tagged {T1 T2} {x x' : T1} {y : T2 x} {y' : T2 x'} :
-  Tagged T2 y = Tagged T2 y' -> {eq_x : x = x' & ecast x (T2 x) eq_x y = y'}.
-Proof.
-set t := Tagged _ _; set t' := Tagged _ _; move=> eqyy'.
-have /= <- : ecast x0 (T2 x0) (congr1 tag eqyy') (tagged t) = (tagged t')
- by case: _/ eqyy'.
-by exists (congr1 tag eqyy').
-Qed.
-
 Lemma mem_imfset2  (T1 : choiceType) (T2 : T1 -> choiceType)
       (f : forall x, T2 x -> K) (p1 : finmempred T1)
       (p2 : forall x, finmempred (T2 x)) (x : T1) (y : T2 x) :
@@ -801,8 +792,9 @@ Lemma mem_imfset2  (T1 : choiceType) (T2 : T1 -> choiceType)
 Proof.
 move=> f_inj; rewrite unlock seq_fsetE; apply/flatten_mapP/idP=> [[x1]|].
   rewrite enum_finmemE  => x1p /mapP[x2]; rewrite enum_finmemE => x2p.
-  move=> /(f_inj (Tagged _ _) (Tagged _ _))/esym -/eq_Tagged[eq_x].
-  by case: _ / eq_x in y * => <-; apply/andP.
+  move=> /(f_inj (Tagged _ _) (Tagged _ _))/esym/eqP => eqx2y.
+  have /eq_tag /= eqx1x := eqx2y; case: _ / eqx1x y eqx2y => y.
+  by rewrite eq_Tagged /= => /eqP<-; apply/andP.
 move=> /andP[xp1 yp2]; exists x; rewrite ?enum_finmemE//.
 by apply/mapP; exists y; rewrite ?enum_finmemE.
 Qed.
