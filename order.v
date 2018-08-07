@@ -23,25 +23,41 @@ Require Import ssreflect ssrbool eqtype ssrfun ssrnat choice seq.
 From mathcomp
 Require Import fintype tuple bigop path finset.
 
-(* DOCUMENTATION OUTDATED, THE NEW ONE IS COMMING SOON *)
-
 (*****************************************************************************)
 (* This files definies a ordered and decidable relations on a                *)
 (* type as canonical structure.  One need to import Order.Theory to get      *)
-(* the theory of such relations. The scope order_scope (%ord) contains       *)
-(* fancier notation for this kind of ordeeing.                               *)
+(* the theory of such relations. The scope order_scope (%O) contains         *)
+(* fancier notation for this kind of ordeering.                              *)
 (*                                                                           *)
-(*           posetType == the type of partially ordered types                *)
+(*          porderType == the type of partially ordered types                *)
 (*           orderType == the type of totally ordered types                  *)
+(*         latticeType == the type of distributive lattices                  *)
+(*        blatticeType == ... with a bottom elemnt                           *)
+(*        tlatticeType == ... with a top element                             *)
+(*       tblatticeType == ... with both a top and a bottom                   *)
+(*       cblatticeType == ... with a complement to, and bottom               *)
+(*      tcblatticeType == ... with a top, bottom, and general complement     *)
 (*                                                                           *)
-(* POsetType ord_mixin == builds an ordtype from a mixing containing         *)
-(*                        proofs of reflexivity, antisymmetry & transitivity *)
+(* Each of these structure take a first argument named display, of type unit *)
+(* instanciating it with tt or an unknown key will lead to a default display *)
+(* Optionally, one can configure the display by setting one owns notation    *)
+(* on operators instanciated for their particular display                    *)
+(* One example of this is the reverse display ^r, every notation with the    *)
+(* suffix ^r (e.g. x <=^r y) is about the reversal order, in order not to    *)
+(* confuse the normal order with its reversal.                               *)
+(*                                                                           *)
+(* PorderType pord_mixin == builds an ordtype from a a partial order mixin   *)
+(*                          containing le, lt and refl, antisym, trans of le *)
+(* LatticeType lat_mixin == builds a distributive lattice from a porderType  *)
+(*                          meet and join and axioms                         *)
+(*    OrderType le_total == builds an order type from a lattice              *)
+(*                          and from a proof of totality                     *)
+(*                  ...                                                      *)
 (*                                                                           *)
 (* We provide a canonical structure of orderType for natural numbers (nat)   *)
 (* for finType and for pairs of ordType by lexicographic orderering.         *)
 (*                                                                           *)
-(* leP ltP ltgtP are the three main lemmas for case analysis, note that      *)
-(* they are doing a bit more than the one for natural numbers.               *)
+(* leP ltP ltgtP are the three main lemmas for case analysis                 *)
 (*                                                                           *)
 (* We also provide specialized version of some theorems from path.v.         *)
 (*                                                                           *)
@@ -584,6 +600,7 @@ Definition eqType := @Equality.Pack cT xclass xT.
 Definition choiceType := @Choice.Pack cT xclass xT.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
+
 End ClassDef.
 
 Module Import Exports.
