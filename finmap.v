@@ -787,7 +787,7 @@ Proof. by move=> xD1 yD2; apply/imfset2P; exists x => //; exists y. Qed.
 Lemma mem_imfset2  (T1 : choiceType) (T2 : T1 -> choiceType)
       (f : forall x, T2 x -> K) (p1 : finmempred T1)
       (p2 : forall x, finmempred (T2 x)) (x : T1) (y : T2 x) :
-   injective (fun x : {x & T2 x} => f (tag x) (tagged x)) ->
+   injective (fun x : sigT T2 => f (tag x) (tagged x)) ->
    f x y \in imfset2 f p1 p2 = (in_mem x p1) && (in_mem y (p2 x)).
 Proof.
 move=> f_inj; rewrite unlock seq_fsetE; apply/flatten_mapP/idP=> [[x1]|].
