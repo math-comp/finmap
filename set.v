@@ -793,6 +793,7 @@ Lemma setU_eq0 A B : (A :|: B == set0) = (A == set0) && (B == set0).
 Proof. by rewrite -!subset0 subUset. Qed.
 
 Lemma setD_eq0 A B : (A :\: B == set0) = (A \subset B).
+Proof. by rewrite -subset0 subDset setU0. Qed.
 
 Lemma subsetD1 A B x : (A \subset B :\ x) = (A \subset B) && (x \notin A).
 Proof.
