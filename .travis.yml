@@ -10,12 +10,12 @@ env:
   - COMPILER="system"
   # Main test targets
   matrix:
-  - COQ_VERSION="8.6.1" MATHCOMP_VERSION="1.7.0"
-  - COQ_VERSION="8.7.2" MATHCOMP_VERSION="1.7.0"
-  - COQ_VERSION="8.8.1" MATHCOMP_VERSION="1.7.0"
-  - COQ_VERSION="8.8.1" MATHCOMP_VERSION="dev"
-  - COQ_VERSION="dev" MATHCOMP_VERSION="1.7.0"
-  - COQ_VERSION="dev" MATHCOMP_VERSION="dev"
+  - COQ="8.6.1" MATHCOMP="1.7.0"
+  - COQ="8.7.2" MATHCOMP="1.7.0"
+  - COQ="8.8.1" MATHCOMP="1.7.0"
+  - COQ="8.8.1" MATHCOMP="dev"
+  - COQ="dev" MATHCOMP="1.7.0"
+  - COQ="dev" MATHCOMP="dev"
 install:
 - sudo add-apt-repository --yes ppa:avsm/ppa
 - sudo apt-get update -qq
@@ -26,9 +26,9 @@ install:
 - opam remote add coq-extra-dev https://coq.inria.fr/opam/extra-dev
 - opam remote add coq-core-dev  https://coq.inria.fr/opam/core-dev
 - opam remote add coq-released  https://coq.inria.fr/opam/released
-- opam pin add -nvy coq --kind version ${COQ_VERSION}
+- opam pin add -nvy coq --kind version ${COQ}
 - opam install -j ${NJOBS} -yv coq
-- opam install -j ${NJOBS} -yv coq-mathcomp-ssreflect.${MATHCOMP_VERSION}
+- opam install -j ${NJOBS} -yv coq-mathcomp-ssreflect.${MATHCOMP}
 - opam list
 script:
 - opam pin add -y -vvv .
