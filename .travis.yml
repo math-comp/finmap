@@ -3,6 +3,11 @@ dist: trusty
 language: coq
 cache:
   apt: true
+branches:
+  only:
+  - master
+  - v1.0
+  - v1.1
 env:
   global:
   - NJOBS=2
@@ -10,6 +15,7 @@ env:
   - COMPILER="system"
   # Main test targets
   matrix:
+  - COQ="8.6.1" MATHCOMP="1.6.1"
   - COQ="8.6.1" MATHCOMP="1.7.0"
   - COQ="8.7.2" MATHCOMP="1.7.0"
   - COQ="8.8.1" MATHCOMP="1.7.0"
