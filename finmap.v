@@ -281,6 +281,43 @@ elim: r1 => [|i1 r1 IHr1]; rewrite !(big_nil, big_cons)//= big_cat {}IHr1.
 by case: (r2 i1) => [|i2 r21]; rewrite /= !(big_nil, big_cons)//= big_map.
 Qed.
 
+Section NatHomomorphism.
+Variable T : Type.
+
+Lemma homo_ltn_in (D : pred nat) (f : nat -> T) (r : T -> T -> Prop) :
+  (forall y x z, r x y -> r y z -> r x z) ->
+  {in D &, forall i j k, i < k < j -> k \in D} ->
+  {in D, forall i, i.+1 \in D -> r (f i) (f i.+1)} ->
+  {in D &, {homo f : i j / i < j >-> r i j}}.
+Proof.
+move=> r_trans Dcx r_incr i j iD jD lt_ij; move: (lt_ij) (jD) => /subnKC<-.
+elim: (_ - _) => [|k ihk]; first by rewrite addn0 => Dsi; apply: r_incr.
+move=> DSiSk [: DSik]; apply: (r_trans _ _ _ (ihk _)); rewrite ?addnS.
+  by abstract: DSik; apply: (Dcx _ _ iD DSiSk); rewrite ltn_addr ?addnS /=.
+by apply: r_incr; rewrite -?addnS.
+Qed.
+
+Lemma homo_ltn (f : nat -> T) (r : T -> T -> Prop) :
+  (forall y x z, r x y -> r y z -> r x z) ->
+  (forall i, r (f i) (f i.+1)) -> {homo f : i j / i < j >-> r i j}.
+Proof. by move=> /(@homo_ltn_in predT f) fr fS i j; apply: fr. Qed.
+
+Lemma homo_leq_in (D : pred nat) (f : nat -> T) (r : T -> T -> Prop) :
+  (forall x, r x x) -> (forall y x z, r x y -> r y z -> r x z) ->
+  {in D &, forall i j k, i < k < j -> k \in D} ->
+  {in D, forall i, i.+1 \in D -> r (f i) (f i.+1)} ->
+  {in D &, {homo f : i j / i <= j >-> r i j}}.
+Proof.
+move=> r_refl r_trans Dcx /(homo_ltn_in r_trans Dcx) lt_r i j iD jD.
+by rewrite leq_eqVlt => /predU1P[->//|/lt_r]; apply.
+Qed.
+
+Lemma homo_leq (f : nat -> T) (r : T -> T -> Prop) :
+   (forall x, r x x) -> (forall y x z, r x y -> r y z -> r x z) ->
+  (forall i, r (f i) (f i.+1)) -> {homo f : i j / i <= j >-> r i j}.
+Proof. by move=> rrefl /(@homo_leq_in predT f r) fr fS i j; apply: fr. Qed.
+
+End NatHomomorphism.
 End extra.
 
 Module Type SortKeysSig.
