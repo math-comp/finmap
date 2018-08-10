@@ -32,29 +32,63 @@ Require Import finmap.
 (*           A `<` B == A is a proper sub-multiset of B                      *)
 (*****************************************************************************)
 
+Set Implicit Arguments.
+Unset Strict Implicit.
+Unset Printing Implicit Defensive.
+
+
+Lemma sumn_map I (f : I -> nat) s :
+   sumn [seq f i | i <- s] = \sum_(i <- s) f i.
+Proof. by elim: s => [|i s IHs] in f *; rewrite ?(big_nil, big_cons) //= IHs. Qed.
+
+Lemma sumn_filter s P : sumn [seq i <- s | P i] = \sum_(i <- s | P i) i.
+Proof. by rewrite -big_filter -sumn_map map_id. Qed.
+
+Lemma sumn_map_filter I s (f : I -> nat) P :
+   sumn [seq f i | i <- s & P i] = \sum_(i <- s | P i) f i.
+Proof. by rewrite sumn_map big_filter. Qed.
+
+
 Delimit Scope mset_scope with mset.
 Local Open Scope fset_scope.
 Local Open Scope fmap_scope.
 Local Open Scope mset_scope.
 Local Open Scope nat_scope.
 
-Definition multiset (T : choiceType) := {fsfun _ : T => 0 : nat}.
+Definition multiset (T : choiceType) := {fsfun T -> nat with 0}.
 Definition multiset_of (T : choiceType) of phant T := @multiset T.
 Notation "'{mset' T }" := (@multiset_of _ (Phant T))
   (format "'{mset'  T }") : mset_scope.
 
-Notation "[ 'mset' & key | x 'in' aT => F ]" := ([fsfun & key | x in aT => F ] : {mset _})
+Notation "[ 'mset[' key ] x 'in' aT => F ]" := ([fsfun[key] x in aT => F] : {mset _})
   (at level 0, x ident, only parsing) : mset_scope.
-Notation "[ 'mset' x 'in' aT => F ]" := ([fsfun x in aT => F ] : {mset _})
-  (at level 0, x ident, format "[ 'mset'  x  'in'  aT  =>  F ]") : mset_scope.
+Notation "[ 'mset' x 'in' aT => F ]" := ([fsfun x in aT => F] : {mset _})
+  (at level 0, x ident, only parsing) : mset_scope.
+Notation "[ 'm' 'set' x 'in' aT => F ]" := ([fsfun[_] x in aT => F] : {mset _})
+  (at level 0, x ident, format "[ 'm' 'set'  x  'in'  aT  =>  F ]") : mset_scope.
 
 Identity Coercion multiset_multiset_of : multiset_of >-> multiset.
-Coercion fset_of_multiset (T : choiceType) (A : multiset T) : finSet T :=
-  finsupp A.
-Canonical multiset_predType (K : choiceType) :=  Eval hnf in mkPredType
-  (@pred_of_finset K \o @fset_of_multiset K : multiset K -> pred K).
+
+Notation enum_mset_def A :=
+  (flatten [seq nseq (A%mset x) x | x <- finsupp A%mset]).
+
+Module Type EnumMsetSig.
+Axiom f : forall K, multiset K -> seq K.
+Axiom E : f = (fun K (A : multiset K) => enum_mset_def A).
+End EnumMsetSig.
+Module EnumMset : EnumMsetSig.
+Definition f K (A : multiset K) := enum_mset_def A.
+Definition E := (erefl f).
+End EnumMset.
+Notation enum_mset := EnumMset.f.
+Coercion enum_mset : multiset >-> seq.
+Canonical enum_mset_unlock := Unlockable EnumMset.E.
+
+Canonical multiset_predType (K : choiceType) :=
+   Eval hnf in mkPredType (fun (A : multiset K) a => a \in enum_mset A).
 Canonical mset_finpredType (T: choiceType) :=
-  mkFinPredType (multiset T) (fun _ _ => erefl).
+  mkFinPredType (multiset T) (fun A => undup (enum_mset A))
+                (fun _ => undup_uniq _) (fun _ _ => mem_undup _ _).
 
 Section MultisetOps.
 
@@ -64,28 +98,33 @@ Implicit Types (a b c : K) (A B C D : {mset K}) (s : seq K).
 Definition mset0 : {mset K} := [fsfun].
 
 Fact msetn_key : unit. Proof. exact: tt. Qed.
-Definition msetn n a := [mset & msetn_key | x in [fset a] => n].
+Definition msetn n a := [mset[msetn_key] x in [fset a] => n].
 
 Fact seq_mset_key : unit. Proof. exact: tt. Qed.
 Definition seq_mset (s : seq K) :=
-  [mset & seq_mset_key | x in seq_fset s => count (pred1 x) s].
+  [mset[seq_mset_key] x in [fset x in s] => count (pred1 x) s].
 
 Fact msetU_key : unit. Proof. exact: tt. Qed.
-Definition msetU A B := [mset & msetU_key | x in A `|` B => maxn (A x) (B x)].
+Definition msetU A B :=
+  [mset[msetU_key] x in finsupp A `|` finsupp B => maxn (A x) (B x)].
 
 Fact msetI_key : unit. Proof. exact: tt. Qed.
-Definition msetI A B := [mset & msetI_key | x in A `|` B => minn (A x) (B x)].
+Definition msetI A B :=
+  [mset[msetI_key] x in finsupp A `|` finsupp B => minn (A x) (B x)].
 
 Fact msetD_key : unit. Proof. exact: tt. Qed.
-Definition msetD A B := [mset & msetD_key | x in A `|` B => A x + B x].
+Definition msetD A B :=
+  [mset[msetD_key] x in finsupp A `|` finsupp B => A x + B x].
 
 Fact msetB_key : unit. Proof. exact: tt. Qed.
-Definition msetB A B := [mset & msetB_key | x in A `|` B => A x - B x].
+Definition msetB A B :=
+  [mset[msetB_key] x in finsupp A `|` finsupp B => A x - B x].
 
 Fact msetM_key : unit. Proof. exact: tt. Qed.
-Definition msetM A B := [mset & msetM_key | x in A `*` B => A x.1 * B x.2].
+Definition msetM A B :=
+  [mset[msetM_key] x in finsupp A `*` finsupp B => A x.1 * B x.2].
 
-Definition msubset A B := [forall x : A, A (val x) <= B (val x)].
+Definition msubset A B := [forall x : finsupp A, A (val x) <= B (val x)].
 
 Definition mproper A B := msubset A B && ~~ msubset B A.
 
@@ -118,6 +157,25 @@ Notation "[ 'mset' a1 ; a2 ; .. ; an ]" :=
    format "[ 'mset'  a1 ;  a2 ;  .. ;  an ]") : mset_scope.
 Notation "A `&` B" := (msetI A B) : mset_scope.
 
+Section MSupp.
+
+Context {K : choiceType}.
+Implicit Types (a b c : K) (A B C D : {mset K}) (s : seq K).
+
+Lemma enum_msetE a A :
+   (a \in A) = (a \in flatten [seq nseq (A x) x | x <- finsupp A]).
+Proof. by transitivity (a \in enum_mset A); rewrite // unlock. Qed.
+
+Lemma msuppE a A : (a \in finsupp A) = (a \in A).
+Proof.
+rewrite enum_msetE.
+apply/idP/flattenP => [aA|/=[_ /mapP[x xA -> /nseqP[->//]]]].
+exists (nseq (A a) a); first by apply/mapP; exists a.
+by apply/nseqP; split=> //; rewrite lt0n -mem_finsupp.
+Qed.
+
+End MSupp.
+
 Section MSetTheory.
 
 Context {K : choiceType}.
@@ -126,20 +184,20 @@ Implicit Types (a b c : K) (A B C D : {mset K}) (s : seq K).
 Lemma msetP {A B} : A =1 B <-> A = B.
 Proof. exact: fsfunP. Qed.
 
-Lemma in_mset a A : (a \in A) = (A a > 0).
-Proof. by rewrite mem_finsupp lt0n. Qed.
-
 Lemma mset_neq0 a A : (A a != 0) = (a \in A).
-Proof. by rewrite mem_finsupp. Qed.
+Proof. by rewrite -msuppE mem_finsupp. Qed.
+
+Lemma in_mset a A : (a \in A) = (A a > 0).
+Proof. by rewrite -mset_neq0 lt0n. Qed.
 
 Lemma mset_eq0 a A : (A a == 0) = (a \notin A).
-Proof. by rewrite mem_finsupp negbK. Qed.
+Proof. by rewrite -mset_neq0 negbK. Qed.
 
 Lemma mset_eq0P {a A} : reflect (A a = 0) (a \notin A).
 Proof. by rewrite -mset_eq0; apply: eqP. Qed.
 
 Lemma mset_gt0 a A : (A a > 0) = (a \in A).
-Proof. by rewrite mem_finsupp lt0n. Qed.
+Proof. by rewrite -in_mset. Qed.
 
 Lemma mset_eqP {A B} : reflect (A =1 B) (A == B).
 Proof. exact: (equivP eqP (iff_sym msetP)). Qed.
@@ -156,12 +214,69 @@ Lemma msetE2 A B a :
  ((A `+` B) a = A a + B a) * ((A `|` B) a = maxn (A a) (B a))
 * ((A `&` B) a = minn (A a) (B a)) * ((A `\` B) a = (A a) - (B a)).
 Proof.
-rewrite !fsfunE !inE -!mset_neq0; case: ifPn => //.
+rewrite !fsfunE !inE !msuppE -!mset_neq0; case: ifPn => //.
 by rewrite negb_or !negbK => /andP [/eqP-> /eqP->].
 Qed.
 
-Lemma mset_seqE s a : (seq_mset s) a = count (pred1 a) s.
-Proof. by rewrite fsfunE seq_fsetE; case: ifPn => // /count_memPn ->. Qed.
+Lemma count_mem_mset a A : count_mem a A = A a.
+Proof.
+rewrite unlock count_flatten sumn_map big_map.
+rewrite (eq_bigr _ (fun _ _ => esym (sum1_count _ _))) /=.
+rewrite (eq_bigr _ (fun _ _ => big_nseq_cond _ _ _ _ _ _)) /= -big_mkcond /=.
+have [aNA|aA] := finsuppP.
+  by rewrite big1_fset // => i iA /eqP eq_ia; rewrite -eq_ia iA in aNA.
+rewrite big_fset_condE/= (big_fsetD1 a) ?inE ?eqxx ?andbT //= iter_addn mul1n.
+rewrite (_ : (_ `\ _)%fset = fset0) ?big_seq_fset0 ?addn0//.
+by apply/fsetP=> i; rewrite !inE; case: (i == a); rewrite ?(andbF, andbT).
+Qed.
+
+Lemma perm_undup_mset A : perm_eq (undup A) (finsupp A).
+Proof.
+apply: uniq_perm_eq; rewrite ?undup_uniq // => a.
+by rewrite mem_undup msuppE.
+Qed.
+
+Section big_com.
+Variables (R : Type) (idx : R) (op : Monoid.com_law idx).
+Implicit Types (X : {mset K}) (P : pred K) (F : K -> R).
+
+Lemma big_mset X P F :
+  \big[op/idx]_(i <- X | P i) F i =
+  \big[op/idx]_(i <- finsupp X | P i) iterop (X i) op (F i) idx.
+Proof.
+rewrite [in RHS](eq_big_perm (undup X)) 1?perm_eq_sym ?perm_undup_mset//.
+rewrite -[in LHS]big_undup_iterop_count; apply: eq_bigr => i _.
+by rewrite count_mem_mset.
+Qed.
+
+End big_com.
+
+Lemma sum_mset (X : {mset K}) (P : pred K) (F : K -> nat) :
+  \sum_(i <- X | P i) F i = \sum_(i <- finsupp X | P i) X i * F i.
+Proof.
+rewrite big_mset; apply: eq_bigr => i _ //.
+by rewrite Monoid.iteropE iter_addn addn0 mulnC.
+Qed.
+
+Lemma prod_mset (X : {mset K}) (P : pred K) (F : K -> nat) :
+  \prod_(i <- X | P i) F i = \prod_(i <- finsupp X | P i) F i ^ X i.
+Proof. by rewrite big_mset. Qed.
+
+Lemma mset_seqE s a : (seq_mset s) a = count_mem a s.
+Proof. by rewrite fsfunE inE/=; case: ifPn => // /count_memPn ->. Qed.
+
+Lemma perm_eq_seq_mset s : perm_eq (seq_mset s) s.
+Proof. by apply/allP => a _ /=; rewrite count_mem_mset mset_seqE. Qed.
+
+Lemma seq_mset_id A : seq_mset A = A.
+Proof. by apply/msetP=> a; rewrite mset_seqE count_mem_mset. Qed.
+
+Lemma eq_seq_msetP s s' : reflect (seq_mset s = seq_mset s') (perm_eq s s').
+Proof.
+apply: (iffP idP) => [/perm_eqP perm_ss'|eq_ss'].
+  by apply/msetP => a; rewrite !mset_seqE perm_ss'.
+by apply/allP => a _ /=; rewrite -!mset_seqE eq_ss'.
+Qed.
 
 Lemma msetME A B (u : K * K) : (A `*` B) u = A u.1 * B u.2.
 Proof.
@@ -189,7 +304,7 @@ Lemma in_msetn n a' a : a \in msetn n a' = (n > 0) && (a == a').
 Proof. by rewrite in_mset msetE; case: (a == a'); rewrite ?andbT ?andbF. Qed.
 
 Lemma in_mset1 a' a : a \in [mset a'] = (a == a').
-Proof. by rewrite in_mset msetE; case: (a == _). Qed.
+Proof. by rewrite in_msetn. Qed.
 
 Lemma in_msetD A B a : (a \in A `+` B) = (a \in A) || (a \in B).
 Proof. by rewrite !in_mset !msetE addn_gt0. Qed.
@@ -218,15 +333,42 @@ by rewrite in_msetB msetE in_mset; case: (_ == _); rewrite -?geq_max.
 Qed.
 
 Lemma in_msetM A B (u : K * K) : (u \in A `*` B) = (u.1 \in A) && (u.2 \in B).
-Proof. by rewrite !mem_finsupp msetE muln_eq0 negb_or. Qed.
+Proof. by rewrite -!msuppE !mem_finsupp msetE muln_eq0 negb_or. Qed.
 
-Definition in_msetE :=
-  (in_mset0, in_mset1, in_msetn,
-   in_mset1U, in_mset1D, in_msetB1,
-   in_msetU, in_msetI, in_msetD, in_msetM
-  ).
+Definition in_msetE := (in_mset0, in_msetn,
+                        in_msetB1, in_msetU, in_msetI, in_msetD, in_msetM).
 
-Let inE := (inE, in_msetE).
+Let inE := (inE, in_msetE, (@msuppE K)).
+
+
+Lemma enum_mset0 : mset0 = [::] :> seq K.
+Proof. by rewrite unlock finsupp0. Qed.
+
+Lemma msetn0 (a : K) : msetn 0 a = mset0.
+Proof. by apply/msetP=> i; rewrite !msetE if_same. Qed.
+
+Lemma finsupp_msetn n a : finsupp (msetn n a) = if n > 0 then [fset a] else fset0.
+Proof.  by apply/fsetP => i; rewrite !inE; case: ifP => //=; rewrite inE. Qed.
+
+Lemma enum_msetn n a : msetn n a = nseq n a :> seq K.
+Proof.
+case: n => [|n]; first by rewrite msetn0 /= enum_mset0.
+rewrite unlock finsupp_msetn /= enum_fsetE /= enum_fset1 /= cats0.
+by rewrite msetE eqxx.
+Qed.
+
+Section big.
+Variables (R : Type) (idx : R) (op : Monoid.law idx).
+Implicit Types (X : {mset K}) (P : pred K) (F : K -> R).
+
+Lemma big_mset0 P F : \big[op/idx]_(i <- mset0 | P i) F i = idx.
+Proof. by rewrite enum_mset0 big_nil. Qed.
+
+Lemma big_msetn n a P F :
+   \big[op/idx]_(i <- msetn n a | P i) F i =
+   if P a then iterop n op (F a) idx else idx.
+Proof. by rewrite enum_msetn big_nseq_cond Monoid.iteropE. Qed.
+End big.
 
 Lemma msetDC (A B : {mset K}) : A `+` B = B `+` A.
 Proof. by apply/msetP=> a; rewrite !msetE addnC. Qed.
@@ -317,15 +459,15 @@ Proof. by rewrite -!msetDA (msetDCA B). Qed.
 
 (* adjunction, union and difference with one element *)
 
-Lemma msetU1l x A b : x \in A -> x \in A `|` [mset b].
-Proof. by move=> Ax; rewrite !inE Ax. Qed.
+Lemma msetU1l x A B : x \in A -> x \in A `|` B.
+Proof. by move=> Ax /=; rewrite inE Ax. Qed.
 
 Lemma msetU1r A b : b \in A `|` [mset b].
 Proof. by rewrite !inE eqxx orbT. Qed.
 
 Lemma msetB1P x A b : reflect ((x = b -> A x > 1) /\ x \in A) (x \in A `\ b).
 Proof.
-rewrite !inE; apply: (iffP andP); first by move=> [/implyP Ax ->]; split => // /eqP.
+rewrite !inE. apply: (iffP andP); first by move=> [/implyP Ax ->]; split => // /eqP.
 by move=> [Ax ->]; split => //; apply/implyP => /eqP.
 Qed.
 
@@ -489,7 +631,8 @@ Proof. by apply/msetP=> a; rewrite !msetE maxnE. Qed.
 
 Lemma msubsetP {A B} : reflect (forall x, A x <= B x) (A `<=` B).
 Proof.
-by apply: (iffP forallP)=> // ? x; case: (in_fsetP A x) => // /mset_eq0P->.
+apply: (iffP forallP)=> // ? x; case: (in_fsetP (finsupp A) x) => //.
+by rewrite msuppE => /mset_eq0P->.
 Qed.
 
 Lemma msubset_subset {A B} : A `<=` B -> {subset A <= B}.
@@ -671,7 +814,7 @@ Lemma mset11 a : a \in [mset a]. Proof. by rewrite inE /=. Qed.
 
 Lemma msetn_inj n : n > 0 -> injective (@msetn K n).
 Proof.
-move=> n_gt0 a b eqsab; apply/(gt0_msetnP _ _ _ n_gt0).
+move=> n_gt0 a b eqsab; apply/(gt0_msetnP _ _ n_gt0).
 by rewrite -eqsab inE n_gt0 eqxx.
 Qed.
 
@@ -680,9 +823,6 @@ Proof. by rewrite !inE; exact: predU1P. Qed.
 
 Lemma mset_cons a s : seq_mset (a :: s) = a +` (seq_mset s).
 Proof. by apply/msetP=> x; rewrite !msetE /= eq_sym. Qed.
-
-(* We need separate lemmas for the explicit enumerations since they *)
-(* associate on the left.   *)
 
 (* intersection *)
 
@@ -786,5 +926,48 @@ Proof. by rewrite -!msubset0 msubUset. Qed.
 
 Lemma setD_eq0 A B : (A `\` B == mset0) = (A `<=` B).
 Proof. by rewrite -msubset0 subset_msetBLR msetD0. Qed.
+
+Lemma msub1set A a : ([mset a] `<=` A) = (a \in A).
+Proof.
+apply/msubsetP/idP; first by move/(_ a); rewrite msetnxx in_mset.
+by move=> ainA b; rewrite msetnE; case: eqP => // ->; rewrite -in_mset.
+Qed.
+
+Lemma msetDBA A B C : C `<=` B -> A `+` B `\` C = (A `+` B) `\` C.
+Proof.
+by move=> /msubsetP CB; apply/msetP=> a; rewrite !msetE2 addnBA.
+Qed.
+
+Lemma mset_0Vmem A : (A = mset0) + {x : K | x \in A}.
+Proof.
+have [/fsetP Aisfset0 | [a ainA]] := fset_0Vmem (finsupp A); last first.
+  by right; exists a; rewrite -msuppE.
+left; apply/msetP => a; rewrite mset0E; apply/mset_eq0P.
+by rewrite -msuppE Aisfset0 inE.
+Qed.
+
+Definition size_mset A : size A = \sum_(a <- finsupp A) A a.
+Proof. by rewrite -sum1_size sum_mset; apply: eq_bigr => i; rewrite muln1. Qed.
+
+Lemma size_mset0 : size (mset0 : {mset K}) = 0.
+Proof. by rewrite -sum1_size big_mset0. Qed.
+
+From mathcomp Require Import tuple.
+
+Lemma sum_nat_seq_eq0 (I : eqType) r (P : pred I) (E : I -> nat) :
+   (\sum_(i <- r | P i) E i == 0) = all [pred i | P i ==> (E i == 0)] r.
+Proof.
+rewrite big_tnth sum_nat_eq0; apply/forallP/allP => /= HE x.
+  by move=> /seq_tnthP[i ->]; apply: HE.
+by apply: HE; rewrite mem_tnth.
+Qed.
+
+Lemma size_mset_eq0 A : (size A == 0) = (A == mset0).
+Proof.
+apply/idP/eqP => [|->]; last by rewrite size_mset0.
+rewrite size_mset sum_nat_seq_eq0 => /allP AP.
+apply/msetP => a /=; rewrite msetE.
+by have /= := AP a; case: finsuppP => // _ /(_ _)/eqP->.
+Qed.
 
 End MSetTheory.
