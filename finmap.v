@@ -1087,7 +1087,7 @@ Lemma enum_imfset2  (T1 : choiceType) (T2 : T1 -> choiceType)
       (f : forall x, T2 x -> K) (p1 : finmempred T1)
       (p2 : forall x, finmempred (T2 x)) :
    {in  [pred t | p1 (tag t) & p2 _ (tagged t)] &,
-        injective (fun t : {x & T2 x} => f (tag t) (tagged t))} ->
+        injective (fun t : sigT T2 => f (tag t) (tagged t))} ->
    perm_eq (imfset2 key f p1 p2)
            (allsigs f (enum_finmem p1) (fun x => enum_finmem (p2 x))).
 Proof.
