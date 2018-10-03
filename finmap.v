@@ -9,6 +9,8 @@ From mathcomp
 Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
 From mathcomp
 Require Import choice path finset finfun fintype bigop.
+From mathcomp
+Require Import bigenough.
 
 (*****************************************************************************)
 (* This file provides representations for finite sets over a choiceType K,   *)
@@ -3824,3 +3826,28 @@ Qed.
 End FsfunIdTheory.
 
 Definition inE := inE.
+
+Export BigEnough.
+
+Module BigEnoughFSet.
+Definition big_rel_fsubset_class K : big_rel_class_of (@fsubset K).
+Proof.
+exists fsubset (fun G => \bigcup_(g <- G) g) => [|g s|g1 g2 j] //.
+  by rewrite big_cons fsubsetUl.
+by rewrite big_cons => h; rewrite fsubsetU // h orbT.
+Qed.
+
+Canonical big_enough_fset K := BigRelOf (big_rel_fsubset_class K).
+
+Ltac fset_big_enough_trans :=
+  match goal with
+  | [leq : is_true (?A `<=` ?B) |- is_true (?X `<=` ?B)] =>
+       apply: fsubset_trans leq; big_enough; olddone
+  end.
+
+Ltac done := do [fset_big_enough_trans|BigEnough.done].
+
+Ltac pose_big_fset K i :=
+  evar (i : {fset K}); suff : closed i; first do
+    [move=> _; instantiate (1 := bigger_than (@fsubset K) _) in (Value of i)].
+End BigEnoughFSet.
