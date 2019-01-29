@@ -330,8 +330,8 @@ Definition pack disp :=
   fun b bT & phant_id (Choice.class bT) b =>
   fun m => Pack disp (@Class T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 End ClassDef.
 
 Module Import Exports.
@@ -517,8 +517,8 @@ Definition pack b0 (m0 : mixin_of (@POrder.Pack disp T b0 T)) :=
   fun bT b & phant_id (@POrder.class disp bT) b =>
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 End ClassDef.
 
@@ -596,8 +596,8 @@ Definition pack b0 (m0 : mixin_of (@Lattice.Pack disp T b0 T)) :=
   fun bT b & phant_id (@Lattice.class disp bT) b =>
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 
@@ -664,8 +664,8 @@ Definition pack b0 (m0 : mixin_of (@Lattice.Pack disp T b0 T)) :=
   fun bT b & phant_id (@Lattice.class disp bT) b =>
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 End ClassDef.
@@ -768,8 +768,8 @@ Definition pack b0 (m0 : mixin_of (@BLattice.Pack disp T b0 T)) :=
   fun bT b & phant_id (@BLattice.class disp bT) b =>
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 Definition blatticeType := @BLattice.Pack disp cT xclass xT.
@@ -877,8 +877,8 @@ Definition pack b0 (m0 : mixin_of (@BLattice.Pack disp T b0 T)) :=
   fun bT b & phant_id (@BLattice.class disp bT) b =>
     fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 Definition blatticeType := @BLattice.Pack disp cT xclass xT.
@@ -966,8 +966,8 @@ Definition pack :=
   fun (m2 : @mixin_of disp (@TBLattice.Pack disp T b T) (CBLattice.sub m1)) =>
   Pack (@Class disp T b m1 m2) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
 Definition blatticeType := @BLattice.Pack disp cT xclass xT.
@@ -1042,7 +1042,7 @@ Section ClassDef.
 
 Record class_of T := Class {
   base  : Finite.class_of T;
-  mixin : POrder.mixin_of (Equality.Pack base T)
+  mixin : POrder.mixin_of (Equality.Pack base)
 }.
 
 Local Coercion base : class_of >-> Finite.class_of.
@@ -1064,9 +1064,9 @@ Definition pack :=
   fun m mT & phant_id (POrder.mixin_of mT) m =>
   Pack disp (@Class T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition finType := @Finite.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition fin_porderType := @POrder.Pack disp finType xclass xT.
 End ClassDef.
@@ -1124,9 +1124,9 @@ Definition pack disp :=
   fun mT m & phant_id (@Lattice.mixin disp mT) m =>
   Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition finType := @Finite.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
@@ -1191,9 +1191,9 @@ Definition pack disp :=
   fun mT m & phant_id (@Total.mixin disp mT) m =>
   Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition finType := @Finite.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
@@ -1264,9 +1264,9 @@ Definition pack disp :=
   fun mT m & phant_id (@BLattice.mixin disp mT) m =>
   Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition finType := @Finite.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
@@ -1337,9 +1337,9 @@ Definition pack disp :=
   fun mT m & phant_id (@TBLattice.mixin disp mT) m =>
   Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition finType := @Finite.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
@@ -1416,9 +1416,9 @@ Definition pack disp :=
   fun mT m & phant_id (@CBLattice.mixin disp mT) m =>
   Pack (@Class disp T b m) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition finType := @Finite.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.
@@ -1500,9 +1500,9 @@ Definition pack disp :=
   fun m2T m2 & phant_id (@CTBLattice.mixin2 disp m2T) m2 =>
   Pack (@Class disp T b m1 m2) T.
 
-Definition eqType := @Equality.Pack cT xclass xT.
-Definition finType := @Finite.Pack cT xclass xT.
-Definition choiceType := @Choice.Pack cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 Definition porderType := @POrder.Pack disp cT xclass xT.
 Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
 Definition latticeType := @Lattice.Pack disp cT xclass xT.

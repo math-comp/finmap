@@ -176,8 +176,8 @@ Local Notation ddisp := (display_set disp).
 Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
 
-Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
-Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
+Definition eqType := @Equality.Pack (cT X) (xclass X).
+Definition choiceType := @Choice.Pack (cT X) (xclass X).
 Definition porderType :=
  @Order.POrder.Pack ddisp (cT X) (xclass X) (xset X).
 Definition latticeType :=
@@ -950,8 +950,8 @@ Local Notation ddisp := (display_set disp).
 Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
 
-Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
-Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
+Definition eqType := @Equality.Pack (cT X) (xclass X).
+Definition choiceType := @Choice.Pack (cT X) (xclass X).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X) (xset X).
 Definition latticeType :=
   @Order.Lattice.Pack ddisp (cT X) (xclass X) (xset X).
