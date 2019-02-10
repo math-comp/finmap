@@ -1,39 +1,58 @@
-sudo: required
 dist: trusty
-language: coq
-cache:
-  apt: true
+sudo: required
+language: generic
+
 branches:
   only:
   - master
-  - v1.0
+
+services:
+  - docker
+
 env:
   global:
-  - NJOBS=2
-  # system is == 4.02.3
-  - COMPILER="system"
-  # Main test targets
+  - NJOBS="2"
+  - CONTRIB_NAME="finmap"
   matrix:
-  - COQ="8.6.1" MATHCOMP="1.6.1"
-  - COQ="8.6.1" MATHCOMP="1.7.0"
-  - COQ="8.7.2" MATHCOMP="1.7.0"
-  - COQ="8.8.1" MATHCOMP="1.7.0"
-  - COQ="8.8.1" MATHCOMP="dev"
-  - COQ="dev" MATHCOMP="1.7.0"
-  - COQ="dev" MATHCOMP="dev"
-install:
-- sudo add-apt-repository --yes ppa:avsm/ppa
-- sudo apt-get update -qq
-- sudo apt-get install -qq -y opam
-- opam init -y
-- eval $(opam config env)
-- opam config var root
-- opam remote add coq-extra-dev https://coq.inria.fr/opam/extra-dev
-- opam remote add coq-core-dev  https://coq.inria.fr/opam/core-dev
-- opam remote add coq-released  https://coq.inria.fr/opam/released
-- opam pin add -nvy coq --kind version ${COQ}
-- opam install -j ${NJOBS} -yv coq
-- opam install -j ${NJOBS} -yv coq-mathcomp-ssreflect.${MATHCOMP}
-- opam list
+  - DOCKERIMAGE="mathcomp/mathcomp:1.7.0-coq-8.7"
+  - DOCKERIMAGE="mathcomp/mathcomp:1.7.0-coq-8.8"
+  - DOCKERIMAGE="mathcomp/mathcomp:1.7.0-coq-8.9"
+  - DOCKERIMAGE="mathcomp/mathcomp:1.7.0-coq-dev"
+  # - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.7"
+  # - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.8"
+  # - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.9"
+  # - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-dev"
+
+install: |
+  # Prepare the COQ container
+  docker pull "${DOCKERIMAGE}"
+  docker run -d -i --init --name=COQ -v ${TRAVIS_BUILD_DIR}:/home/coq/${CONTRIB_NAME} -w /home/coq/${CONTRIB_NAME} "${DOCKERIMAGE}"
+  docker exec COQ /bin/bash --login -c "
+    # This bash script is double-quoted to interpolate Travis CI env vars:
+    echo \"Build triggered by ${TRAVIS_EVENT_TYPE}\"
+    export PS4='+ \e[33;1m(\$0 @ line \$LINENO) \$\e[0m '
+    set -ex  # -e = exit on failure; -x = trace for debug
+    # Using flambda makes sense here as we usually get ~10% faster
+    # builds in math-comp.
+    opam switch \$COMPILER_EDGE
+    eval \$(opam env)
+    opam update -y
+    opam config list
+    opam repo list
+    opam list
+    sudo chown -R coq:coq /home/coq/${CONTRIB_NAME}
+    opam pin add -y -n coq-mathcomp-finmap .
+    # install deps only
+    opam install -y -vvv --deps-only coq-mathcomp-finmap
+    "
 script:
-- opam pin add -y -vvv .
+- echo -e "${ANSI_YELLOW}Building ${CONTRIB_NAME}...${ANSI_RESET}" && echo -en 'travis_fold:start:script\\r'
+- |
+  docker exec COQ /bin/bash --login -c "
+    export PS4='+ \e[33;1m(\$0 @ line \$LINENO) \$\e[0m '
+    set -ex
+    eval \$(opam env)
+    opam install -y -vvv coq-mathcomp-finmap
+    "
+- docker stop COQ  # optional
+- echo -en 'travis_fold:end:script\\r'
