@@ -106,6 +106,26 @@ Notation "x \subset y" := (\sub%set x y) : bool_scope.
 Notation "x \proper y" := (\proper%set x y) : bool_scope.
 End SetSyntax.
 
+Ltac EqualityPack cT xclass xT :=
+  match type of Equality.Pack with
+  | forall sort : Type, Equality.mixin_of sort -> eqType =>
+    (* mathcomp.dev *)
+    exact (@Equality.Pack cT xclass)
+  | _ =>
+    (* mathcomp <= 1.7 *)
+    exact (@Equality.Pack cT xclass xT)
+  end.
+
+Ltac ChoicePack cT xclass xT :=
+  match type of Choice.Pack with
+  | forall sort : Type, Choice.class_of sort -> choiceType =>
+    (* mathcomp.dev *)
+    exact (@Choice.Pack cT xclass)
+  | _ =>
+    (* mathcomp <= 1.7 *)
+    exact (@Choice.Pack cT xclass xT)
+  end.
+
 Module Semiset.
 Section ClassDef.
 Variable elementType : Type. (* Universe type *)
@@ -176,8 +196,8 @@ Local Notation ddisp := (display_set disp).
 Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
 
-Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
-Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
+Definition eqType := ltac:(EqualityPack (cT X) ((@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset) X) (xset X)).
+Definition choiceType := ltac:(ChoicePack (cT X) ((@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset) X) (xset X)).
 Definition porderType :=
  @Order.POrder.Pack ddisp (cT X) (xclass X) (xset X).
 Definition latticeType :=
@@ -950,8 +970,8 @@ Local Notation ddisp := (display_set disp).
 Let xset := let: Pack set _ _ := cT in set.
 Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
 
-Definition eqType := @Equality.Pack (cT X) (xclass X) (xset X).
-Definition choiceType := @Choice.Pack (cT X) (xclass X) (xset X).
+Definition eqType := ltac:(EqualityPack (cT X) ((@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset) X) (xset X)).
+Definition choiceType := ltac:(ChoicePack (cT X) ((@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset) X) (xset X)).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X) (xset X).
 Definition latticeType :=
   @Order.Lattice.Pack ddisp (cT X) (xclass X) (xset X).
