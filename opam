@@ -1,10 +1,11 @@
-opam-version: "1.2"
+opam-version: "2.0"
 name: "coq-mathcomp-finmap"
 version: "dev"
 maintainer: "Cyril Cohen <cyril.cohen@inria.fr>"
 
-homepage: "http://www.cyrilcohen.fr"
-bug-reports: "Cyril Cohen <cyril.cohen@inria.fr>"
+homepage: "https://github.com/math-comp/finmap"
+bug-reports: "https://github.com/math-comp/finmap/issues"
+dev-repo: "git+https://github.com/math-comp/finmap.git"
 license: "CeCILL-B"
 
 build: [ make "-j" "%{jobs}%" ]
@@ -17,3 +18,5 @@ depends: [
 
 tags: [ "keyword:finmap" "keyword:finset" "keyword:multiset"]
 authors: [ "Cyril Cohen <cyril.cohen@inria.fr>" ]
+
+synopsis: "A finset and finmap library"
