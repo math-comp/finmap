@@ -296,36 +296,6 @@ Module Order.
 (* STRUCTURES *)
 (**************)
 
-Ltac EqualityPack cT xclass xT :=
-  match type of Equality.Pack with
-  | forall sort : Type, Equality.mixin_of sort -> eqType =>
-    (* mathcomp.dev *)
-    exact (@Equality.Pack cT xclass)
-  | _ =>
-    (* mathcomp <= 1.7 *)
-    exact (@Equality.Pack cT xclass xT)
-  end.
-
-Ltac ChoicePack cT xclass xT :=
-  match type of Choice.Pack with
-  | forall sort : Type, Choice.class_of sort -> choiceType =>
-    (* mathcomp.dev *)
-    exact (@Choice.Pack cT xclass)
-  | _ =>
-    (* mathcomp <= 1.7 *)
-    exact (@Choice.Pack cT xclass xT)
-  end.
-
-Ltac FinitePack cT xclass xT :=
-  match type of Finite.Pack with
-  | forall sort : Type, Finite.class_of sort -> finType =>
-    (* mathcomp.dev *)
-    exact (@Finite.Pack cT xclass)
-  | _ =>
-    (* mathcomp <= 1.7 *)
-    exact (@Finite.Pack cT xclass xT)
-  end.
-
 Module POrder.
 Section ClassDef.
 Structure mixin_of (T : eqType) := Mixin {
@@ -344,24 +314,24 @@ Record class_of T := Class {
 
 Local Coercion base : class_of >-> Choice.class_of.
 
-Structure type (disp : unit) := Pack { sort; _ : class_of sort; _ : Type }.
+Structure type (disp : unit) := Pack { sort; _ : class_of sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of cT' in c.
 Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' T c T.
-Let xT := let: Pack T _ _ := cT in T.
+  @Pack disp' T c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of xT).
 
 Definition pack disp :=
   fun b bT & phant_id (Choice.class bT) b =>
-  fun m => Pack disp (@Class T b m) T.
+  fun m => Pack disp (@Class T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of xT) xT).
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
 End ClassDef.
 
 Module Import Exports.
@@ -525,31 +495,31 @@ Structure mixin_of d (T : porderType d) := Mixin {
 
 Record class_of d (T : Type) := Class {
   base  : POrder.class_of T;
-  mixin : mixin_of (POrder.Pack d base T)
+  mixin : mixin_of (POrder.Pack d base)
 }.
 
 Local Coercion base : class_of >-> POrder.class_of.
 
 Structure type (display : unit) :=
-  Pack { sort; _ : class_of display sort; _ : Type }.
+  Pack { sort; _ : class_of display sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
 Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' T c T.
-Let xT := let: Pack T _ _ := cT in T.
+  @Pack disp' T c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
-Definition pack b0 (m0 : mixin_of (@POrder.Pack disp T b0 T)) :=
+Definition pack b0 (m0 : mixin_of (@POrder.Pack disp T b0)) :=
   fun bT b & phant_id (@POrder.class disp bT) b =>
-    fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
+    fun    m & phant_id m0 m => Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
 End ClassDef.
 
 Module Import Exports.
@@ -605,31 +575,31 @@ Local Notation mixin_of T := (total (<=%O : rel T)).
 
 Record class_of d (T : Type) := Class {
   base  : Lattice.class_of d T;
-  mixin : total (<=%O : rel (POrder.Pack d base T))
+  mixin : total (<=%O : rel (POrder.Pack d base))
 }.
 
 Local Coercion base : class_of >-> Lattice.class_of.
 
-Structure type d := Pack { sort; _ : class_of d sort; _ : Type }.
+Structure type d := Pack { sort; _ : class_of d sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
 Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' T c T.
-Let xT := let: Pack T _ _ := cT in T.
+  @Pack disp' T c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
-Definition pack b0 (m0 : mixin_of (@Lattice.Pack disp T b0 T)) :=
+Definition pack b0 (m0 : mixin_of (@Lattice.Pack disp T b0)) :=
   fun bT b & phant_id (@Lattice.class disp bT) b =>
-    fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
+    fun    m & phant_id m0 m => Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
 
 End ClassDef.
 
@@ -673,31 +643,31 @@ Structure mixin_of d (T : porderType d) := Mixin {
 
 Record class_of d (T : Type) := Class {
   base  : Lattice.class_of d T;
-  mixin : mixin_of (POrder.Pack d base T)
+  mixin : mixin_of (POrder.Pack d base)
 }.
 
 Local Coercion base : class_of >-> Lattice.class_of.
 
-Structure type d := Pack { sort; _ : class_of d sort; _ : Type }.
+Structure type d := Pack { sort; _ : class_of d sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
 Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' T c T.
-Let xT := let: Pack T _ _ := cT in T.
+  @Pack disp' T c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
-Definition pack b0 (m0 : mixin_of (@Lattice.Pack disp T b0 T)) :=
+Definition pack b0 (m0 : mixin_of (@Lattice.Pack disp T b0)) :=
   fun bT b & phant_id (@Lattice.class disp bT) b =>
-    fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
+    fun    m & phant_id m0 m => Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
 End ClassDef.
 
 Module Import Exports.
@@ -777,32 +747,32 @@ Structure mixin_of d (T : porderType d) := Mixin {
 
 Record class_of d (T : Type) := Class {
   base  : BLattice.class_of d T;
-  mixin : mixin_of (POrder.Pack d base T)
+  mixin : mixin_of (POrder.Pack d base)
 }.
 
 Local Coercion base : class_of >-> BLattice.class_of.
 
-Structure type d := Pack { sort; _ : class_of d sort; _ : Type }.
+Structure type d := Pack { sort; _ : class_of d sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
 Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' T c T.
-Let xT := let: Pack T _ _ := cT in T.
+  @Pack disp' T c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
-Definition pack b0 (m0 : mixin_of (@BLattice.Pack disp T b0 T)) :=
+Definition pack b0 (m0 : mixin_of (@BLattice.Pack disp T b0)) :=
   fun bT b & phant_id (@BLattice.class disp bT) b =>
-    fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
+    fun    m & phant_id m0 m => Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition blatticeType := @BLattice.Pack disp cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition blatticeType := @BLattice.Pack disp cT xclass.
 End ClassDef.
 
 Module Import Exports.
@@ -886,32 +856,32 @@ Structure mixin_of d (T : blatticeType d) := Mixin {
 
 Record class_of d (T : Type) := Class {
   base  : BLattice.class_of d T;
-  mixin : mixin_of (BLattice.Pack base T)
+  mixin : mixin_of (BLattice.Pack base)
 }.
 
 Local Coercion base : class_of >-> BLattice.class_of.
 
-Structure type d := Pack { sort; _ : class_of d sort; _ : Type }.
+Structure type d := Pack { sort; _ : class_of d sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
 Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' T c T.
-Let xT := let: Pack T _ _ := cT in T.
+  @Pack disp' T c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
-Definition pack b0 (m0 : mixin_of (@BLattice.Pack disp T b0 T)) :=
+Definition pack b0 (m0 : mixin_of (@BLattice.Pack disp T b0)) :=
   fun bT b & phant_id (@BLattice.class disp bT) b =>
-    fun    m & phant_id m0 m => Pack (@Class disp T b m) T.
+    fun    m & phant_id m0 m => Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition blatticeType := @BLattice.Pack disp cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition blatticeType := @BLattice.Pack disp cT xclass.
 End ClassDef.
 
 Module Import Exports.
@@ -968,24 +938,24 @@ Record mixin_of d (T : tblatticeType d) (sub : T -> T -> T) := Mixin {
 
 Record class_of d (T : Type) := Class {
   base  : TBLattice.class_of d T;
-  mixin1 : CBLattice.mixin_of (BLattice.Pack base T);
-  mixin2 : @mixin_of d (TBLattice.Pack base T) (CBLattice.sub mixin1)
+  mixin1 : CBLattice.mixin_of (BLattice.Pack base);
+  mixin2 : @mixin_of d (TBLattice.Pack base) (CBLattice.sub mixin1)
 }.
 
 Local Coercion base : class_of >-> TBLattice.class_of.
 Local Coercion base2 d T (c : class_of d T) :=
   CBLattice.Class (mixin1 c).
 
-Structure type d := Pack { sort; _ : class_of d sort; _ : Type }.
+Structure type d := Pack { sort; _ : class_of d sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
 Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' T c T.
-Let xT := let: Pack T _ _ := cT in T.
+  @Pack disp' T c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
 Definition pack :=
@@ -993,18 +963,18 @@ Definition pack :=
                       (b : TBLattice.class_of disp T) =>
   fun m1T m1 &  phant_id (@CBLattice.class disp m1T)
                          (@CBLattice.Class disp T b m1) =>
-  fun (m2 : @mixin_of disp (@TBLattice.Pack disp T b T) (CBLattice.sub m1)) =>
-  Pack (@Class disp T b m1 m2) T.
+  fun (m2 : @mixin_of disp (@TBLattice.Pack disp T b) (CBLattice.sub m1)) =>
+  Pack (@Class disp T b m1 m2).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition blatticeType := @BLattice.Pack disp cT xclass xT.
-Definition tblatticeType := @TBLattice.Pack disp cT xclass xT.
-Definition cblatticeType := @CBLattice.Pack disp cT xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition blatticeType := @BLattice.Pack disp cT xclass.
+Definition tblatticeType := @TBLattice.Pack disp cT xclass.
+Definition cblatticeType := @CBLattice.Pack disp cT xclass.
 Definition tbd_cblatticeType :=
-  @CBLattice.Pack disp tblatticeType xclass xT.
+  @CBLattice.Pack disp tblatticeType xclass.
 End ClassDef.
 
 Module Import Exports.
@@ -1072,33 +1042,33 @@ Section ClassDef.
 
 Record class_of T := Class {
   base  : Finite.class_of T;
-  mixin : POrder.mixin_of (ltac:(EqualityPack T base T))
+  mixin : POrder.mixin_of (Equality.Pack base)
 }.
 
 Local Coercion base : class_of >-> Finite.class_of.
 Definition base2 T (c : class_of T) := (POrder.Class (mixin c)).
 Local Coercion base2 : class_of >-> POrder.class_of.
 
-Structure type (disp : unit) := Pack { sort; _ : class_of sort; _ : Type }.
+Structure type (disp : unit) := Pack { sort; _ : class_of sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of cT' in c.
-Let xT := let: Pack T _ _ := cT in T.
+Definition class := let: Pack _ c as cT' := cT return class_of cT' in c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of xT).
 
 Definition pack :=
   fun b bT & phant_id (Finite.class bT) b =>
   fun m mT & phant_id (POrder.mixin_of mT) m =>
-  Pack disp (@Class T b m) T.
+  Pack disp (@Class T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of xT) xT).
-Definition finType := ltac:(FinitePack cT (class : class_of xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition fin_porderType := @POrder.Pack disp finType xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition fin_porderType := @POrder.Pack disp finType xclass.
 End ClassDef.
 
 Module Import Exports.
@@ -1131,7 +1101,7 @@ Section ClassDef.
 
 Record class_of d (T : Type) := Class {
   base  : FinPOrder.class_of T;
-  mixin : Lattice.mixin_of (POrder.Pack d base T)
+  mixin : Lattice.mixin_of (POrder.Pack d base)
 }.
 
 Local Coercion base : class_of >-> FinPOrder.class_of.
@@ -1139,28 +1109,28 @@ Definition base2 d T (c : class_of d T) := (Lattice.Class (mixin c)).
 Local Coercion base2 : class_of >-> Lattice.class_of.
 
 Structure type (display : unit) :=
-  Pack { sort; _ : class_of display sort; _ : Type }.
+  Pack { sort; _ : class_of display sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
-Let xT := let: Pack T _ _ := cT in T.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
 Definition pack disp :=
   fun bT b & phant_id (@FinPOrder.class disp bT) b =>
   fun mT m & phant_id (@Lattice.mixin disp mT) m =>
-  Pack (@Class disp T b m) T.
+  Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition finType := ltac:(FinitePack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition fin_latticeType := @Lattice.Pack disp finPOrderType xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition finPOrderType := @FinPOrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition fin_latticeType := @Lattice.Pack disp finPOrderType xclass.
 
 End ClassDef.
 
@@ -1197,7 +1167,7 @@ Section ClassDef.
 
 Record class_of d (T : Type) := Class {
   base  : FinLattice.class_of d T;
-  mixin : total (<=%O : rel (POrder.Pack d base T))
+  mixin : total (<=%O : rel (POrder.Pack d base))
 }.
 
 Local Coercion base : class_of >-> FinLattice.class_of.
@@ -1206,30 +1176,30 @@ Definition base2 d T (c : class_of d T) :=
 Local Coercion base2 : class_of >-> Total.class_of.
 
 Structure type (display : unit) :=
-  Pack { sort; _ : class_of display sort; _ : Type }.
+  Pack { sort; _ : class_of display sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
-Let xT := let: Pack T _ _ := cT in T.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
 Definition pack disp :=
   fun bT b & phant_id (@FinPOrder.class disp bT) b =>
   fun mT m & phant_id (@Total.mixin disp mT) m =>
-  Pack (@Class disp T b m) T.
+  Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition finType := ltac:(FinitePack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition finLatticeType := @FinLattice.Pack disp cT xclass xT.
-Definition orderType := @Total.Pack disp cT xclass xT.
-Definition fin_orderType := @Total.Pack disp finLatticeType xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition finPOrderType := @FinPOrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition finLatticeType := @FinLattice.Pack disp cT xclass.
+Definition orderType := @Total.Pack disp cT xclass.
+Definition fin_orderType := @Total.Pack disp finLatticeType xclass.
 
 End ClassDef.
 
@@ -1270,7 +1240,7 @@ Section ClassDef.
 
 Record class_of d (T : Type) := Class {
   base  : FinLattice.class_of d T;
-  mixin : BLattice.mixin_of (FinPOrder.Pack d base T)
+  mixin : BLattice.mixin_of (FinPOrder.Pack d base)
 }.
 
 Local Coercion base : class_of >-> FinLattice.class_of.
@@ -1279,30 +1249,30 @@ Definition base2 d T (c : class_of d T) :=
 Local Coercion base2 : class_of >-> BLattice.class_of.
 
 Structure type (display : unit) :=
-  Pack { sort; _ : class_of display sort; _ : Type }.
+  Pack { sort; _ : class_of display sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
-Let xT := let: Pack T _ _ := cT in T.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
 Definition pack disp :=
   fun bT b & phant_id (@FinPOrder.class disp bT) b =>
   fun mT m & phant_id (@BLattice.mixin disp mT) m =>
-  Pack (@Class disp T b m) T.
+  Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition finType := ltac:(FinitePack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition finLatticeType := @FinLattice.Pack disp cT xclass xT.
-Definition blatticeType := @BLattice.Pack disp cT xclass xT.
-Definition fin_blatticeType := @BLattice.Pack disp finLatticeType xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition finPOrderType := @FinPOrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition finLatticeType := @FinLattice.Pack disp cT xclass.
+Definition blatticeType := @BLattice.Pack disp cT xclass.
+Definition fin_blatticeType := @BLattice.Pack disp finLatticeType xclass.
 
 End ClassDef.
 
@@ -1343,7 +1313,7 @@ Section ClassDef.
 
 Record class_of d (T : Type) := Class {
   base  : FinBLattice.class_of d T;
-  mixin : TBLattice.mixin_of (FinPOrder.Pack d base T)
+  mixin : TBLattice.mixin_of (FinPOrder.Pack d base)
 }.
 
 Local Coercion base : class_of >-> FinBLattice.class_of.
@@ -1352,32 +1322,32 @@ Definition base2 d T (c : class_of d T) :=
 Local Coercion base2 : class_of >-> TBLattice.class_of.
 
 Structure type (display : unit) :=
-  Pack { sort; _ : class_of display sort; _ : Type }.
+  Pack { sort; _ : class_of display sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
-Let xT := let: Pack T _ _ := cT in T.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
 Definition pack disp :=
   fun bT b & phant_id (@FinBLattice.class disp bT) b =>
   fun mT m & phant_id (@TBLattice.mixin disp mT) m =>
-  Pack (@Class disp T b m) T.
+  Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition finType := ltac:(FinitePack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition finLatticeType := @FinLattice.Pack disp cT xclass xT.
-Definition blatticeType := @BLattice.Pack disp cT xclass xT.
-Definition finBLatticeType := @FinBLattice.Pack disp cT xclass xT.
-Definition tblatticeType := @TBLattice.Pack disp cT xclass xT.
-Definition fin_blatticeType := @TBLattice.Pack disp finBLatticeType xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition finPOrderType := @FinPOrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition finLatticeType := @FinLattice.Pack disp cT xclass.
+Definition blatticeType := @BLattice.Pack disp cT xclass.
+Definition finBLatticeType := @FinBLattice.Pack disp cT xclass.
+Definition tblatticeType := @TBLattice.Pack disp cT xclass.
+Definition fin_blatticeType := @TBLattice.Pack disp finBLatticeType xclass.
 
 End ClassDef.
 
@@ -1422,7 +1392,7 @@ Section ClassDef.
 
 Record class_of d (T : Type) := Class {
   base  : FinBLattice.class_of d T;
-  mixin : CBLattice.mixin_of (BLattice.Pack base T)
+  mixin : CBLattice.mixin_of (BLattice.Pack base)
 }.
 
 Local Coercion base : class_of >-> FinBLattice.class_of.
@@ -1431,32 +1401,32 @@ Definition base2 d T (c : class_of d T) :=
 Local Coercion base2 : class_of >-> CBLattice.class_of.
 
 Structure type (display : unit) :=
-  Pack { sort; _ : class_of display sort; _ : Type }.
+  Pack { sort; _ : class_of display sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
-Let xT := let: Pack T _ _ := cT in T.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
 Definition pack disp :=
   fun bT b & phant_id (@FinBLattice.class disp bT) b =>
   fun mT m & phant_id (@CBLattice.mixin disp mT) m =>
-  Pack (@Class disp T b m) T.
+  Pack (@Class disp T b m).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition finType := ltac:(FinitePack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition finLatticeType := @FinLattice.Pack disp cT xclass xT.
-Definition blatticeType := @BLattice.Pack disp cT xclass xT.
-Definition finBLatticeType := @FinBLattice.Pack disp cT xclass xT.
-Definition cblatticeType := @CBLattice.Pack disp cT xclass xT.
-Definition fin_blatticeType := @CBLattice.Pack disp finBLatticeType xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition finPOrderType := @FinPOrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition finLatticeType := @FinLattice.Pack disp cT xclass.
+Definition blatticeType := @BLattice.Pack disp cT xclass.
+Definition finBLatticeType := @FinBLattice.Pack disp cT xclass.
+Definition cblatticeType := @CBLattice.Pack disp cT xclass.
+Definition fin_blatticeType := @CBLattice.Pack disp finBLatticeType xclass.
 
 End ClassDef.
 
@@ -1501,8 +1471,8 @@ Section ClassDef.
 
 Record class_of d (T : Type) := Class {
   base  : FinTBLattice.class_of d T;
-  mixin1 : CBLattice.mixin_of (BLattice.Pack base T);
-  mixin2 : @CTBLattice.mixin_of d (TBLattice.Pack base T) (CBLattice.sub mixin1)
+  mixin1 : CBLattice.mixin_of (BLattice.Pack base);
+  mixin2 : @CTBLattice.mixin_of d (TBLattice.Pack base) (CBLattice.sub mixin1)
 }.
 
 Local Coercion base : class_of >-> FinTBLattice.class_of.
@@ -1514,38 +1484,38 @@ Definition base2 d T (c : class_of d T) :=
 Local Coercion base2 : class_of >-> CTBLattice.class_of.
 
 Structure type (display : unit) :=
-  Pack { sort; _ : class_of display sort; _ : Type }.
+  Pack { sort; _ : class_of display sort }.
 
 Local Coercion sort : type >-> Sortclass.
 
 Variables (T : Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
-Let xT := let: Pack T _ _ := cT in T.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
+Let xT := let: Pack T _ := cT in T.
 Notation xclass := (class : class_of _ xT).
 
 Definition pack disp :=
   fun bT b & phant_id (@FinTBLattice.class disp bT) b =>
   fun m1T m1 & phant_id (@CTBLattice.mixin1 disp m1T) m1 =>
   fun m2T m2 & phant_id (@CTBLattice.mixin2 disp m2T) m2 =>
-  Pack (@Class disp T b m1 m2) T.
+  Pack (@Class disp T b m1 m2).
 
-Definition eqType := ltac:(EqualityPack cT (class : class_of _ xT) xT).
-Definition finType := ltac:(FinitePack cT (class : class_of _ xT) xT).
-Definition choiceType := ltac:(ChoicePack cT (class : class_of _ xT) xT).
-Definition porderType := @POrder.Pack disp cT xclass xT.
-Definition finPOrderType := @FinPOrder.Pack disp cT xclass xT.
-Definition latticeType := @Lattice.Pack disp cT xclass xT.
-Definition finLatticeType := @FinLattice.Pack disp cT xclass xT.
-Definition blatticeType := @BLattice.Pack disp cT xclass xT.
-Definition finBLatticeType := @FinBLattice.Pack disp cT xclass xT.
-Definition cblatticeType := @CBLattice.Pack disp cT xclass xT.
-Definition tblatticeType := @TBLattice.Pack disp cT xclass xT.
-Definition finTBLatticeType := @FinTBLattice.Pack disp cT xclass xT.
-Definition finCBLatticeType := @FinCBLattice.Pack disp cT xclass xT.
-Definition ctblatticeType := @CTBLattice.Pack disp cT xclass xT.
-Definition fintb_ctblatticeType := @CTBLattice.Pack disp finTBLatticeType xclass xT.
-Definition fincb_ctblatticeType := @CTBLattice.Pack disp finCBLatticeType xclass xT.
+Definition eqType := @Equality.Pack cT xclass.
+Definition finType := @Finite.Pack cT xclass.
+Definition choiceType := @Choice.Pack cT xclass.
+Definition porderType := @POrder.Pack disp cT xclass.
+Definition finPOrderType := @FinPOrder.Pack disp cT xclass.
+Definition latticeType := @Lattice.Pack disp cT xclass.
+Definition finLatticeType := @FinLattice.Pack disp cT xclass.
+Definition blatticeType := @BLattice.Pack disp cT xclass.
+Definition finBLatticeType := @FinBLattice.Pack disp cT xclass.
+Definition cblatticeType := @CBLattice.Pack disp cT xclass.
+Definition tblatticeType := @TBLattice.Pack disp cT xclass.
+Definition finTBLatticeType := @FinTBLattice.Pack disp cT xclass.
+Definition finCBLatticeType := @FinCBLattice.Pack disp cT xclass.
+Definition ctblatticeType := @CTBLattice.Pack disp cT xclass.
+Definition fintb_ctblatticeType := @CTBLattice.Pack disp finTBLatticeType xclass.
+Definition fincb_ctblatticeType := @CTBLattice.Pack disp finCBLatticeType xclass.
 
 End ClassDef.
 

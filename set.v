@@ -106,26 +106,6 @@ Notation "x \subset y" := (\sub%set x y) : bool_scope.
 Notation "x \proper y" := (\proper%set x y) : bool_scope.
 End SetSyntax.
 
-Ltac EqualityPack cT xclass xT :=
-  match type of Equality.Pack with
-  | forall sort : Type, Equality.mixin_of sort -> eqType =>
-    (* mathcomp.dev *)
-    exact (@Equality.Pack cT xclass)
-  | _ =>
-    (* mathcomp <= 1.7 *)
-    exact (@Equality.Pack cT xclass xT)
-  end.
-
-Ltac ChoicePack cT xclass xT :=
-  match type of Choice.Pack with
-  | forall sort : Type, Choice.class_of sort -> choiceType =>
-    (* mathcomp.dev *)
-    exact (@Choice.Pack cT xclass)
-  | _ =>
-    (* mathcomp <= 1.7 *)
-    exact (@Choice.Pack cT xclass xT)
-  end.
-
 Module Semiset.
 Section ClassDef.
 Variable elementType : Type. (* Universe type *)
@@ -156,30 +136,29 @@ Structure mixin_of d (set : elementType -> (cblatticeType (display_set d))) :=
 
 Record class_of d (set : elementType -> Type) := Class {
   base  : forall X, @Order.CBLattice.class_of (display_set d) (set X);
-  mixin : mixin_of (fun X => Order.CBLattice.Pack (base X) (set X))
+  mixin : mixin_of (fun X => Order.CBLattice.Pack (base X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
 
-Structure type d := Pack { sort ; _ : class_of d sort;
-                         _ : elementType -> Type }.
+Structure type d := Pack { sort ; _ : class_of d sort }.
 
 Local Coercion sort : type >-> Funclass.
 
 Variables (set : elementType -> Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
 Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' set c set.
-Let xset := let: Pack set _ _ := cT in set.
+  @Pack disp' set c.
+Let xset := let: Pack set _ := cT in set.
 Notation xclass := (class : class_of _ xset).
 
 Definition pack b0
   (m0 : mixin_of
- (fun X=> @Order.CBLattice.Pack (display_set disp) (set X) (b0 X) (set X))) :=
+ (fun X=> @Order.CBLattice.Pack (display_set disp) (set X) (b0 X))) :=
   fun bT b &
  (forall X, phant_id (@Order.CBLattice.class (display_set disp) (bT X)) (b X)) =>
-  fun    m & phant_id m0 m => Pack (@Class disp set b m) set.
+  fun    m & phant_id m0 m => Pack (@Class disp set b m).
 End ClassDef.
 
 Section CanonicalDef.
@@ -193,19 +172,15 @@ Variables (set : elementType -> Type) (X : elementType).
 Variables (disp : unit) (cT : type disp).
 Local Notation ddisp := (display_set disp).
 
-Let xset := let: Pack set _ _ := cT in set.
+Let xset := let: Pack set _ := cT in set.
 Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
 
-Definition eqType := ltac:(EqualityPack (cT X) ((@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset) X) (xset X)).
-Definition choiceType := ltac:(ChoicePack (cT X) ((@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset) X) (xset X)).
-Definition porderType :=
- @Order.POrder.Pack ddisp (cT X) (xclass X) (xset X).
-Definition latticeType :=
-  @Order.Lattice.Pack ddisp (cT X) (xclass X) (xset X).
-Definition blatticeType :=
-  @Order.BLattice.Pack ddisp (cT X) (xclass X) (xset X).
-Definition cblatticeType :=
-  @Order.CBLattice.Pack ddisp (cT X) (xclass X) (xset X).
+Definition eqType := @Equality.Pack (cT X) (xclass X).
+Definition choiceType := @Choice.Pack (cT X) (xclass X).
+Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X).
+Definition latticeType := @Order.Lattice.Pack ddisp (cT X) (xclass X).
+Definition blatticeType := @Order.BLattice.Pack ddisp (cT X) (xclass X).
+Definition cblatticeType := @Order.CBLattice.Pack ddisp (cT X) (xclass X).
 End CanonicalDef.
 
 Module Import Exports.
@@ -342,42 +317,42 @@ Implicit Types (x y : X) (A B C : set X).
 Lemma notin_set0 (x : X) : x \notin (set0 : set X).
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set => [S [base [memset set1 /= H ? ? ? ? ? ? ? ? ?]] ?] /=.
+case: set => [S [base [memset set1 /= H ? ? ? ? ? ? ? ? ?]]] /=.
 exact: H.
 Qed.
 
 Lemma in_set1 x y : x \in ([set y] : set X) = (x == y).
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set => [S [base [memset set1 /= ? H ? ? ? ? ? ? ? ?]] ?] /=.
+case: set => [S [base [memset set1 /= ? H ? ? ? ? ? ? ? ?]]] /=.
 exact: H.
 Qed.
 
 Lemma sub1set x A : ([set x] \subset A) = (x \in A).
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set A => [S [base [memset set1 /= ? ? H ? ? ? ? ? ? ?]] ?] A /=.
+case: set A => [S [base [memset set1 /= ? ? H ? ? ? ? ? ? ?]]] A /=.
 exact: H.
 Qed.
 
 Lemma set_gt0_ex A : set0 \proper A -> {x | x \in A}.
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set A => [S [base [memset set1 /= ? ? ? H ? ? ? ? ? ?]] ?] A /=.
+case: set A => [S [base [memset set1 /= ? ? ? H ? ? ? ? ? ?]]] A /=.
 exact: H.
 Qed.
 
 Lemma subsetP_subproof A B : {subset A <= B} -> A \subset B.
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set A B => [S [base [memset set1 /= ? ? ? ? H ? ? ? ? ?]] ?] /=.
+case: set A B => [S [base [memset set1 /= ? ? ? ? H ? ? ? ? ?]]] /=.
 exact: H.
 Qed.
 
 Lemma in_setU (x : X) A B : (x \in A :|: B) = (x \in A) || (x \in B).
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set A B => [S [base [memset set1 /= ? ? ? ? ? H ? ? ? ?]] ?] /=.
+case: set A B => [S [base [memset set1 /= ? ? ? ? ? H ? ? ? ?]]] /=.
 exact: H.
 Qed.
 
@@ -871,7 +846,7 @@ Lemma imsetP (f : setfun set X Y) A y :
     reflect (exists2 x : X, x \in A & y = f x) (y \in imset f A).
 Proof.
 move: A f; rewrite /set1 /in_mem /= /memset /imset /setfun.
-case: set => [S [base [memset set1 /= ? ? ? ? ? ? ? ? ? H]]] ? /= A f.
+case: set => [S [base [memset set1 /= ? ? ? ? ? ? ? ? ? H]]] /= A f.
 exact: H.
 Qed.
 
@@ -926,7 +901,7 @@ Implicit Types (X Y : elementType).
 Record class_of d (set : elementType -> Type) := Class {
   base  : forall X, Order.CTBLattice.class_of (display_set d) (set X);
   mixin : Semiset.mixin_of eqType_of_elementType
-                           (fun X => Order.CBLattice.Pack (base X) (set X))
+                           (fun X => Order.CBLattice.Pack (base X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
@@ -934,16 +909,15 @@ Definition base2 d (set : elementType -> Type)
          (c : class_of d set) := Semiset.Class (@mixin _ set c).
 Local Coercion base2 : class_of >-> Semiset.class_of.
 
-Structure type d := Pack { sort ; _ : class_of d sort;
-                         _ : elementType -> Type }.
+Structure type d := Pack { sort ; _ : class_of d sort }.
 
 Local Coercion sort : type >-> Funclass.
 
 Variables (set : elementType -> Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c _ as cT' := cT return class_of _ cT' in c.
+Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
 (* Definition clone c of phant_id class c := @Pack set c set. *)
-Let xset := let: Pack set _ _ := cT in set.
+Let xset := let: Pack set _ := cT in set.
 Notation xclass := (class : class_of xset).
 
 Definition pack :=
@@ -951,7 +925,7 @@ Definition pack :=
       & (forall X, phant_id (@Order.CTBLattice.class disp (bT X)) (b X)) =>
   fun mT m & phant_id (@Semiset.class _ eqType_of_elementType mT)
                       (@Semiset.Class _ _ disp set b m) =>
-  Pack (@Class _ set (fun x => b x) m) set.
+  Pack (@Class _ set (fun x => b x) m).
 
 End ClassDef.
 
@@ -967,23 +941,19 @@ Variables (set : elementType -> Type) (X : elementType).
 Variable (disp : unit) (cT : type disp).
 Local Notation ddisp := (display_set disp).
 
-Let xset := let: Pack set _ _ := cT in set.
+Let xset := let: Pack set _ := cT in set.
 Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
 
-Definition eqType := ltac:(EqualityPack (cT X) ((@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset) X) (xset X)).
-Definition choiceType := ltac:(ChoicePack (cT X) ((@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset) X) (xset X)).
-Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X) (xset X).
-Definition latticeType :=
-  @Order.Lattice.Pack ddisp (cT X) (xclass X) (xset X).
-Definition blatticeType :=
-  @Order.BLattice.Pack ddisp (cT X) (xclass X) (xset X).
-Definition cblatticeType :=
-  @Order.CBLattice.Pack ddisp (cT X) (xclass X) (xset X).
-Definition ctblatticeType :=
-  @Order.CTBLattice.Pack ddisp (cT X) (xclass X) (xset X).
-Definition semisetType := @Semiset.Pack _ _ disp cT xclass xset.
+Definition eqType := @Equality.Pack (cT X) (xclass X).
+Definition choiceType := @Choice.Pack (cT X) (xclass X).
+Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X).
+Definition latticeType := @Order.Lattice.Pack ddisp (cT X) (xclass X).
+Definition blatticeType := @Order.BLattice.Pack ddisp (cT X) (xclass X).
+Definition cblatticeType := @Order.CBLattice.Pack ddisp (cT X) (xclass X).
+Definition ctblatticeType := @Order.CTBLattice.Pack ddisp (cT X) (xclass X).
+Definition semisetType := @Semiset.Pack _ _ disp cT xclass.
 Definition semiset_ctblatticeType :=
-  @Order.CTBLattice.Pack ddisp (semisetType X) (xclass X) (xset X).
+  @Order.CTBLattice.Pack ddisp (semisetType X) (xclass X).
 End CanonicalDef.
 
 Module Import Exports.
