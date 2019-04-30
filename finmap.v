@@ -155,7 +155,13 @@ Reserved Notation "x .[? k ]" (at level 2, k at level 200, format "x .[?  k ]").
 Reserved Infix "`~`" (at level 52).
 Reserved Notation "[ 'fset' k ]" (at level 0, k at level 99, format "[ 'fset'  k ]").
 
-Local Notation predOfType T := (sort_of_simpl_pred (@pred_of_argType T)).
+(* Copy of the ssrbool shim to ensure compatibility with MathComp v1.8.0. *)
+Definition PredType : forall T pT, (pT -> pred T) -> predType T.
+exact PredType || exact mkPredType.
+Defined.
+Arguments PredType [T pT] toP.
+
+Local Notation predOfType T := (pred_of_simpl (@pred_of_argType T)).
 
 Definition oextract (T : Type) (o : option T) : o -> T :=
   if o is Some t return o -> T then fun=> t else False_rect T \o notF.
@@ -416,27 +422,25 @@ Section FinPredStruct.
 Structure finpredType (T : eqType) := FinPredType {
   finpred_sort :> Type;
   tofinpred : finpred_sort -> pred T;
-  _ : {mem : finpred_sort -> mem_pred T | isMem tofinpred mem};
   _ : {finpred_seq : finpred_sort -> seq T |
        ((forall p, uniq (finpred_seq p))
        * forall p x, x \in finpred_seq p = tofinpred p x)%type}
 }.
 
 Canonical finpredType_predType (T : eqType) (fpT : finpredType T) :=
-  @PredType T (finpred_sort fpT) (@tofinpred T fpT)
-            (let: FinPredType _ _ mem _ := fpT in mem).
+  @PredType T (finpred_sort fpT) (@tofinpred T fpT).
 
 Definition enum_finpred  (T : eqType) (fpT : finpredType T) :
     fpT -> seq T :=
-  let: FinPredType _ _ _ (exist s _) := fpT in s.
+  let: FinPredType _ _ (exist s _) := fpT in s.
 
 Lemma enum_finpred_uniq (T : eqType) (fpT : finpredType T) (p : fpT) :
    uniq (enum_finpred p).
-Proof. by case: fpT p => ??? [s sE] p; rewrite sE. Qed.
+Proof. by case: fpT p => ?? [s sE] p; rewrite sE. Qed.
 
 Lemma enum_finpredE (T : eqType) (fpT : finpredType T) (p : fpT) :
    enum_finpred p =i p.
-Proof. by case: fpT p => ??? [s sE] p x; rewrite sE -topredE. Qed.
+Proof. by case: fpT p => ?? [s sE] p x; rewrite sE -topredE. Qed.
 
 Lemma mkFinPredType_of_subproof (T : eqType) (pT : predType T)
    (fpred_seq : pT -> seq T) (pred_fsetE : forall p, fpred_seq p =i p) :
@@ -445,16 +449,16 @@ Proof. by move=> p x; rewrite topredE pred_fsetE. Qed.
 
 Definition mkFinPredType_of (T : eqType) (U : Type) :=
   fun (pT : predType T) & pred_sort pT -> U =>
-  fun a mP (pT' := @PredType T U a mP) & phant_id pT' pT =>
+  fun a (pT' := @PredType T U a) & phant_id pT' pT =>
   fun (fpred_seq : pT' -> seq T)
       (fpred_seq_uniq : forall p, uniq (fpred_seq p))
       (fpred_seqE : forall p, fpred_seq p =i p) =>
-  @FinPredType T U a mP (exist _ fpred_seq
+  @FinPredType T U a (exist _ fpred_seq
    (fpred_seq_uniq, (mkFinPredType_of_subproof fpred_seqE))).
 
 Definition clone_finpredType (T : eqType) (U : Type) :=
   fun (pT : finpredType T) & finpred_sort pT -> U =>
-  fun a mP pP (pT' := @FinPredType T U a mP pP) & phant_id pT' pT => pT'.
+  fun a pP (pT' := @FinPredType T U a pP) & phant_id pT' pT => pT'.
 
 Structure is_finite (T : eqType) (P : pred T) := IsFinite {
   seq_of_is_finite :> seq T;
@@ -517,11 +521,11 @@ Canonical mem_fin (T : eqType) (pT : predType T) (p : finpred pT) :=
 
 End FinPredStruct.
 
-Notation "[ 'finpredType' 'of' T ]" := (@clone_finpredType _ T _ id _ _ _ id)
+Notation "[ 'finpredType' 'of' T ]" := (@clone_finpredType _ T _ id _ _ id)
   (at level 0, format "[ 'finpredType'  'of'  T ]") : form_scope.
 
 Notation mkFinPredType T s s_uniq sE :=
-  (@mkFinPredType_of _ T _ id _ _ id s s_uniq sE).
+  (@mkFinPredType_of _ T _ id _ id s s_uniq sE).
 
 Section CanonicalFinPred.
 

@@ -52,6 +52,12 @@ Reserved Notation "[ 'set' a1 ; a2 ; .. ; an ]"
 Delimit Scope abstract_set_scope with set.
 Local Open Scope abstract_set_scope.
 
+(* Copy of the ssrbool shim to ensure compatibility with MathComp v1.8.0. *)
+Definition PredType : forall T pT, (pT -> pred T) -> predType T.
+exact PredType || exact mkPredType.
+Defined.
+Arguments PredType [T pT] toP.
+
 Module SET.
 Import Order.Theory Order.Syntax Order.Def.
 
@@ -248,17 +254,15 @@ Canonical set_predType := Eval hnf in mkPredType memset.
 Structure setpredType := SetPredType {
   setpred_sort :> Type;
   tosetpred : setpred_sort -> pred X;
-  _ : {mem : setpred_sort -> mem_pred X | isMem tosetpred mem};
   _ : {pred_fset : setpred_sort -> set X |
        forall p x, x \in pred_fset p = tosetpred p x}
 }.
 
 Canonical setpredType_predType (fpX : setpredType) :=
-  @PredType X (setpred_sort fpX) (@tosetpred fpX)
-  (let: SetPredType _ _ mem _ := fpX in mem).
+  @PredType X (setpred_sort fpX) (@tosetpred fpX).
 
 Definition predset (fpX : setpredType) : fpX -> set X :=
-  let: SetPredType _ _ _ (exist pred_fset _) := fpX in pred_fset.
+  let: SetPredType _ _ (exist pred_fset _) := fpX in pred_fset.
 
 End SemisetOperations.
 
