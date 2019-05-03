@@ -17,7 +17,7 @@ env:
   - DOCKERIMAGE="mathcomp/mathcomp:1.8.0-coq-8.7"
   - DOCKERIMAGE="mathcomp/mathcomp:1.8.0-coq-8.8"
   - DOCKERIMAGE="mathcomp/mathcomp:1.8.0-coq-8.9"
-  - DOCKERIMAGE="mathcomp/mathcomp:1.8.0-coq-dev"
+#  - DOCKERIMAGE="mathcomp/mathcomp:1.8.0-coq-dev"
   - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.7"
   - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.8"
   - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.9"
