@@ -294,8 +294,7 @@ Notation "{fset T }" := (@finset_of _ (Phant T)) : type_scope.
 
 Definition pred_of_finset (K : choiceType)
   (f : finSet K) : pred K := fun k => k \in (enum_fset f).
-Canonical finSetPredType (K : choiceType) :=
-  Eval hnf in mkPredType (@pred_of_finset K).
+Canonical finSetPredType (K : choiceType) := PredType (@pred_of_finset K).
 
 Section FinSetCanonicals.
 
@@ -2623,7 +2622,7 @@ Notation "{fmap T }" := (@finmap_of _ _ (Phant T)) : type_scope.
 Definition pred_of_finmap (K : choiceType) (V : Type)
   (f : {fmap K -> V}) : pred K := mem (domf f).
 Canonical finMapPredType (K : choiceType) (V : Type) :=
-  Eval hnf in mkPredType (@pred_of_finmap K V).
+  PredType (@pred_of_finmap K V).
 
 Delimit Scope fmap_scope with fmap.
 Local Open Scope fmap_scope.
