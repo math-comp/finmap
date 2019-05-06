@@ -249,7 +249,7 @@ Definition set1 : X -> set X :=
 Definition imset : setfun set X Y -> set X -> set Y:=
   @Semiset.imset _ _ _ _ (Semiset.class set) _ _.
 
-Canonical set_predType := Eval hnf in mkPredType memset.
+Canonical set_predType := PredType memset.
 
 Structure setpredType := SetPredType {
   setpred_sort :> Type;

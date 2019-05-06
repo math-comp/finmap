@@ -85,7 +85,7 @@ Coercion enum_mset : multiset >-> seq.
 Canonical enum_mset_unlock := Unlockable EnumMset.E.
 
 Canonical multiset_predType (K : choiceType) :=
-   Eval hnf in mkPredType (fun (A : multiset K) a => a \in enum_mset A).
+  PredType (fun (A : multiset K) a => a \in enum_mset A).
 Canonical mset_finpredType (T: choiceType) :=
   mkFinPredType (multiset T) (fun A => undup (enum_mset A))
                 (fun _ => undup_uniq _) (fun _ _ => mem_undup _ _).
