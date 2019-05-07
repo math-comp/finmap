@@ -217,7 +217,7 @@ split=> [eq_ss'|eq_ss' k]; last by rewrite -E eq_ss' E.
 rewrite /f; have peq_ss' : perm_eq (undup s) (undup s').
   by apply: uniq_perm_eq; rewrite ?undup_uniq // => x; rewrite !mem_undup.
 rewrite (@choose_id _ _ _ (undup s')) //=; apply: eq_choose => x /=.
-by apply: sym_left_transitive; [exact: perm_eq_sym|exact: perm_eq_trans|].
+by apply: sym_left_transitive; [exact: perm_eq_sym | exact: @perm_eq_trans|].
 Qed.
 End SortKeys.
 End SortKeys.
