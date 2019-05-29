@@ -4,7 +4,7 @@
   sha256 = "0rxjkfiq53ibz0rzggvnp341b6kgzgfr9x6q07m2my7ijlirs2da";
 }),
 coq-version ? "8.9",
-mc ? "1.9.0",
+mc ? "1.8.0",
 print-env ? false
 }:
 let

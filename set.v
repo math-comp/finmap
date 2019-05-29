@@ -140,22 +140,24 @@ Structure mixin_of d (set : elementType -> (cblatticeType (display_set d))) :=
             (memset (imset f A) y)
 }.
 
-Record class_of d (set : elementType -> Type) := Class {
-  base  : forall X, @Order.CBLattice.class_of (display_set d) (set X);
-  mixin : mixin_of (fun X => Order.CBLattice.Pack (base X))
+Record class_of (set : elementType -> Type) := Class {
+  base  : forall X, @Order.CBLattice.class_of (set X);
+  mixin_disp : unit;
+  mixin : mixin_of (fun X => Order.CBLattice.Pack (display_set mixin_disp) (base X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
 
-Structure type d := Pack { sort ; _ : class_of d sort }.
+Structure type (disp : unit) := Pack { sort ; _ : class_of sort }.
 
 Local Coercion sort : type >-> Funclass.
 
 Variables (set : elementType -> Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
-Definition clone disp' c of (disp = disp') & phant_id class c :=
-  @Pack disp' set c.
+Definition class := let: Pack _ c as cT' := cT return class_of cT' in c.
+Definition clone c & phant_id class c := @Pack disp set c.
+Definition clone_with disp' c of phant_id class c := @Pack disp' set c.
+
 Let xset := let: Pack set _ := cT in set.
 Notation xclass := (class : class_of _ xset).
 
@@ -164,7 +166,7 @@ Definition pack b0
  (fun X=> @Order.CBLattice.Pack (display_set disp) (set X) (b0 X))) :=
   fun bT b &
  (forall X, phant_id (@Order.CBLattice.class (display_set disp) (bT X)) (b X)) =>
-  fun    m & phant_id m0 m => Pack (@Class disp set b m).
+  fun  disp' m & phant_id m0 m => Pack disp (@Class set b disp' m).
 End ClassDef.
 
 Section CanonicalDef.
@@ -179,7 +181,7 @@ Variables (disp : unit) (cT : type disp).
 Local Notation ddisp := (display_set disp).
 
 Let xset := let: Pack set _ := cT in set.
-Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
+Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType xset).
 
 Definition eqType := @Equality.Pack (cT X) (xclass X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X).
@@ -212,10 +214,10 @@ Notation semisetMixin := mixin_of.
 Notation SemisetMixin := Mixin.
 Notation SemisetType set m := (@pack _ _ set _ _ m _ _ (fun=> id) _ id).
 
-Notation "[ 'semisetType' 'of' set 'for' cset ]" := (@clone _ _ set _ cset _ _ erefl id)
+Notation "[ 'semisetType' 'of' set 'for' cset ]" := (@clone _ _ set _ cset _ id)
   (at level 0, format "[ 'semisetType'  'of'  set  'for'  cset ]") : form_scope.
 Notation "[ 'semisetType' 'of' set 'for' cset 'with' disp ]" :=
-  (@clone _ _ set _ cset disp _ (unit_irrelevance _ _) id)
+  (@clone_with _ _ set _ cset _ disp _ id)
   (at level 0, format "[ 'semisetType'  'of'  set  'for'  cset  'with'  disp ]") : form_scope.
 Notation "[ 'semisetType' 'of' set ]" := [semisetType of set for _]
   (at level 0, format "[ 'semisetType'  'of'  set ]") : form_scope.
@@ -321,42 +323,42 @@ Implicit Types (x y : X) (A B C : set X).
 Lemma notin_set0 (x : X) : x \notin (set0 : set X).
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set => [S [base [memset set1 /= H ? ? ? ? ? ? ? ? ?]]] /=.
+case: set => [S [base ? [memset set1 /= H ? ? ? ? ? ? ? ? ?]]] /=.
 exact: H.
 Qed.
 
 Lemma in_set1 x y : x \in ([set y] : set X) = (x == y).
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set => [S [base [memset set1 /= ? H ? ? ? ? ? ? ? ?]]] /=.
+case: set => [S [base ? [memset set1 /= ? H ? ? ? ? ? ? ? ?]]] /=.
 exact: H.
 Qed.
 
 Lemma sub1set x A : ([set x] \subset A) = (x \in A).
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set A => [S [base [memset set1 /= ? ? H ? ? ? ? ? ? ?]]] A /=.
+case: set A => [S [base ? [memset set1 /= ? ? H ? ? ? ? ? ? ?]]] A /=.
 exact: H.
 Qed.
 
 Lemma set_gt0_ex A : set0 \proper A -> {x | x \in A}.
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set A => [S [base [memset set1 /= ? ? ? H ? ? ? ? ? ?]]] A /=.
+case: set A => [S [base ? [memset set1 /= ? ? ? H ? ? ? ? ? ?]]] A /=.
 exact: H.
 Qed.
 
 Lemma subsetP_subproof A B : {subset A <= B} -> A \subset B.
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set A B => [S [base [memset set1 /= ? ? ? ? H ? ? ? ? ?]]] /=.
+case: set A B => [S [base ? [memset set1 /= ? ? ? ? H ? ? ? ? ?]]] /=.
 exact: H.
 Qed.
 
 Lemma in_setU (x : X) A B : (x \in A :|: B) = (x \in A) || (x \in B).
 Proof.
 rewrite /set1 /in_mem /= /memset.
-case: set A B => [S [base [memset set1 /= ? ? ? ? ? H ? ? ? ?]]] /=.
+case: set A B => [S [base ? [memset set1 /= ? ? ? ? ? H ? ? ? ?]]] /=.
 exact: H.
 Qed.
 
@@ -780,7 +782,7 @@ Lemma subUset A B C : (B :|: C \subset A) = (B \subset A) && (C \subset A).
 Proof. exact: leUx. Qed.
 
 Lemma subsetU A B C : (A \subset B) || (A \subset C) -> A \subset B :|: C.
-Proof. exact: lexU. Qed.
+Proof. exact: lexU2. Qed.
 
 Lemma subUsetP A B C : reflect (A \subset C /\ B \subset C) (A :|: B \subset C).
 Proof. by rewrite subUset; apply: andP. Qed.
@@ -850,7 +852,7 @@ Lemma imsetP (f : setfun set X Y) A y :
     reflect (exists2 x : X, x \in A & y = f x) (y \in imset f A).
 Proof.
 move: A f; rewrite /set1 /in_mem /= /memset /imset /setfun.
-case: set => [S [base [memset set1 /= ? ? ? ? ? ? ? ? ? H]]] /= A f.
+case: set => [S [base ? [memset set1 /= ? ? ? ? ? ? ? ? ? H]]] /= A f.
 exact: H.
 Qed.
 
@@ -902,34 +904,34 @@ Variable eqType_of_elementType : elementType -> eqType.
 Coercion eqType_of_elementType : elementType >-> eqType.
 Implicit Types (X Y : elementType).
 
-Record class_of d (set : elementType -> Type) := Class {
-  base  : forall X, Order.CTBLattice.class_of (display_set d) (set X);
+Record class_of (set : elementType -> Type) := Class {
+  base  : forall X, Order.CTBLattice.class_of (set X);
+  mixin_disp : unit;
   mixin : Semiset.mixin_of eqType_of_elementType
-                           (fun X => Order.CBLattice.Pack (base X))
+            (fun X => Order.CBLattice.Pack (display_set mixin_disp) (base X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
-Definition base2 d (set : elementType -> Type)
-         (c : class_of d set) := Semiset.Class (@mixin _ set c).
+Definition base2 (set : elementType -> Type)
+         (c : class_of set) := Semiset.Class (@mixin set c).
 Local Coercion base2 : class_of >-> Semiset.class_of.
 
-Structure type d := Pack { sort ; _ : class_of d sort }.
+Structure type (disp : unit) := Pack { sort ; _ : class_of sort }.
 
 Local Coercion sort : type >-> Funclass.
 
 Variables (set : elementType -> Type) (disp : unit) (cT : type disp).
 
-Definition class := let: Pack _ c as cT' := cT return class_of _ cT' in c.
-(* Definition clone c of phant_id class c := @Pack set c set. *)
+Definition class := let: Pack _ c as cT' := cT return class_of cT' in c.
 Let xset := let: Pack set _ := cT in set.
 Notation xclass := (class : class_of xset).
 
 Definition pack :=
-  fun bT (b : forall X, Order.CTBLattice.class_of _ _)
+  fun bT (b : forall X, Order.CTBLattice.class_of _)
       & (forall X, phant_id (@Order.CTBLattice.class disp (bT X)) (b X)) =>
-  fun mT m & phant_id (@Semiset.class _ eqType_of_elementType mT)
-                      (@Semiset.Class _ _ disp set b m) =>
-  Pack (@Class _ set (fun x => b x) m).
+  fun d' mT m & phant_id (@Semiset.class _ eqType_of_elementType mT)
+                      (@Semiset.Class _ _ set b d' m) =>
+  Pack disp (@Class set (fun x => b x) _ m).
 
 End ClassDef.
 
@@ -946,7 +948,7 @@ Variable (disp : unit) (cT : type disp).
 Local Notation ddisp := (display_set disp).
 
 Let xset := let: Pack set _ := cT in set.
-Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType _ xset).
+Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_elementType xset).
 
 Definition eqType := @Equality.Pack (cT X) (xclass X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X).
@@ -984,8 +986,7 @@ Canonical semisetType.
 
 Notation setType  := type.
 
-Notation "[ 'setType' 'of' set ]" :=
-  (@pack _ _ set _ _ _ (fun=> id) _ _ id)
+Notation "[ 'setType' 'of' set ]" := (@pack _ _ set _ _ _ (fun=> id) _ _ _ id)
   (at level 0, format "[ 'setType'  'of'  set ]") : form_scope.
 
 End Exports.
