@@ -2776,11 +2776,11 @@ Lemma fnd_set_in V (f : {fmap K -> V}) k0 v0 (x : domf f.[k0 <- v0]) :
 Proof. by have := valP x; rewrite mem_setf inE; case: eqP. Qed.
 
 Lemma setfK V (f : {fmap K -> V}) k0 v0 (x : domf f.[k0 <- v0]):
-   f.[k0 <- v0] x = if eqVneq (val x) k0 is right xNk0
-                    then f.[fnd_set_in xNk0] else v0.
+   f.[k0 <- v0] x = if (val x != k0) =P true isn't ReflectT xNk0 then v0
+                    else f.[fnd_set_in xNk0].
 Proof.
-case: eqVneq => [|xNk0]; rewrite ?ffunE /=; first by move->; rewrite eqxx.
-by rewrite (negPf xNk0) in_fnd ?fnd_set_in //= => xf; apply: eq_getf.
+case: eqP => [p|]; rewrite ?ffunE/=; last by case: (altP eqP).
+by rewrite (negPf p) in_fnd ?fnd_set_in// => xf; apply: eq_getf.
 Qed.
 
 Lemma fnd_set V (f : {fmap K -> V}) k0 v0 k :
@@ -2788,7 +2788,7 @@ Lemma fnd_set V (f : {fmap K -> V}) k0 v0 k :
 Proof.
 case: fndP => [ksf|]; last first.
   by rewrite mem_setf inE negb_or => /andP [/negPf ->]; case: fndP.
-rewrite setfK; case: eqVneq => //= [->|kNk0]; first by rewrite eqxx.
+rewrite setfK; case: eqP => [kNk0|/negPn/=]; last by rewrite negbK => ->.
 by rewrite Some_fnd (negPf kNk0).
 Qed.
 
