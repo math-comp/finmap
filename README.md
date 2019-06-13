@@ -2,15 +2,14 @@
 
 # A finset and finmap library
 
-## AUTHOR
+## AUTHORS
 
-Cyril Cohen
+Cyril Cohen, Kazuhiko Sakaguchi
 
 # RELATED WORK
 
-
 This library was developed independently but inspired from Pierre-Yves
-Strub's library (https://github.com/strub/ssrmisc/blob/master/fset.v)
+Strub's library (https://github.com/strub/ssrmisc/blob/master/fset.v),
 from Christian Doczkal's library
 (https://www.ps.uni-saarland.de/formalizations/fset/html/libs.fset.html)
 and from Beta Ziliani's work (no reference provided so far).
