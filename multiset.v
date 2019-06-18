@@ -5,10 +5,8 @@
 (* License CeCILL-B                                                      *)
 (*************************************************************************)
 
-From mathcomp
-Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
-From mathcomp
-Require Import choice path finset finfun fintype bigop.
+From mathcomp Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
+From mathcomp Require Import choice path finset finfun fintype bigop tuple.
 Require Import finmap.
 
 (*****************************************************************************)
@@ -951,8 +949,6 @@ Proof. by rewrite -sum1_size sum_mset; apply: eq_bigr => i; rewrite muln1. Qed.
 
 Lemma size_mset0 : size (mset0 : {mset K}) = 0.
 Proof. by rewrite -sum1_size big_mset0. Qed.
-
-From mathcomp Require Import tuple.
 
 Lemma sum_nat_seq_eq0 (I : eqType) r (P : pred I) (E : I -> nat) :
    (\sum_(i <- r | P i) E i == 0) = all [pred i | P i ==> (E i == 0)] r.
