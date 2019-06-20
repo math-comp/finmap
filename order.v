@@ -2696,31 +2696,22 @@ Context {T : orderType disp} {T' : porderType disp'}.
 Variables (D : pred T) (f : T -> T').
 Implicit Types (x y z : T) (u v w : T').
 
+Hint Resolve (@le_anti _ T) (@le_anti _ T') (@lt_neqAle _ T) : core.
+Hint Resolve (@lt_neqAle _ T') (@lt_def _ T) (@le_total _ T) : core.
+
 Lemma le_mono : {homo f : x y / x < y} -> {mono f : x y / x <= y}.
-Proof.
-move=> mf x y; case: ltgtP=> [/mf/ltW//|/mf fxy|->]; last exact: lexx.
-by rewrite comparable_leNgt /comparable 1?(le_eqVlt (f y)) fxy ?orbT.
-Qed.
+Proof. exact: total_homo_mono. Qed.
 
 Lemma le_nmono : {homo f : x y /~ x < y} -> {mono f : x y /~ x <= y}.
-Proof.
-move=> mf x y; case: ltgtP=> [/mf/ltW//|/mf fxy|->]; last exact: lexx.
-by rewrite comparable_leNgt /comparable 1?(le_eqVlt (f y)) fxy ?orbT.
-Qed.
+Proof. exact: total_homo_mono. Qed.
 
 Lemma le_mono_in :
   {in D &, {homo f : x y / x < y}} -> {in D &, {mono f : x y / x <= y}}.
-Proof.
-move=> mf x y; case: ltgtP=> [/mf/ltW//|/mf fxy|->]; last by rewrite lexx.
-by move=> /fxy fy /fy /lt_geF.
-Qed.
+Proof. exact: total_homo_mono_in. Qed.
 
 Lemma le_nmono_in :
   {in D &, {homo f : x y /~ x < y}} -> {in D &, {mono f : x y /~ x <= y}}.
-Proof.
-move=> mf x y; case: ltgtP=> [/mf/ltW//|/mf fxy|->]; last by rewrite lexx.
-by move=> /fxy fy /fy /lt_geF.
-Qed.
+Proof. exact: total_homo_mono_in. Qed.
 
 End TotalMonotonyTheory.
 End TotalTheory.
@@ -4269,6 +4260,8 @@ Canonical finClatticeType.
 
 Definition leEprod := @leEprod.
 Definition ltEprod := @ltEprod.
+Definition le_pair := @le_pair.
+Definition lt_pair := @lt_pair.
 Definition meetEprod := @meetEprod.
 Definition joinEprod := @joinEprod.
 Definition botEprod := @botEprod.
@@ -4581,6 +4574,8 @@ Canonical finOrderType.
 
 Definition leEprodlexi := @leEprodlexi.
 Definition ltEprodlexi := @ltEprodlexi.
+Definition lexi_pair := @lexi_pair.
+Definition ltxi_pair := @ltxi_pair.
 Definition topEprodlexi := @topEprodlexi.
 Definition botEprodlexi := @botEprodlexi.
 Definition sub_prod_lexi := @sub_prod_lexi.
@@ -5402,7 +5397,6 @@ Canonical tlexi_blatticeType n (T : finOrderType disp) :=
   [blatticeType of n.-tuple T for [blatticeType of n.-tuplelexi T]].
 Canonical tlexi_tblatticeType n (T : finOrderType disp) :=
   [tblatticeType of n.-tuple T for [tblatticeType of n.-tuplelexi T]].
-Check forall n (T : orderType tt), [orderType of n.-tuplelexi T].
 Canonical tlexi_orderType n (T : orderType disp) :=
   [orderType of n.-tuple T for [orderType of n.-tuplelexi T]].
 Canonical tlexi_finPOrderType n (T : finPOrderType disp) :=
