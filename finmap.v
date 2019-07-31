@@ -326,6 +326,9 @@ Definition fset_sub_eqMixin := Eval hnf in [eqMixin of fset_sub_type by <:].
 Canonical fset_sub_eqType := Eval hnf in EqType fset_sub_type fset_sub_eqMixin.
 Definition fset_sub_choiceMixin := Eval hnf in [choiceMixin of fset_sub_type by <:].
 Canonical fset_sub_choiceType := Eval hnf in ChoiceType fset_sub_type fset_sub_choiceMixin.
+Definition fset_countMixin (T : countType) := Eval hnf in [countMixin of {fset T} by <:].
+Canonical fset_countType (T : countType) := Eval hnf in CountType {fset T} (fset_countMixin T).
+
 
 Definition fset_sub_enum : seq fset_sub_type :=
   undup (pmap insub (enum_fset A)).
@@ -2092,6 +2095,33 @@ by move=> X Y /fsetP eqXY; apply/setP => x; have := eqXY (val x); rewrite !inE.
 Qed.
 
 End PowerSetTheory.
+
+Section FinTypeFset.
+Variables (T : finType).
+
+Definition pickle (s : {fset T}) :=
+  [set x in s].
+
+Definition unpickle (s : {set T}) :=
+  [fset x | x in s]%fset.
+
+Lemma pickleK : cancel pickle unpickle.
+Proof. by move=> s; apply/fsetP=> x; rewrite !inE. Qed.
+
+Lemma unpickleK : cancel unpickle pickle.
+Proof. by move=> s; apply/setP=> x; rewrite !inE. Qed.
+
+Definition fset_finMixin := CanFinMixin pickleK.
+Canonical fset_finType := Eval hnf in FinType {fset T} fset_finMixin.
+
+Lemma card_fsets : #|{:{fset T}}| = 2^#|T|.
+Proof.
+rewrite -(card_image (can_inj pickleK)) /=.
+rewrite -cardsT -card_powerset powersetT; apply: eq_card.
+move=> x; rewrite !inE; apply/mapP; exists (unpickle x).
+  by rewrite mem_enum. by rewrite unpickleK.
+Qed.
+End FinTypeFset.
 
 Section BigFSet.
 Variable (R : Type) (idx : R) (op : Monoid.law idx).
