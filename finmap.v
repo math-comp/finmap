@@ -2372,11 +2372,13 @@ End BigFOpsSeq.
 
 (* ** Induction Principles *)
 Lemma finSet_rect (T : choiceType) (P : {fset T} -> Type) :
-  P fset0 -> (forall X, (forall Y, Y `<` X -> P Y) -> P X) -> forall X, P X.
+  (forall X, (forall Y, Y `<` X -> P Y) -> P X) -> forall X, P X.
 Proof.
-move=> P0 Psub X; move: (leqnn #|` X|); move: (X in Y in _ <= Y) => Y.
-elim: #|` _| X => [|n IHn] {Y} X; first by rewrite leqn0 cardfs_eq0 => /eqP->.
-move=> Xleq; apply: Psub => Y XsubY; apply: IHn.
+move=> ih X; move: (leqnn #|` X|); move: (X in Y in _ <= Y) => Y.
+elim: #|` _| X => [|n IHn] {Y} X.
+  rewrite leqn0 cardfs_eq0 => /eqP ->; apply: ih.
+  by move=> Y /fproper_ltn_card.
+move=> Xleq; apply: ih => Y XsubY; apply: IHn.
 by rewrite -ltnS (leq_trans _ Xleq) // fproper_ltn_card.
 Qed.
 
@@ -2386,9 +2388,7 @@ Lemma fset_bounded_coind (T : choiceType) (P : {fset T} -> Type) (U : {fset T}):
 Proof.
 move=> Psuper X XsubU; rewrite -[X](fsetDK XsubU)//.
 have {XsubU}: (U `\` X) `<=` U by rewrite fsubsetDl.
-elim: (_ `\` X) => {X} [|X IHX] XsubU.
-  rewrite fsetD0; apply: Psuper => Y /fsub_proper_trans UY/UY.
-  by rewrite fproperEneq eqxx.
+elim: (_ `\` X) => {X} X IHX XsubU.
 apply: Psuper => Y /fsetDK<-; rewrite fproperD2l ?fsubsetDl //.
 by move=> /IHX; apply; rewrite fsubsetDl.
 Qed.
