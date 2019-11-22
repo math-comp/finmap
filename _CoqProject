@@ -1,6 +1,7 @@
 finmap.v
 multiset.v
 order.v
+table.v
 set.v
 
 -R . mathcomp.finmap
