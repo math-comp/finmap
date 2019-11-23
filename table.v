@@ -72,10 +72,48 @@ Proof. exact: mono_sorted. Qed.
 
 End extra.
 
+Section ext.
+Variable (T : Type).
+
+Inductive ext := Infty of bool | Fin of T.
+
+Lemma Fin_inj : injective Fin. Proof. by move=> ? ? []. Qed.
+Lemma Infty_inj : injective Infty. Proof. by move=> ? ? []. Qed.
+
+Definition ext_encode x := match x with Infty b => inl b | Fin t => inr t end.
+Definition ext_decode a := match a with inl b => Infty b | inr t => Fin t end.
+Lemma ext_encodeK : cancel ext_encode ext_decode. Proof. by case. Qed.
+
+Definition finite := [qualify x : ext | if x is Fin _ then true else false].
+Coercion is_finite x := x \is finite.
+
+End ext.
+
+Arguments Infty {T}.
+Arguments Fin {T}.
+Arguments ext_encodeK {T}.
+Arguments finite {T}.
+Arguments is_finite T /.
+
+Notation "x %:x" := (Fin x) (format "x %:x", left associativity, at level 2) : ext_scope.
+Notation "+oo" := (Infty true) (at level 0) : ext_scope.
+Notation "-oo" := (Infty false) (at level 0) : ext_scope.
+Hint Resolve Fin_inj Infty_inj.
+
+Canonical ext_eqType (T : eqType) := EqType (ext T) (CanEqMixin ext_encodeK).
+Canonical ext_choiceType (T : choiceType) :=
+  ChoiceType (ext T) (CanChoiceMixin ext_encodeK).
+Canonical ext_countType (T : countType) :=
+  CountType (ext T) (CanCountMixin ext_encodeK).
+Canonical ext_finType (T : finType) :=
+  FinType (ext T) (CanFinMixin ext_encodeK).
+
 Section rindex.
 
 Variables (d : unit) (T : orderType d).
-Implicit Types (t u v : T).
+
+Notation ext := (ext T).
+Implicit Types (t u v : T) (x y z : ext).
 
 Lemma meetEtotal t u : t `&` u = if t <= u then t else u.
 Proof. by case: ltgtP. Qed.
@@ -83,42 +121,25 @@ Proof. by case: ltgtP. Qed.
 Lemma joinEtotal t u : t `|` u = if u <= t then t else u.
 Proof. by case: ltgtP. Qed.
 
-Inductive ext := Infty of bool | Fin of T.
+Let FinT_inj := @Fin_inj T.
 
-Local Notation "x %:x" := (Fin x) (format "x %:x", left associativity, at level 2).
-Local Notation "+oo" := (Infty true) (at level 0).
-Local Notation "-oo" := (Infty false) (at level 0).
-
-Implicit Types (x y z : ext).
-
-Definition ext_encode x := match x with Infty b => inl b | Fin t => inr t end.
-Definition ext_decode a := match a with inl b => Infty b | inr t => Fin t end.
-Lemma ext_encodeK : cancel ext_encode ext_decode. Proof. by case. Qed.
-
-Canonical ext_eqType := EqType ext (CanEqMixin ext_encodeK).
-Canonical ext_choiceType := ChoiceType ext (CanChoiceMixin ext_encodeK).
-
-Definition ext_le (x y : ext) := match x, y with
-  | Infty bl, Infty br => bl ==> br
-  | Infty bl, _ => ~~ bl
-  | _, Infty br => br
-  | Fin t, Fin u => t <= u
+Definition ext_le x y := match x, y with
+  | Infty bl, Infty br => bl ==> br | Fin t, Fin u => t <= u
+  | Infty bl, _ => ~~ bl            | _, Infty br => br
 end.
 
-Definition ext_lt (x y : ext) := match x, y with
-  | Infty bl, Infty br => ~~ bl && br
-  | Infty bl, _ => ~~ bl
-  | _ , Infty br => br
-  | Fin t, Fin u => t < u
+Definition ext_lt x y := match x, y with
+  | Infty bl, Infty br => ~~ bl && br  | Fin t, Fin u => t < u
+  | Infty bl, _ => ~~ bl               | _ , Infty br => br
 end.
 
-Definition ext_meet (x y : ext) := match x, y with
+Definition ext_meet x y := match x, y with
   | Infty bl, Infty br => Infty (bl && br)
   | Infty b, Fin t | Fin t, Infty b => if b then Fin t else Infty b
   | Fin t, Fin u => Fin (t `&` u)
 end.
 
-Definition ext_join (x y : ext) := match x, y with
+Definition ext_join x y := match x, y with
   | Infty bl, Infty br => Infty (bl || br)
   | Infty b, Fin t | Fin t, Infty b => if b then Infty b else Fin t
   | Fin t, Fin u => Fin (t `|` u)
@@ -153,14 +174,6 @@ Lemma leEext x y : (x <= y) = (ext_le x y). Proof. by []. Qed.
 Lemma ltEext x y : (x < y) = (ext_lt x y). Proof. by []. Qed.
 Lemma meetEext x y : (x `&` y) = (ext_meet x y). Proof. by []. Qed.
 Lemma joinEext x y : (x `|` y) = (ext_join x y). Proof. by []. Qed.
-
-Definition finite := [qualify x | if x is Fin _ then true else false].
-Coercion is_finite x := x \is finite.
-Arguments is_finite /.
-
-Lemma Fin_inj : injective Fin. Proof. by move=> ? ? []. Qed.
-Lemma Infty_inj : injective Infty. Proof. by move=> ? ? []. Qed.
-Hint Resolve Fin_inj Infty_inj.
 
 Lemma ge_xmin x : -oo <= x. Proof. by case: x => [[]|]. Qed.
 Lemma le_xmax x : x <= +oo. Proof. by case: x => [[]|]. Qed.
@@ -296,9 +309,6 @@ End rindex.
 
 Bind Scope ext_scope with ext.
 
-Notation "x %:x" := (Fin x) (format "x %:x", left associativity, at level 2) : ext_scope.
-Notation "+oo" := (Infty _ true) (at level 0) : ext_scope.
-Notation "-oo" := (Infty _ false) (at level 0) : ext_scope.
 Notation "s `[ i ]" := (nth +oo%x (rindex_seq s) i) : ext_scope.
 Notation rprev s t := s`[rindex s t].
 Notation rnext s t := s`[(rindex s t).+1].
