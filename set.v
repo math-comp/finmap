@@ -59,17 +59,17 @@ Defined.
 Arguments PredType [T pT] toP.
 
 Module SET.
-Import Order.Theory Order.Syntax Order.Def.
+Import Order.Theory.
 
 Fact display_set : unit -> unit. Proof. exact. Qed.
 
 Module Import SetSyntax.
 
-Notation "\sub%set" := (@le (display_set _) _) : abstract_set_scope.
-Notation "\super%set" := (@ge (display_set _) _) : abstract_set_scope.
-Notation "\proper%set" := (@lt (display_set _) _) : abstract_set_scope.
-Notation "\superproper%set" := (@gt (display_set _) _) : abstract_set_scope.
-Notation "\sub?%set" := (@leif (display_set _) _) : abstract_set_scope.
+Notation "\sub%set" := (@Order.le (display_set _) _) : abstract_set_scope.
+Notation "\super%set" := (@Order.ge (display_set _) _) : abstract_set_scope.
+Notation "\proper%set" := (@Order.lt (display_set _) _) : abstract_set_scope.
+Notation "\superproper%set" := (@Order.gt (display_set _) _) : abstract_set_scope.
+Notation "\sub?%set" := (@Order.leif (display_set _) _) : abstract_set_scope.
 
 Notation "\subsets y" := (\super%set y) : abstract_set_scope.
 Notation "\subsets y :> T" := (\subsets (y : T)) : abstract_set_scope.
@@ -96,12 +96,12 @@ Notation "x \subset y ?= 'iff' C" := (\sub?%set x y C) : abstract_set_scope.
 Notation "x \subset y ?= 'iff' C :> R" := ((x : R) \subset (y : R) ?= iff C)
   (only parsing) : abstract_set_scope.
 
-Notation set0 := (@bottom (display_set _) _).
-Notation setT := (@top (display_set _) _).
-Notation setU := (@join (display_set _) _).
-Notation setI := (@meet (display_set _) _).
-Notation setD := (@sub (display_set _) _).
-Notation setC := (@compl (display_set _) _).
+Notation set0 := (@Order.bottom (display_set _) _).
+Notation setT := (@Order.top (display_set _) _).
+Notation setU := (@Order.join (display_set _) _).
+Notation setI := (@Order.meet (display_set _) _).
+Notation setD := (@Order.sub (display_set _) _).
+Notation setC := (@Order.compl (display_set _) _).
 
 Notation "x :&: y" := (setI x y).
 Notation "x :|: y" := (setU x y).
@@ -119,7 +119,7 @@ Variable eqType_of_elementType : elementType -> eqType.
 Coercion eqType_of_elementType : elementType >-> eqType.
 Implicit Types (X Y : elementType).
 
-Structure mixin_of d (set : elementType -> (cblatticeType (display_set d))) :=
+Structure mixin_of d (set : elementType -> (cbDistrLatticeType (display_set d))) :=
   Mixin {
   memset : forall X, set X -> X -> bool;
   set1 : forall X, X -> set X;
@@ -141,9 +141,9 @@ Structure mixin_of d (set : elementType -> (cblatticeType (display_set d))) :=
 }.
 
 Record class_of (set : elementType -> Type) := Class {
-  base  : forall X, @Order.CBLattice.class_of (set X);
+  base  : forall X, @Order.CBDistrLattice.class_of (set X);
   mixin_disp : unit;
-  mixin : mixin_of (fun X => Order.CBLattice.Pack (display_set mixin_disp) (base X))
+  mixin : mixin_of (fun X => Order.CBDistrLattice.Pack (display_set mixin_disp) (base X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
@@ -163,9 +163,9 @@ Notation xclass := (class : class_of _ xset).
 
 Definition pack b0
   (m0 : mixin_of
- (fun X=> @Order.CBLattice.Pack (display_set disp) (set X) (b0 X))) :=
+ (fun X=> @Order.CBDistrLattice.Pack (display_set disp) (set X) (b0 X))) :=
   fun bT b &
- (forall X, phant_id (@Order.CBLattice.class (display_set disp) (bT X)) (b X)) =>
+ (forall X, phant_id (@Order.CBDistrLattice.class (display_set disp) (bT X)) (b X)) =>
   fun  disp' m & phant_id m0 m => Pack disp (@Class set b disp' m).
 End ClassDef.
 
@@ -186,9 +186,9 @@ Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_ele
 Definition eqType := @Equality.Pack (cT X) (xclass X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X).
-Definition latticeType := @Order.Lattice.Pack ddisp (cT X) (xclass X).
-Definition blatticeType := @Order.BLattice.Pack ddisp (cT X) (xclass X).
-Definition cblatticeType := @Order.CBLattice.Pack ddisp (cT X) (xclass X).
+Definition distrLatticeType := @Order.DistrLattice.Pack ddisp (cT X) (xclass X).
+Definition bDistrLatticeType := @Order.BDistrLattice.Pack ddisp (cT X) (xclass X).
+Definition cbDistrLatticeType := @Order.CBDistrLattice.Pack ddisp (cT X) (xclass X).
 End CanonicalDef.
 
 Module Import Exports.
@@ -198,16 +198,16 @@ Coercion sort       : type >-> Funclass.
 Coercion eqType     : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
-Coercion latticeType : type >-> Order.Lattice.type.
-Coercion blatticeType : type >-> Order.BLattice.type.
-Coercion cblatticeType : type >-> Order.CBLattice.type.
+Coercion distrLatticeType : type >-> Order.DistrLattice.type.
+Coercion bDistrLatticeType : type >-> Order.BDistrLattice.type.
+Coercion cbDistrLatticeType : type >-> Order.CBDistrLattice.type.
 
 Canonical eqType.
 Canonical choiceType.
 Canonical porderType.
-Canonical latticeType.
-Canonical blatticeType.
-Canonical cblatticeType.
+Canonical distrLatticeType.
+Canonical bDistrLatticeType.
+Canonical cbDistrLatticeType.
 
 Notation semisetType  := type.
 Notation semisetMixin := mixin_of.
@@ -905,10 +905,10 @@ Coercion eqType_of_elementType : elementType >-> eqType.
 Implicit Types (X Y : elementType).
 
 Record class_of (set : elementType -> Type) := Class {
-  base  : forall X, Order.CTBLattice.class_of (set X);
+  base  : forall X, Order.CTBDistrLattice.class_of (set X);
   mixin_disp : unit;
   mixin : Semiset.mixin_of eqType_of_elementType
-            (fun X => Order.CBLattice.Pack (display_set mixin_disp) (base X))
+            (fun X => Order.CBDistrLattice.Pack (display_set mixin_disp) (base X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
@@ -927,8 +927,8 @@ Let xset := let: Pack set _ := cT in set.
 Notation xclass := (class : class_of xset).
 
 Definition pack :=
-  fun bT (b : forall X, Order.CTBLattice.class_of _)
-      & (forall X, phant_id (@Order.CTBLattice.class disp (bT X)) (b X)) =>
+  fun bT (b : forall X, Order.CTBDistrLattice.class_of _)
+      & (forall X, phant_id (@Order.CTBDistrLattice.class disp (bT X)) (b X)) =>
   fun d' mT m & phant_id (@Semiset.class _ eqType_of_elementType mT)
                       (@Semiset.Class _ _ set b d' m) =>
   Pack disp (@Class set (fun x => b x) _ m).
@@ -953,13 +953,13 @@ Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_ele
 Definition eqType := @Equality.Pack (cT X) (xclass X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X).
-Definition latticeType := @Order.Lattice.Pack ddisp (cT X) (xclass X).
-Definition blatticeType := @Order.BLattice.Pack ddisp (cT X) (xclass X).
-Definition cblatticeType := @Order.CBLattice.Pack ddisp (cT X) (xclass X).
-Definition ctblatticeType := @Order.CTBLattice.Pack ddisp (cT X) (xclass X).
+Definition distrLatticeType := @Order.DistrLattice.Pack ddisp (cT X) (xclass X).
+Definition bDistrLatticeType := @Order.BDistrLattice.Pack ddisp (cT X) (xclass X).
+Definition cbDistrLatticeType := @Order.CBDistrLattice.Pack ddisp (cT X) (xclass X).
+Definition ctbDistrLatticeType := @Order.CTBDistrLattice.Pack ddisp (cT X) (xclass X).
 Definition semisetType := @Semiset.Pack _ _ disp cT xclass.
-Definition semiset_ctblatticeType :=
-  @Order.CTBLattice.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_ctbDistrLatticeType :=
+  @Order.CTBDistrLattice.Pack ddisp (semisetType X) (xclass X).
 End CanonicalDef.
 
 Module Import Exports.
@@ -969,19 +969,19 @@ Coercion sort      : type >-> Funclass.
 Coercion eqType    : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
-Coercion latticeType : type >-> Order.Lattice.type.
-Coercion blatticeType : type >-> Order.BLattice.type.
-Coercion cblatticeType : type >-> Order.CBLattice.type.
-Coercion ctblatticeType : type >-> Order.CTBLattice.type.
+Coercion distrLatticeType : type >-> Order.DistrLattice.type.
+Coercion bDistrLatticeType : type >-> Order.BDistrLattice.type.
+Coercion cbDistrLatticeType : type >-> Order.CBDistrLattice.type.
+Coercion ctbDistrLatticeType : type >-> Order.CTBDistrLattice.type.
 Coercion semisetType : type >-> Semiset.type.
 
 Canonical eqType.
 Canonical choiceType.
 Canonical porderType.
-Canonical latticeType.
-Canonical blatticeType.
-Canonical cblatticeType.
-Canonical ctblatticeType.
+Canonical distrLatticeType.
+Canonical bDistrLatticeType.
+Canonical cbDistrLatticeType.
+Canonical ctbDistrLatticeType.
 Canonical semisetType.
 
 Notation setType  := type.
