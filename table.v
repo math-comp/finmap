@@ -78,6 +78,23 @@ Proof. exact: mono_sorted. Qed.
 
 End extra.
 
+Section FindSpec.
+Variable (T : Type) (a : predPredType T) (s : seq T).
+
+Variant find_spec : bool -> nat -> Type :=
+| NotFound of ~~ has a s : find_spec false (size s)
+| Found (i : nat) of (i < size s)%N & (forall x0, a (nth x0 s i)) &
+  (forall x0 j, j < i -> a (nth x0 s j) = false) : find_spec true i.
+
+Lemma findP : find_spec (has a s) (find a s).
+Proof.
+have [a_s|aNs] := boolP (has a s); last by rewrite hasNfind//; constructor.
+by constructor=> [|x0|x0]; rewrite -?has_find ?nth_find//; apply: before_find.
+Qed.
+
+End FindSpec.
+Arguments findP {T}.
+
 Local Open Scope order_scope.
 
 Section ext.
@@ -198,16 +215,90 @@ Lemma joinmaxx x : +oo `|` x = +oo. Proof. by case: x => [[]|]. Qed.
 Lemma joinxmin x : x `|` -oo = x. Proof. by case: x => [[]|]. Qed.
 Lemma joinminx x : -oo `|` x = x. Proof. by case: x => [[]|]. Qed.
 
-Variable (s : seq T).
-
-Definition rindex t := find (>= t) s.
-Definition rindex_seq := -oo :: map Fin s.
-Local Notation "[ i ]" := (nth +oo rindex_seq i).
-Local Notation rprev t := [rindex t].
-Local Notation rnext t := [(rindex t).+1].
-
+Section rindex_def.
+Variable (x0 : T) (s : seq T).
 Hypothesis s_sorted : sorted <=%O s.
 Hypothesis s_uniq : uniq s.
+
+Definition rindex t := find (>= t) s.
+
+Lemma rindex_size t : (rindex t <= size s)%N. Proof. exact: find_size. Qed.
+
+(* ---- t -- i ----- j ---- *)
+Lemma rindex_le t j : (j < size s)%N -> (rindex t <= j)%N = (t <= nth x0 s j)%O.
+Proof.
+rewrite /rindex => j_lt; symmetry.
+case: findP => [/hasPn/= ltsx|i i_lt x_le xNle].
+  by rewrite ltn_geF//; apply/negbTE/ltsx/mem_nth.
+case: (leqP i) => [le_ij|/xNle->//].
+by rewrite (le_trans (x_le x0))// sorted_le_nth//; apply: le_trans.
+Qed.
+
+Lemma rindex_gt t j : j < size s -> (j < rindex t)%N = (nth x0 s j < t)%O.
+Proof. by move=> j_lt; rewrite ltnNge rindex_le// ltNge. Qed.
+
+Lemma rindex_ge t j : (0 < j <= size s)%N ->
+  (j <= rindex t)%N = (nth x0 s j.-1 < t)%O.
+Proof. by case: j => //= j; apply: rindex_gt. Qed.
+
+Lemma rindex_lt t j : (0 < j <= size s)%N ->
+  (rindex t < j)%N = (t <= nth x0 s j.-1)%O.
+Proof. by move=> jP; rewrite ltnNge rindex_ge// leNgt. Qed.
+
+End rindex_def.
+Hint Resolve rindex_size.
+
+Section rindex_theory.
+Variable (s : seq T).
+Hypothesis s_sorted : sorted <=%O s.
+Hypothesis s_uniq : uniq s.
+
+Lemma le_rindex t : all (>= t)%O s -> rindex s t = 0.
+Proof. by case: s => //= y s'; case: ltgtP. Qed.
+
+Lemma gt_rindex t : all (< t)%O s -> rindex s t = size s.
+Proof. by move=> /allP/= lt_st; apply/hasNfind/hasPn=> y /lt_st; case: ltP. Qed.
+
+Lemma rindex_rcons t u : all (<= t)%O s ->
+  rindex (rcons s t) u = if (u <= t)%O then rindex s u else (size s).+1.
+Proof.
+move=> /allP/= le_st; rewrite /rindex -cats1 find_cat/=.
+case: ifPn => [|/hasNfind->]; last by case: ifP; rewrite ?(addn0, addn1).
+by move=> /hasP[z zs /le_trans->]//; apply: le_st.
+Qed.
+
+End rindex_theory.
+
+Section rindex_take_drop.
+
+Lemma take_rindex s t : sorted <=%O%O s ->
+  take (rindex s t) s = [seq y <- s | (y < t)%O].
+Proof.
+elim: s => //= a s IHs pas; rewrite -IHs ?(path_sorted pas)//.
+case: leP => //= le_ta; rewrite le_rindex ?take0//.
+by have /(order_path_min le_trans) := pas; apply/sub_all => y; apply: le_trans.
+Qed.
+
+Lemma drop_rindex s t : sorted <=%O%O s ->
+  drop (rindex s t) s = [seq y <- s | (y >= t)%O].
+Proof.
+elim: s => //= a s IHs pas; rewrite -IHs ?(path_sorted pas)//.
+case: leP => //= le_ta; rewrite le_rindex ?drop0//.
+by have /(order_path_min le_trans) := pas; apply/sub_all => y; apply: le_trans.
+Qed.
+
+End rindex_take_drop.
+
+Section rindex_seq.
+
+Variable (s : seq T).
+Hypothesis s_sorted : sorted <=%O s.
+Hypothesis s_uniq : uniq s.
+
+Definition rindex_seq := -oo :: map Fin s.
+Local Notation "[ i ]" := (nth +oo rindex_seq i).
+Local Notation rprev t := [rindex s t].
+Local Notation rnext t := [(rindex s t).+1].
 
 Let s_lt_sorted : sorted <%O s.
 Proof. by rewrite lt_sorted_uniq_le s_uniq. Qed.
@@ -224,9 +315,6 @@ Hint Resolve rindex_seq_uniq.
 Lemma rindex_seq_lt_sorted : sorted <%O rindex_seq.
 Proof. by rewrite lt_sorted_uniq_le rindex_seq_uniq. Qed.
 Hint Resolve rindex_seq_lt_sorted.
-
-Lemma rindex_size t : (rindex t <= size s)%N. Proof. exact: find_size. Qed.
-Hint Resolve rindex_size.
 
 Lemma eq_from_rindex i j x : (i <= size s)%N -> (j <= size s)%N ->
   ([i] < x <= [i.+1]) -> ([j] < x <= [j.+1]) -> i = j.
@@ -249,13 +337,13 @@ Qed.
 
 Lemma in_rprev t : rprev t \in -oo :: map Fin s.
 Proof.
-rewrite /= in_cons; case: rindex (rindex_size t) => //= n n_lt.
+rewrite /= in_cons; case: rindex (rindex_size s t) => //= n n_lt.
 by rewrite (nth_map t)// mem_map// mem_nth.
 Qed.
 
 Lemma in_rnext t : rnext t \in +oo :: map Fin s.
 Proof.
-rewrite /= in_cons; case: (ltnP (rindex t) (size (map Fin s))).
+rewrite /= in_cons; case: (ltnP (rindex s t) (size (map Fin s))).
   by move=> /mem_nth->; rewrite orbT.
 by move=> /(nth_default _)->.
 Qed.
@@ -263,18 +351,18 @@ Qed.
 Lemma rindexP t : rprev t < t%:x <= rnext t.
 Proof.
 rewrite /rindex_seq /=.
-have find_small : (rindex t <= size s)%N by apply: find_size.
+have find_small : (rindex s t <= size s)%N by apply: find_size.
 apply/andP; split; last first.
   case: ltngtP (find_small) => [//|i_lt|<-] _; last first.
     by rewrite nth_default// ?size_map.
   by rewrite /rindex (nth_map t)// leEext/= nth_find// has_find.
-have /= := @before_find _ t (>= t) s (rindex t).-1; rewrite -/(rindex t).
+have /= := @before_find _ t (>= t) s (rindex s t).-1; rewrite -/(rindex s t).
 case: (rindex _) => [_//|i/=] in find_small * => /(_ (ltnSn _))/negbT.
 by rewrite (nth_map t)// ltEext/= -ltNge.
 Qed.
 Hint Resolve rindexP.
 
-Lemma eq_rindex t u : rprev t < u%:x <= rnext t -> rindex t = rindex u.
+Lemma eq_rindex t u : rprev t < u%:x <= rnext t -> rindex s t = rindex s u.
 Proof. by move=> /eq_from_rindex; apply. Qed.
 
 Lemma lt_rprev_rnext t : rprev t < rnext t.
@@ -304,15 +392,16 @@ by rewrite -![[_]]nth_rcons_default !total_sorted_lt_nth ?[_ && _]le_lt_asym//;
    rewrite ?inE/= ?size_rcons ?size_map ?ltnS// ?find_size// 1?leqW//=.
 Qed.
 
-Lemma rindexE i : {in [pred t | [i] < t%:x <= [i.+1]], forall t, rindex t = i}.
+Lemma rindexE i : {in [pred t | [i] < t%:x <= [i.+1]], forall t, rindex s t = i}.
 Proof.
 move=> t; have [i_le|i_gt] := leqP i (size s); first exact: eq_from_rindex.
 by rewrite !nth_default//= ?size_map// ltnW.
 Qed.
 
-Lemma rindex_next t tnext : rnext t = tnext%:x -> rindex tnext = rindex t.
+Lemma rindex_next t tnext : rnext t = tnext%:x -> rindex s tnext = rindex s t.
 Proof. by move=> sneq; apply: rindexE; rewrite inE -sneq lexx andbT. Qed.
 
+End rindex_seq.
 End rindex.
 
 Bind Scope ext_scope with ext.
@@ -323,22 +412,3 @@ Notation rnext s t := s`[(rindex s t).+1].
 
 Hint Resolve Fin_inj Infty_inj.
 Hint Resolve rindex_size rindexP lt_rprev_rnext.
-
-Section rindex_rcons.
-Variables (d : unit) (T : orderType d).
-Implicit Types (s : seq T) (x y : T).
-
-Lemma le_rindex s x : all (>= x)%O s -> rindex s x = 0.
-Proof. by case: s => //= y s; case: ltgtP. Qed.
-
-Lemma gt_rindex s x : all (< x)%O s -> rindex s x = size s.
-Proof. by move=> /allP/= lt_sx; apply/hasNfind/hasPn=> y /lt_sx; case: ltP. Qed.
-
-Lemma rindex_rcons s x y : all (<= x)%O s ->
-  rindex (rcons s x) y = if (y <= x)%O then rindex s y else (size s).+1.
-Proof.
-move=> /allP/= le_sx; rewrite /rindex -cats1 find_cat/=.
-case: ifPn => [|/hasNfind->]; last by case: ifP; rewrite ?(addn0, addn1).
-by move=> /hasP[z zs /le_trans->]//; apply: le_sx.
-Qed.
-End rindex_rcons.
