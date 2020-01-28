@@ -1,7 +1,7 @@
 From mathcomp Require Import all_ssreflect order.
 
 (******************************************************************************)
-(* This files provides support for tabulating ordered date, such as in sign   *)
+(* This files provides support for tabulating ordered numbers, such as in sign*)
 (* tables of functions.                                                       *)
 (*    ext T == the type of ordered types extended with two formal infinities, *)
 (*             such that -oo <= x    <= +oo for all x of type ext T,          *)
@@ -21,7 +21,7 @@ From mathcomp Require Import all_ssreflect order.
 (*                  | the i.-1th element of s   otherwise                     *)
 (*               := nth +oo (-oo :: s) i                                      *)
 (*    rindex s t == the unique natural number such that                       *)
-(*                  s`[index s t] < t%:x <= s`[(index s t).+1]                *)
+(*                  s`[rindex s t] < t%:x <= s`[(rindex s t).+1]                *)
 (*                  (under total and uniq ordering of rindex)                 *)
 (*               := find (>= t) s                                             *)
 (*     rprev s t == the last element u of s s.t. u < t, otherwise -oo         *)
@@ -35,7 +35,6 @@ Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 Import Order.Syntax Order.Def Order.Theory.
-Local Open Scope order_scope.
 
 Delimit Scope ext_scope with x.
 Local Open Scope ext_scope.
@@ -51,6 +50,13 @@ Lemma nth_rcons_default T (x0 : T) s i : nth x0 (rcons s x0) i = nth x0 s i.
 Proof.
 by rewrite nth_rcons; case: ltngtP => //[/ltnW ?|->]; rewrite nth_default.
 Qed.
+
+Lemma hasNfind (T : Type) (a : pred T) (s : seq T) : ~~ has a s -> find a s = size s.
+Proof. by rewrite has_find; case: ltngtP (find_size a s). Qed.
+
+Lemma nth_cons_scanl (T1 : Type) (x1 : T1) (T2 : Type) (g : T1 -> T2 -> T1) (s : seq T2) (n : nat) :
+   n <= size s -> forall x : T1, nth x1 (x :: scanl g x s) n = foldl g x (take n s).
+Proof. by case: n => //=; [rewrite take0|exact: nth_scanl]. Qed.
 
 Variables (T T' : eqType) (f : T' -> T).
 
@@ -71,6 +77,8 @@ Lemma sorted_map leT s : sorted leT (map f s) = sorted (relpre f leT) s.
 Proof. exact: mono_sorted. Qed.
 
 End extra.
+
+Local Open Scope order_scope.
 
 Section ext.
 Variable (T : Type).
@@ -315,3 +323,22 @@ Notation rnext s t := s`[(rindex s t).+1].
 
 Hint Resolve Fin_inj Infty_inj.
 Hint Resolve rindex_size rindexP lt_rprev_rnext.
+
+Section rindex_rcons.
+Variables (d : unit) (T : orderType d).
+Implicit Types (s : seq T) (x y : T).
+
+Lemma le_rindex s x : all (>= x)%O s -> rindex s x = 0.
+Proof. by case: s => //= y s; case: ltgtP. Qed.
+
+Lemma gt_rindex s x : all (< x)%O s -> rindex s x = size s.
+Proof. by move=> /allP/= lt_sx; apply/hasNfind/hasPn=> y /lt_sx; case: ltP. Qed.
+
+Lemma rindex_rcons s x y : all (<= x)%O s ->
+  rindex (rcons s x) y = if (y <= x)%O then rindex s y else (size s).+1.
+Proof.
+move=> /allP/= le_sx; rewrite /rindex -cats1 find_cat/=.
+case: ifPn => [|/hasNfind->]; last by case: ifP; rewrite ?(addn0, addn1).
+by move=> /hasP[z zs /le_trans->]//; apply: le_sx.
+Qed.
+End rindex_rcons.
