@@ -1,4 +1,6 @@
+Set Warnings "-notation-overridden".
 From mathcomp Require Import all_ssreflect order.
+Set Warnings "+notation-overridden".
 
 (******************************************************************************)
 (* This files provides support for tabulating ordered numbers, such as in sign*)
@@ -21,7 +23,7 @@ From mathcomp Require Import all_ssreflect order.
 (*                  | the i.-1th element of s   otherwise                     *)
 (*               := nth +oo (-oo :: s) i                                      *)
 (*    rindex s t == the unique natural number such that                       *)
-(*                  s`[rindex s t] < t%:x <= s`[(rindex s t).+1]                *)
+(*                  s`[rindex s t] < t%:x <= s`[(rindex s t).+1]              *)
 (*                  (under total and uniq ordering of rindex)                 *)
 (*               := find (>= t) s                                             *)
 (*     rprev s t == the last element u of s s.t. u < t, otherwise -oo         *)
@@ -41,6 +43,9 @@ Local Open Scope ext_scope.
 
 Reserved Notation "s `[ i ]" (at level 3, i at level 2, left associativity,
   format "s `[ i ]").
+Reserved Notation "x %:x" (format "x %:x", left associativity, at level 2).
+Reserved Notation "+oo" (at level 0).
+Reserved Notation "-oo" (at level 0).
 
 Section extra.
 
@@ -120,9 +125,9 @@ Arguments ext_encodeK {T}.
 Arguments finite {T}.
 Arguments is_finite T /.
 
-Notation "x %:x" := (Fin x) (format "x %:x", left associativity, at level 2) : ext_scope.
-Notation "+oo" := (Infty true) (at level 0) : ext_scope.
-Notation "-oo" := (Infty false) (at level 0) : ext_scope.
+Notation "x %:x" := (Fin x).
+Notation "+oo" := (Infty true).
+Notation "-oo" := (Infty false).
 Hint Resolve Fin_inj Infty_inj.
 
 Canonical ext_eqType (T : eqType) := EqType (ext T) (CanEqMixin ext_encodeK).
@@ -409,6 +414,4 @@ Bind Scope ext_scope with ext.
 Notation "s `[ i ]" := (nth +oo%x (rindex_seq s) i) : ext_scope.
 Notation rprev s t := s`[rindex s t].
 Notation rnext s t := s`[(rindex s t).+1].
-
-Hint Resolve Fin_inj Infty_inj.
 Hint Resolve rindex_size rindexP lt_rprev_rnext.
