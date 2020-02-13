@@ -4,7 +4,7 @@
   sha256 = "0rxjkfiq53ibz0rzggvnp341b6kgzgfr9x6q07m2my7ijlirs2da";
 }),
 coq-version ? "8.9",
-mc ? "1.8.0",
+mc ? fetchGit {url = "/home/ccohen/git/math-comp/experiment/order/"; ref = "order";},
 print-env ? false
 }:
 let
@@ -22,7 +22,7 @@ let
           mathcompPkgs = if builtins.isString mc then (super.mathcompGen mc)
                          else super.mathcomp.mathcompGen (o: {
                             version = "dev";
-                            name = "coq${self.coq.coq-version}-mathcomp-custom";
+                            name = "coq${self.coq.coq-version}-mathcomp-dev";
                             src = mc;
              });
            mathcomp = self.mathcompPkgs.all;
