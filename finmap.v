@@ -135,15 +135,219 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Import Prenex Implicits.
 
+Reserved Notation "A `=` B" (at level 70, no associativity).
+Reserved Notation "A `<>` B" (at level 70, no associativity).
+Reserved Notation "A `==` B" (at level 70, no associativity).
+Reserved Notation "A `!=` B" (at level 70, no associativity).
+Reserved Notation "A `=P` B" (at level 70, no associativity).
+
+Reserved Notation "f @`[ key ] A" (at level 24, key at level 0).
+Reserved Notation "f @2`[ key ] ( A , B )"
+  (at level 24, format "f  @2`[ key ]  ( A ,  B )").
+Reserved Notation "f @` A" (at level 24).
+Reserved Notation "f @2` ( A , B )" (at level 24, format "f  @2`  ( A ,  B )").
+
+(* unary *)
+Reserved Notation "[ 'fset' E | x : T 'in' A ]" (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset' E | x 'in' A ]" (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset' E | x : A ]" (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset'  x  :  T  'in'  A ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset'  x  :  T  'in'  A  |  P ]"
+  (at level 0, x at level 99).
+Reserved Notation "[ 'fset' x 'in' A | P ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset' x 'in' A ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset' x : T | P ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset' x : T | P & Q ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset'  x  :  T  'in' A  |  P  &  Q ]"
+  (at level 0, x at level 99).
+Reserved Notation "[ 'fset' x 'in' A | P & Q ]" (at level 0, x at level 99).
+
+(* binary *)
+Reserved Notation "[ 'fset' E | x : T 'in' A , y : T' 'in' B ]"
+  (at level 0, E, x at level 99, A at level 200, y at level 99).
+Reserved Notation "[ 'fset' E | x 'in' A , y 'in' B ]"
+  (at level 0, E, x at level 99, A at level 200, y at level 99).
+
+(* keyed parse only *)
+Reserved Notation "[ 'fset[' key ] E | x : T 'in' A ]"
+  (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset[' key ] E | x 'in' A ]"
+  (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset[' key ] E | x : A ]" (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset[' key ] E | x 'in' A & P ]"
+  (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset[' key ] E | x : A & P ]"
+  (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset[' key ] E | x : T 'in' A , y : T' 'in' B ]"
+  (at level 0, E, x at level 99, A at level 200, y at level 99).
+Reserved Notation "[ 'fset[' key ] E | x 'in' A , y 'in' B ]"
+  (at level 0, E, x at level 99, A at level 200, y at level 99).
+Reserved Notation "[ 'fset[' key ] E | x : A , y : B ]"
+  (at level 0, E, x at level 99, A at level 200, y at level 99).
+Reserved Notation "[ 'fset[' key ] E | x : A , y 'in' B ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset[' key ] E | x 'in' A , y : B ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset[' key ] E | x 'in' A , y 'in' B & P ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset[' key ] E | x : A , y 'in' B & P ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset[' key ] E | x 'in' A , y : B & P ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset[' key ] E | x : A , y : B & P ]"
+  (at level 0, E, x, y at level 99).
+
+Reserved Notation "[ 'fset[' key ]  x  :  T  'in'  A ]"
+  (at level 0, x at level 99).
+Reserved Notation "[ 'fset[' key ]  x  :  T  'in'  A  |  P ]"
+  (at level 0, x at level 99).
+Reserved Notation "[ 'fset[' key ] x 'in' A | P ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset[' key ] x 'in' A ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset[' key ] x : T | P ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset[' key ] x : T | P & Q ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fset[' key ]  x  :  T  'in' A  |  P  &  Q ]"
+  (at level 0, x at level 99).
+Reserved Notation "[ 'fset[' key ] x 'in' A | P & Q ]"
+  (at level 0, x at level 99).
+
+(* printing only *)
+Reserved Notation "[ 'f' 'set' E | x 'in' A ]"
+  (at level 0, E, x at level 99,
+   format "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A ] ']'").
+Reserved Notation "[ 'f' 'set' E | x : A ]"
+  (at level 0, E, x at level 99,
+   format "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A ] ']'").
+Reserved Notation "[ 'f' 'set' x 'in' A | P ]"
+  (at level 0, x at level 99, format "[ 'f' 'set'  x  'in'  A  |  P ]").
+Reserved Notation "[ 'f' 'set' x 'in' A ]"
+  (at level 0, x at level 99, format "[ 'f' 'set'  x  'in'  A ]").
+Reserved Notation "[ 'f' 'set' x : T | P ]"
+  (at level 0, x at level 99, format "[ 'f' 'set'  x  :  T  |  P ]").
+Reserved Notation "[ 'f' 'set' x : T | P & Q ]"
+  (at level 0, x at level 99, format "[ 'f' 'set'  x  :  T  |  P  &  Q ]").
+Reserved Notation "[ 'f' 'set' x 'in' A | P & Q ]"
+  (at level 0, x at level 99, format "[ 'f' 'set'  x  'in'  A  |  P  &  Q ]").
+(* binary printing only *)
+Reserved Notation "[ 'f' 'set' E | x 'in' A , y 'in' B ]"
+  (at level 0, E, x at level 99, A at level 200, y at level 99,
+   format "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A , '/' y  'in'  B ] ']'").
+
 Reserved Notation "{fset K }" (at level 0, format "{fset  K }").
-Reserved Notation "A `&` B"  (at level 48, left associativity).
-Reserved Notation "A `*` B"  (at level 46, left associativity).
-Reserved Notation "A `+` B"  (at level 54, left associativity).
+Reserved Notation "[ 'fset' a ]"
+  (at level 0, a at level 99, format "[ 'fset'  a ]").
+Reserved Notation "[ 'fset' a : T ]"
+  (at level 0, a at level 99, format "[ 'fset'  a   :  T ]").
+Reserved Notation "A `&` B" (at level 48, left associativity).
+Reserved Notation "A `*` B" (at level 46, left associativity).
+Reserved Notation "A `+` B" (at level 54, left associativity).
 Reserved Notation "A +` B"  (at level 54, left associativity).
 Reserved Notation "A `|` B" (at level 52, left associativity).
-Reserved Notation "a |` A" (at level 52, left associativity).
+Reserved Notation "a |` A"  (at level 52, left associativity).
 Reserved Notation "A `\` B" (at level 50, left associativity).
-Reserved Notation "A `\ b" (at level 50, left associativity).
+Reserved Notation "A `\ b"  (at level 50, left associativity).
+Reserved Notation "A `<=` B" (at level 70, no associativity).
+Reserved Notation "A `<` B" (at level 70, no associativity).
+
+(* This is left-associative due to historical limitations of the .. Notation. *)
+Reserved Notation "[ 'fset' a1 ; a2 ; .. ; an ]"
+  (at level 0, a1 at level 99, format "[ 'fset'  a1 ;  a2 ;  .. ;  an ]").
+
+Reserved Notation "[ 'disjoint' A & B ]".
+
+(* Comprehensions *)
+Reserved Notation "[ 'fset' E | x 'in' A & P ]" (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset' E | x : A & P ]" (at level 0, E, x at level 99).
+Reserved Notation "[ 'fset' E | x : A , y 'in' B ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset' E | x 'in' A , y : B ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset' E | x : A , y : B ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset' E | x 'in' A , y 'in' B & P ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset' E | x : A , y 'in' B & P ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset' E | x 'in' A , y : B & P ]"
+  (at level 0, E, x, y at level 99).
+Reserved Notation "[ 'fset' E | x : A , y : B & P ]"
+  (at level 0, E, x, y at level 99).
+
+Reserved Notation "[ 'fsetval' x 'in' A ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval' x 'in' A | P ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval' x 'in' A | P & Q ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval' x : A ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval' x : A | P ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval' x : A | P & Q ]" (at level 0, x at level 99).
+
+(* keyed parse only *)
+Reserved Notation "[ 'fsetval[' key ] x 'in' A ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval[' key ] x 'in' A | P ]"
+  (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval[' key ] x 'in' A | P & Q ]"
+  (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval[' key ] x : A ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval[' key ] x : A | P ]" (at level 0, x at level 99).
+Reserved Notation "[ 'fsetval[' key ] x : A | P & Q ]"
+  (at level 0, x at level 99).
+
+(* Print-only variants to work around the Coq pretty-printer K-term kink. *)
+Reserved Notation "[ 'f' 'set' E | x 'in' A & P ]"
+  (at level 0, E, x at level 99,
+   format "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A '/ '  &  P ] ']'").
+Reserved Notation "[ 'f' 'set' E | x : A & P ]"
+  (at level 0, E, x at level 99,
+   format "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A '/ '  &  P ] ']'").
+Reserved Notation "[ 'f' 'set' E | x : A , y 'in' B ]"
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A , '/   '  y  'in'  B ] ']'").
+Reserved Notation "[ 'f' 'set' E | x 'in' A , y : B ]"
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A , '/   '  y  :  B ] ']'").
+Reserved Notation "[ 'f' 'set' E | x : A , y : B ]"
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A , '/   '  y  :  B ] ']'").
+Reserved Notation "[ 'f' 'set' E | x 'in' A , y 'in' B & P ]"
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A , '/   '  y  'in'  B '/ '  &  P ] ']'").
+Reserved Notation "[ 'f' 'set' E | x : A , y 'in' B & P ]"
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A , '/   '  y  'in'  B  &  P ] ']'").
+Reserved Notation "[ 'f' 'set' E | x 'in' A , y : B & P ]"
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A , '/   '  y  :  B  &  P ] ']'").
+Reserved Notation "[ 'f' 'set' E | x : A , y : B & P ]"
+  (at level 0, E, x, y at level 99, format
+   "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A , '/   '  y  :  B  &  P ] ']'").
+
+Reserved Notation "[ 'f' 'setval' x 'in' A ]"
+  (at level 0, x at level 99, format "[ 'f' 'setval'  x  'in'  A ]").
+Reserved Notation "[ 'f' 'setval' x 'in' A | P ]"
+  (at level 0, x at level 99, format "[ 'f' 'setval'  x  'in'  A  |  P ]").
+Reserved Notation "[ 'f' 'setval' x 'in' A | P & Q ]"
+  (at level 0, x at level 99,
+   format "[ 'f' 'setval'  x  'in'  A  |  P  &  Q ]").
+Reserved Notation "[ 'f' 'setval' x : A ]"
+  (at level 0, x at level 99, format "[ 'f' 'setval'  x  :  A ]").
+Reserved Notation "[ 'f' 'setval' x : A | P ]"
+  (at level 0, x at level 99, format "[ 'f' 'setval'  x  :  A  |  P ]").
+Reserved Notation "[ 'f' 'setval' x : A | P & Q ]"
+  (at level 0, x at level 99, format "[ 'f' 'setval'  x  :  A  |  P  &  Q ]").
+
+Reserved Notation "\bigcup_ ( i <- r | P ) F"
+  (at level 41, F at level 41, i, r at level 50,
+           format "'[' \bigcup_ ( i  <-  r  |  P ) '/  '  F ']'").
+Reserved Notation "\bigcup_ ( i <- r ) F"
+  (at level 41, F at level 41, i, r at level 50,
+           format "'[' \bigcup_ ( i  <-  r ) '/  '  F ']'").
+Reserved Notation "\bigcup_ ( i | P ) F"
+  (at level 41, F at level 41, i at level 50,
+           format "'[' \bigcup_ ( i  |  P ) '/  '  F ']'").
+Reserved Notation "\bigcup_ ( i 'in' A | P ) F"
+  (at level 41, F at level 41, i, A at level 50,
+           format "'[' \bigcup_ ( i  'in'  A  |  P ) '/  '  F ']'").
+Reserved Notation "\bigcup_ ( i 'in' A ) F"
+  (at level 41, F at level 41, i, A at level 50,
+           format "'[' \bigcup_ ( i  'in'  A ) '/  '  F ']'").
 
 Reserved Notation "{fmap T }" (at level 0, format "{fmap  T }").
 Reserved Notation "x .[ k <- v ]"
@@ -593,134 +797,97 @@ Notation imfset2 key f p q :=
 Canonical imfset_unlock k := Unlockable (Imfset.imfsetE k).
 Canonical imfset2_unlock k := Unlockable (Imfset.imfset2E k).
 
-Notation "A `=` B" := (A = B :> {fset _})
-  (at level 70, no associativity, only parsing) : fset_scope.
-Notation "A `<>` B" := (A <> B :> {fset _})
-  (at level 70, no associativity, only parsing) : fset_scope.
-Notation "A `==` B" := (A == B :> {fset _})
-  (at level 70, no associativity, only parsing) : fset_scope.
-Notation "A `!=` B" := (A != B :> {fset _})
-  (at level 70, no associativity, only parsing) : fset_scope.
-Notation "A `=P` B" := (A =P B :> {fset _})
-  (at level 70, no associativity, only parsing) : fset_scope.
+Notation "A `=` B" := (A = B :> {fset _}) (only parsing) : fset_scope.
+Notation "A `<>` B" := (A <> B :> {fset _}) (only parsing) : fset_scope.
+Notation "A `==` B" := (A == B :> {fset _}) (only parsing) : fset_scope.
+Notation "A `!=` B" := (A != B :> {fset _}) (only parsing) : fset_scope.
+Notation "A `=P` B" := (A =P B :> {fset _}) (only parsing) : fset_scope.
 
-Notation "f @`[ key ] A" := (Imfset.imfset key f (Phantom _ (mem A)))
-  (at level 24, key at level 0) : fset_scope.
+Notation "f @`[ key ] A" :=
+  (Imfset.imfset key f (Phantom _ (mem A))) : fset_scope.
 Notation "f @2`[ key ] ( A , B )" :=
    (Imfset.imfset2 key f (Phantom _ (mem A)) (Phantom _ (fun x => (mem (B x)))))
-  (at level 24, format "f  @2`[ key ]  ( A ,  B )") : fset_scope.
+  : fset_scope.
 
 Fact imfset_key : unit. Proof. exact: tt. Qed.
 
-Notation "f @` A" := (f @`[imfset_key] A) (at level 24) : fset_scope.
-Notation "f @2` ( A , B )" := (f @2`[imfset_key] (A, B))
-  (at level 24, format "f  @2`  ( A ,  B )") : fset_scope.
+Notation "f @` A" := (f @`[imfset_key] A) : fset_scope.
+Notation "f @2` ( A , B )" := (f @2`[imfset_key] (A, B)) : fset_scope.
 
 (* unary *)
 Notation "[ 'fset' E | x : T 'in' A ]" :=
-  ((fun x : T => E) @` A)
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x 'in' A ]" := [fset E | x : _ in A]
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x : A ]" := [fset E | x : _ in {: A} ]
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset'  x  :  T  'in'  A ]" := [fset (x : T) | x in A]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+  ((fun x : T => E) @` A) (only parsing) : fset_scope.
+Notation "[ 'fset' E | x 'in' A ]" :=
+  [fset E | x : _ in A] (only parsing) : fset_scope.
+Notation "[ 'fset' E | x : A ]" :=
+  [fset E | x : _ in {: A} ] (only parsing) : fset_scope.
+Notation "[ 'fset'  x  :  T  'in'  A ]" :=
+  [fset (x : T) | x in A] (only parsing) : fset_scope.
 Notation "[ 'fset'  x  :  T  'in'  A  |  P ]" :=
-  [fset (x : T) | x in [pred x in A | P]]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' x 'in' A | P ]" := [fset x : _ in A | P]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' x 'in' A ]" := [fset x : _ in A ]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' x : T | P ]" := [fset x in {: T} | P]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' x : T | P & Q ]" := [fset x : T | P && Q]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset'  x  :  T  'in' A  |  P  &  Q ]" := [fset x : T in A | P && Q]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' x 'in' A | P & Q ]" := [fset x in A | P && Q]
-  (at level 0, x at level 99,  only parsing) : fset_scope.
+  [fset (x : T) | x in [pred x in A | P]] (only parsing) : fset_scope.
+Notation "[ 'fset' x 'in' A | P ]" :=
+  [fset x : _ in A | P] (only parsing) : fset_scope.
+Notation "[ 'fset' x 'in' A ]" :=
+  [fset x : _ in A ] (only parsing) : fset_scope.
+Notation "[ 'fset' x : T | P ]" :=
+  [fset x in {: T} | P] (only parsing) : fset_scope.
+Notation "[ 'fset' x : T | P & Q ]" :=
+  [fset x : T | P && Q] (only parsing) : fset_scope.
+Notation "[ 'fset'  x  :  T  'in' A  |  P  &  Q ]" :=
+  [fset x : T in A | P && Q] (only parsing) : fset_scope.
+Notation "[ 'fset' x 'in' A | P & Q ]" :=
+  [fset x in A | P && Q] (only parsing) : fset_scope.
 
 (* binary *)
 Notation "[ 'fset' E | x : T 'in' A , y : T' 'in' B ]" :=
-  ((fun (x : T) (y : T') => E) @2` (A, fun x => B))
-  (at level 0, E, x at level 99, A at level 200,
-   y at level 99, only parsing) : fset_scope.
+  ((fun (x : T) (y : T') => E) @2` (A, fun x => B)) (only parsing) : fset_scope.
 Notation "[ 'fset' E | x 'in' A , y 'in' B ]" :=
-  [fset E | x : _ in A, y : _ in B]
-  (at level 0, E, x at level 99, A at level 200, y at level 99,
-   only parsing) : fset_scope.
+  [fset E | x : _ in A, y : _ in B] (only parsing) : fset_scope.
 
 (* keyed parse only *)
 Notation "[ 'fset[' key ] E | x : T 'in' A ]" :=
-  ((fun x : T => E) @`[key] A)
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset[' key ] E | x 'in' A ]" := [fset[key] E | x : _ in A]
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset[' key ] E | x : A ]" := [fset[key] E | x : _ in {: A} ]
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset[' key ]  x  :  T  'in'  A ]" := [fset[key] (x : T) | x in A]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+  ((fun x : T => E) @`[key] A) (only parsing) : fset_scope.
+Notation "[ 'fset[' key ] E | x 'in' A ]" :=
+  [fset[key] E | x : _ in A] (only parsing) : fset_scope.
+Notation "[ 'fset[' key ] E | x : A ]" :=
+  [fset[key] E | x : _ in {: A} ] (only parsing) : fset_scope.
+Notation "[ 'fset[' key ]  x  :  T  'in'  A ]" :=
+  [fset[key] (x : T) | x in A] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ]  x  :  T  'in'  A  |  P ]" :=
-  [fset[key] (x : T) | x in [pred x in A | P]]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset[' key ] x 'in' A | P ]" := [fset[key] x : _ in A | P]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset[' key ] x 'in' A ]" := [fset[key] x : _ in A ]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset[' key ] x : T | P ]" := [fset[key] x in {: T} | P]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset[' key ] x : T | P & Q ]" := [fset[key] x : T | P && Q]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+  [fset[key] (x : T) | x in [pred x in A | P]] (only parsing) : fset_scope.
+Notation "[ 'fset[' key ] x 'in' A | P ]" :=
+  [fset[key] x : _ in A | P] (only parsing) : fset_scope.
+Notation "[ 'fset[' key ] x 'in' A ]" :=
+  [fset[key] x : _ in A ] (only parsing) : fset_scope.
+Notation "[ 'fset[' key ] x : T | P ]" :=
+  [fset[key] x in {: T} | P] (only parsing) : fset_scope.
+Notation "[ 'fset[' key ] x : T | P & Q ]" :=
+  [fset[key] x : T | P && Q] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ]  x  :  T  'in' A  |  P  &  Q ]" :=
-  [fset[key] x : T in A | P && Q]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset[' key ] x 'in' A | P & Q ]" := [fset[key] x in A | P && Q]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+  [fset[key] x : T in A | P && Q] (only parsing) : fset_scope.
+Notation "[ 'fset[' key ] x 'in' A | P & Q ]" :=
+  [fset[key] x in A | P && Q] (only parsing) : fset_scope.
 
 Notation "[ 'fset[' key ] E | x : T 'in' A , y : T' 'in' B ]" :=
   ((fun (x : T) (y : T') => E) @2` (A, fun x => B))
-  (at level 0, E, x at level 99, A at level 200,
-   y at level 99, only parsing) : fset_scope.
+  (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x 'in' A , y 'in' B ]" :=
-  [fset[key] E | x : _ in A, y : _ in B]
-  (at level 0, E, x at level 99, A at level 200, y at level 99,
-   only parsing) : fset_scope.
+  [fset[key] E | x : _ in A, y : _ in B] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x : A , y : B ]" :=
-  [fset[key] E | x : _ in {: A}, y : _ in {: B}]
-  (at level 0, E, x at level 99, A at level 200, y at level 99,
-   only parsing) : fset_scope.
+  [fset[key] E | x : _ in {: A}, y : _ in {: B}] (only parsing) : fset_scope.
 
 (* printing only *)
-Notation "[ 'f' 'set' E | x 'in' A ]" := [fset[_] E | x in A]
-  (at level 0, E, x at level 99,
-   format "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A ] ']'") : fset_scope.
-Notation "[ 'f' 'set' E | x : A ]" := [fset[_] E | x : A]
-  (at level 0, E, x at level 99,
-   format "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A ] ']'") : fset_scope.
-Notation "[ 'f' 'set' x 'in' A | P ]" := [fset[_] x in A | P]
-  (at level 0, x at level 99,
-   format "[ 'f' 'set'  x  'in'  A  |  P ]") : fset_scope.
-Notation "[ 'f' 'set' x 'in' A ]" := [fset[_] x in A]
-  (at level 0, x at level 99,
-   format "[ 'f' 'set'  x  'in'  A ]") : fset_scope.
-Notation "[ 'f' 'set' x : T | P ]" := [fset[_] x : T | P]
-  (at level 0, x at level 99,
-   format "[ 'f' 'set'  x  :  T  |  P ]") : fset_scope.
-Notation "[ 'f' 'set' x : T | P & Q ]" := [fset[_] x : T | P & Q]
-  (at level 0, x at level 99,
-   format "[ 'f' 'set'  x  :  T  |  P  &  Q ]") : fset_scope.
-Notation "[ 'f' 'set' x 'in' A | P & Q ]" := [fset[_] x in A | P & Q]
-  (at level 0, x at level 99,
-   format "[ 'f' 'set'  x  'in'  A  |  P  &  Q ]") : fset_scope.
+Notation "[ 'f' 'set' E | x 'in' A ]" := [fset[_] E | x in A] : fset_scope.
+Notation "[ 'f' 'set' E | x : A ]" := [fset[_] E | x : A] : fset_scope.
+Notation "[ 'f' 'set' x 'in' A | P ]" := [fset[_] x in A | P] : fset_scope.
+Notation "[ 'f' 'set' x 'in' A ]" := [fset[_] x in A] : fset_scope.
+Notation "[ 'f' 'set' x : T | P ]" := [fset[_] x : T | P] : fset_scope.
+Notation "[ 'f' 'set' x : T | P & Q ]" := [fset[_] x : T | P & Q] : fset_scope.
+Notation "[ 'f' 'set' x 'in' A | P & Q ]" :=
+  [fset[_] x in A | P & Q] : fset_scope.
 (* binary printing only*)
 Notation "[ 'f' 'set' E | x 'in' A , y 'in' B ]" :=
-  [fset[_] E | x in A, y in B]
-  (at level 0, E, x at level 99, A at level 200, y at level 99,
-   format "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A , '/' y  'in'  B ] ']'"
-  ) : fset_scope.
-
+  [fset[_] E | x in A, y in B] : fset_scope.
 
 Section Ops.
 
@@ -754,172 +921,118 @@ Definition fdisjoint A B := (fsetI A B == fset0).
 
 End Ops.
 
-Notation "[ 'fset' a ]" := (fset1 a)
-  (at level 0, a at level 99, format "[ 'fset'  a ]") : fset_scope.
-Notation "[ 'fset' a : T ]" := [fset (a : T)]
-  (at level 0, a at level 99, format "[ 'fset'  a   :  T ]") : fset_scope.
+Notation "[ 'fset' a ]" := (fset1 a) : fset_scope.
+Notation "[ 'fset' a : T ]" := [fset (a : T)] : fset_scope.
 Notation "A `|` B" := (fsetU A B) : fset_scope.
 Notation "a |` A" := ([fset a] `|` A) : fset_scope.
 
 (* This is left-associative due to historical limitations of the .. Notation. *)
-Notation "[ 'fset' a1 ; a2 ; .. ; an ]" := (fsetU .. (a1 |` [fset a2]) .. [fset an])
-  (at level 0, a1 at level 99,
-   format "[ 'fset'  a1 ;  a2 ;  .. ;  an ]") : fset_scope.
+Notation "[ 'fset' a1 ; a2 ; .. ; an ]" :=
+  (fsetU .. (a1 |` [fset a2]) .. [fset an]) : fset_scope.
 Notation "A `&` B" := (fsetI A B) : fset_scope.
 Notation "A `*` B" := (fsetM A B) : fset_scope.
 Notation "A `\` B" := (fsetD A B) : fset_scope.
 Notation "A `\ a" := (A `\` [fset a]) : fset_scope.
 
-Notation "A `<=` B" := (fsubset A B)
-  (at level 70, no associativity) : fset_scope.
-
-Notation "A `<` B" := (fproper A B)
-  (at level 70, no associativity) : fset_scope.
+Notation "A `<=` B" := (fsubset A B) : fset_scope.
+Notation "A `<` B" := (fproper A B) : fset_scope.
 
 Notation "[ 'disjoint' A & B ]" := (fdisjoint A B) : fset_scope.
 
 (* Comprehensions *)
-Notation "[ 'fset' E | x 'in' A & P ]" := [fset E | x in [pred x in A | P]]
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x : A & P ]" := [fset E | x in {: A} & P]
-  (at level 0, E, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x : A , y 'in' B ]" := [fset E | x in {: A}, y in B]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x 'in' A , y : B ]" := [fset E | x in A, y in {: B}]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
-Notation "[ 'fset' E | x : A , y : B ]" := [fset E | x in {: A}, y in {: B}]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+Notation "[ 'fset' E | x 'in' A & P ]" :=
+  [fset E | x in [pred x in A | P]] (only parsing) : fset_scope.
+Notation "[ 'fset' E | x : A & P ]" :=
+  [fset E | x in {: A} & P] (only parsing) : fset_scope.
+Notation "[ 'fset' E | x : A , y 'in' B ]" :=
+  [fset E | x in {: A}, y in B] (only parsing) : fset_scope.
+Notation "[ 'fset' E | x 'in' A , y : B ]" :=
+  [fset E | x in A, y in {: B}] (only parsing) : fset_scope.
+Notation "[ 'fset' E | x : A , y : B ]" :=
+  [fset E | x in {: A}, y in {: B}] (only parsing) : fset_scope.
 Notation "[ 'fset' E | x 'in' A , y 'in' B & P ]" :=
-  [fset E | x in A, y in [pred y in B | P]]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset E | x in A, y in [pred y in B | P]] (only parsing) : fset_scope.
 Notation "[ 'fset' E | x : A , y 'in' B & P ]" :=
-  [fset E | x in {: A}, y in B & P]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset E | x in {: A}, y in B & P] (only parsing) : fset_scope.
 Notation "[ 'fset' E | x 'in' A , y : B & P ]" :=
-  [fset E | x in A, y in {: B} & P]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset E | x in A, y in {: B} & P] (only parsing) : fset_scope.
 Notation "[ 'fset' E | x : A , y : B & P ]" :=
-  [fset E | x in {: A}, y in {: B} & P]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset E | x in {: A}, y in {: B} & P] (only parsing) : fset_scope.
 
-Notation "[ 'fsetval' x 'in' A ]" := [fset val x | x in A]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fsetval' x 'in' A | P ]" := [fset val x | x in A & P]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fsetval' x 'in' A | P & Q ]" := [fsetval x in A | (P && Q)]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fsetval' x : A ]" := [fset val x | x in {: A}]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fsetval' x : A | P ]" := [fset val x | x in {: A} & P]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fsetval' x : A | P & Q ]" := [fsetval x in {: A} | (P && Q)]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+Notation "[ 'fsetval' x 'in' A ]" :=
+  [fset val x | x in A] (only parsing) : fset_scope.
+Notation "[ 'fsetval' x 'in' A | P ]" :=
+  [fset val x | x in A & P] (only parsing) : fset_scope.
+Notation "[ 'fsetval' x 'in' A | P & Q ]" :=
+  [fsetval x in A | (P && Q)] (only parsing) : fset_scope.
+Notation "[ 'fsetval' x : A ]" :=
+  [fset val x | x in {: A}] (only parsing) : fset_scope.
+Notation "[ 'fsetval' x : A | P ]" :=
+  [fset val x | x in {: A} & P] (only parsing) : fset_scope.
+Notation "[ 'fsetval' x : A | P & Q ]" :=
+  [fsetval x in {: A} | (P && Q)] (only parsing) : fset_scope.
 
 (* keyed parse only *)
 Notation "[ 'fset[' key ] E | x 'in' A & P ]" :=
-  [fset[key] E | x in [pred x in A | P]]
-  (at level 0, E, x at level 99, only parsing).
+  [fset[key] E | x in [pred x in A | P]] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x : A & P ]" :=
-  [fset[key] E | x in {: A} & P]
-  (at level 0, E, x at level 99, only parsing).
+  [fset[key] E | x in {: A} & P] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x : A , y 'in' B ]" :=
-  [fset[key] E | x in {: A}, y in B]
-  (at level 0, E, x, y at level 99, only parsing).
+  [fset[key] E | x in {: A}, y in B] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x 'in' A , y : B ]" :=
-  [fset[key] E | x in A, y in {: B}]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset[key] E | x in A, y in {: B}] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x : A , y : B ]" :=
-  [fset[key] E | x in {: A}, y in {: B}]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset[key] E | x in {: A}, y in {: B}] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x 'in' A , y 'in' B & P ]" :=
-  [fset[key] E | x in A, y in [pred y in B | P]]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset[key] E | x in A, y in [pred y in B | P]] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x : A , y 'in' B & P ]" :=
-  [fset[key] E | x in {: A}, y in B & P]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset[key] E | x in {: A}, y in B & P] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x 'in' A , y : B & P ]" :=
-  [fset[key] E | x in A, y in {: B} & P]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset[key] E | x in A, y in {: B} & P] (only parsing) : fset_scope.
 Notation "[ 'fset[' key ] E | x : A , y : B & P ]" :=
-  [fset[key] E | x in {: A}, y in {: B} & P]
-  (at level 0, E, x, y at level 99, only parsing) : fset_scope.
+  [fset[key] E | x in {: A}, y in {: B} & P] (only parsing) : fset_scope.
 
-Notation "[ 'fsetval[' key ] x 'in' A ]" := [fset[key] val x | x in A]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fsetval[' key ] x 'in' A | P ]" := [fset[key] val x | x in A & P]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+Notation "[ 'fsetval[' key ] x 'in' A ]" :=
+  [fset[key] val x | x in A] (only parsing) : fset_scope.
+Notation "[ 'fsetval[' key ] x 'in' A | P ]" :=
+  [fset[key] val x | x in A & P] (only parsing) : fset_scope.
 Notation "[ 'fsetval[' key ] x 'in' A | P & Q ]" :=
-  [fsetval[key] x in A | (P && Q)]
-  (at level 0, x at level 99, only parsing) : fset_scope.
-Notation "[ 'fsetval[' key ] x : A ]" := [fset[key] val x | x in {: A}]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+  [fsetval[key] x in A | (P && Q)] (only parsing) : fset_scope.
+Notation "[ 'fsetval[' key ] x : A ]" :=
+  [fset[key] val x | x in {: A}] (only parsing) : fset_scope.
 Notation "[ 'fsetval[' key ] x : A | P ]" :=
-  [fset[key] val x | x in {: A} & P]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+  [fset[key] val x | x in {: A} & P] (only parsing) : fset_scope.
 Notation "[ 'fsetval[' key ] x : A | P & Q ]" :=
-  [fsetval[key] x in {: A} | (P && Q)]
-  (at level 0, x at level 99, only parsing) : fset_scope.
+  [fsetval[key] x in {: A} | (P && Q)] (only parsing) : fset_scope.
 
 (* Print-only variants to work around the Coq pretty-printer K-term kink. *)
-Notation "[ 'f' 'set' E | x 'in' A & P ]" := [fset[_] E | x in A & P]
-  (at level 0, E, x at level 99,
-   format "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A '/ '  &  P ] ']'"
-  ) : fset_scope.
-Notation "[ 'f' 'set' E | x : A & P ]" := [fset[_] E | x : A & P]
-  (at level 0, E, x at level 99,
-   format "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A '/ '  &  P ] ']'") : fset_scope.
-Notation "[ 'f' 'set' E | x : A , y 'in' B ]" := [fset[_] E | x : A, y in B]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A , '/   '  y  'in'  B ] ']'"
-  ) : fset_scope.
-Notation "[ 'f' 'set' E | x 'in' A , y : B ]" := [fset[_] E | x in A, y : B]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A , '/   '  y  :  B ] ']'"
-  ) : fset_scope.
+  Notation "[ 'f' 'set' E | x 'in' A & P ]" :=
+  [fset[_] E | x in A & P] : fset_scope.
+Notation "[ 'f' 'set' E | x : A & P ]" := [fset[_] E | x : A & P] : fset_scope.
+Notation "[ 'f' 'set' E | x : A , y 'in' B ]" :=
+  [fset[_] E | x : A, y in B] : fset_scope.
+Notation "[ 'f' 'set' E | x 'in' A , y : B ]" :=
+  [fset[_] E | x in A, y : B] : fset_scope.
 Notation "[ 'f' 'set' E | x : A , y : B ]" :=
-  [fset[_] E | x : A, y : B]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A , '/   '  y  :  B ] ']'"
-  ) : fset_scope.
+  [fset[_] E | x : A, y : B] : fset_scope.
 Notation "[ 'f' 'set' E | x 'in' A , y 'in' B & P ]" :=
-  [fset[_] E | x in A, y in B & P]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A , '/   '  y  'in'  B '/ '  &  P ] ']'"
-  ) : fset_scope.
+  [fset[_] E | x in A, y in B & P] : fset_scope.
 Notation "[ 'f' 'set' E | x : A , y 'in' B & P ]" :=
-  [fset[_] E | x : A, y in B & P]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A , '/   '  y  'in'  B  &  P ] ']'"
-  ) : fset_scope.
+  [fset[_] E | x : A, y in B & P] : fset_scope.
 Notation "[ 'f' 'set' E | x 'in' A , y : B & P ]" :=
-  [fset[_] E | x in A, y : B & P]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'f' 'set'  E '/ '  |  x  'in'  A , '/   '  y  :  B  &  P ] ']'"
-  ) : fset_scope.
+  [fset[_] E | x in A, y : B & P] : fset_scope.
 Notation "[ 'f' 'set' E | x : A , y : B & P ]" :=
-  [fset[_] E | x : A, y : B & P]
-  (at level 0, E, x, y at level 99, format
-   "[ '[hv' 'f' 'set'  E '/ '  |  x  :  A , '/   '  y  :  B  &  P ] ']'"
-  ) : fset_scope.
+  [fset[_] E | x : A, y : B & P] : fset_scope.
 
-Notation "[ 'f' 'setval' x 'in' A ]" := [fset[_] val x | x in A]
-  (at level 0, x at level 99,
-   format "[ 'f' 'setval'  x  'in'  A ]") : fset_scope.
-Notation "[ 'f' 'setval' x 'in' A | P ]" := [fset[_] val x | x in A & P]
-  (at level 0, x at level 99,
-   format "[ 'f' 'setval'  x  'in'  A  |  P ]") : fset_scope.
-Notation "[ 'f' 'setval' x 'in' A | P & Q ]" := [fsetval[_] x in A | (P && Q)]
-  (at level 0, x at level 99,
-   format "[ 'f' 'setval'  x  'in'  A  |  P  &  Q ]") : fset_scope.
-Notation "[ 'f' 'setval' x : A ]" := [fsetval[_] x : A]
-  (at level 0, x at level 99,
-   format "[ 'f' 'setval'  x  :  A ]") : fset_scope.
-Notation "[ 'f' 'setval' x : A | P ]" := [fsetval[_] x : A | P]
-  (at level 0, x at level 99,
-   format "[ 'f' 'setval'  x  :  A  |  P ]") : fset_scope.
-Notation "[ 'f' 'setval' x : A | P & Q ]" := [fsetval[_] x : A | (P && Q)]
-  (at level 0, x at level 99,
-   format "[ 'f' 'setval'  x  :  A  |  P  &  Q ]") : fset_scope.
+Notation "[ 'f' 'setval' x 'in' A ]" := [fset[_] val x | x in A] : fset_scope.
+Notation "[ 'f' 'setval' x 'in' A | P ]" :=
+  [fset[_] val x | x in A & P] : fset_scope.
+Notation "[ 'f' 'setval' x 'in' A | P & Q ]" :=
+  [fsetval[_] x in A | (P && Q)] : fset_scope.
+Notation "[ 'f' 'setval' x : A ]" := [fsetval[_] x : A] : fset_scope.
+Notation "[ 'f' 'setval' x : A | P ]" := [fsetval[_] x : A | P] : fset_scope.
+Notation "[ 'f' 'setval' x : A | P & Q ]" :=
+  [fsetval[_] x : A | (P && Q)] : fset_scope.
 
 Section imfset.
 
