@@ -3489,7 +3489,7 @@ Lemma join_min_seq T (r : seq T) (P : pred T) (F : T -> L) (x : T) (l : L) :
   x \in r -> P x -> l <= F x -> l <= \join_(x <- r | P x) F x.
 Proof. by move=> /seq_tnthP[j->] Px; rewrite big_tnth; apply: join_min. Qed.
 
-Lemma joinsP_seq T (r : seq T) (P : {pred T}) (F : T -> L) (u : L) :
+Lemma joinsP_seq T (r : seq T) (P : pred T) (F : T -> L) (u : L) :
   reflect (forall x : T, x \in r -> P x -> F x <= u)
           (\join_(x <- r | P x) F x <= u).
 Proof.
@@ -3586,27 +3586,27 @@ Canonical meet_comoid := Monoid.ComLaw (@meetC _ _).
 Canonical meet_muloid := Monoid.MulLaw (@meet0x _ L) (@meetx0 _ _).
 Canonical join_muloid := Monoid.MulLaw join1x joinx1.
 
-Lemma meets_inf I (j : I) (P : {pred I}) (F : I -> L) :
+Lemma meets_inf I (j : I) (P : pred I) (F : I -> L) :
    P j -> \meet_(i | P i) F i <= F j.
 Proof. exact: (@join_sup _ [tbLatticeType of L^d]). Qed.
 
-Lemma meets_max I (j : I) (u : L) (P : {pred I}) (F : I -> L) :
+Lemma meets_max I (j : I) (u : L) (P : pred I) (F : I -> L) :
    P j -> F j <= u -> \meet_(i | P i) F i <= u.
 Proof. exact: (@join_min _ [tbLatticeType of L^d]). Qed.
 
-Lemma meetsP I (l : L) (P : {pred I}) (F : I -> L) :
+Lemma meetsP I (l : L) (P : pred I) (F : I -> L) :
    reflect (forall i : I, P i -> l <= F i) (l <= \meet_(i | P i) F i).
 Proof. exact: (@joinsP _ [tbLatticeType of L^d]). Qed.
 
-Lemma meet_inf_seq T (r : seq T) (P : {pred T}) (F : T -> L) (x : T) :
+Lemma meet_inf_seq T (r : seq T) (P : pred T) (F : T -> L) (x : T) :
   x \in r -> P x -> \meet_(i <- r | P i) F i <= F x.
 Proof. exact: (@join_sup_seq _ [tbLatticeType of L^d]). Qed.
 
-Lemma meet_max_seq T (r : seq T) (P : {pred T}) (F : T -> L) (x : T) (u : L) :
+Lemma meet_max_seq T (r : seq T) (P : pred T) (F : T -> L) (x : T) (u : L) :
   x \in r -> P x -> F x <= u -> \meet_(x <- r | P x) F x <= u.
 Proof. exact: (@join_min_seq _ [tbLatticeType of L^d]). Qed.
 
-Lemma meetsP_seq T (r : seq T) (P : {pred T}) (F : T -> L) (l : L) :
+Lemma meetsP_seq T (r : seq T) (P : pred T) (F : T -> L) (l : L) :
   reflect (forall x : T, x \in r -> P x -> l <= F x)
           (l <= \meet_(x <- r | P x) F x).
 Proof. exact: (@joinsP_seq _ [tbLatticeType of L^d]). Qed.
@@ -3658,7 +3658,7 @@ move=> dxt dyz; apply/idP/andP; last by case=> ? ?; exact: leU2.
 by move=> lexyzt; rewrite (leU2l_le _ lexyzt) // (leU2r_le _ lexyzt).
 Qed.
 
-Lemma joins_disjoint I (d : L) (P : {pred I}) (F : I -> L) :
+Lemma joins_disjoint I (d : L) (P : pred I) (F : I -> L) :
    (forall i : I, P i -> d `&` F i = 0) -> d `&` \join_(i | P i) F i = 0.
 Proof.
 move=> d_Fi_disj; have : \big[andb/true]_(i | P i) (d `&` F i == 0).
@@ -4311,7 +4311,7 @@ Record of_ := Build {
 Variables (m : of_).
 
 Fact lt_def x y : lt m x y = (y != x) && le m x y.
-Proof. by rewrite le_def; case: eqVneq => //= ->; rewrite lt_irr. Qed.
+Proof. by rewrite le_def (eq_sym y); case: eqP => //= ->; rewrite lt_irr. Qed.
 
 Fact meet_def_le x y : meet m x y = if le m x y then x else y.
 Proof. by rewrite meet_def le_def; case: eqP => //= ->; rewrite lt_irr. Qed.
@@ -4321,18 +4321,21 @@ Proof. by rewrite join_def le_def; case: eqP => //= ->; rewrite lt_irr. Qed.
 
 Fact le_anti : antisymmetric (le m).
 Proof.
-move=> x y; rewrite !le_def; case: eqVneq => //= _ /andP [] hxy.
+move=> x y; rewrite !le_def (eq_sym y); case: eqP => //= _ /andP [] hxy.
 by move/(lt_trans hxy); rewrite lt_irr.
 Qed.
 
 Fact le_trans : transitive (le m).
 Proof.
-move=> y x z; rewrite !le_def; case: eqVneq => [->|_] //=.
-by case: eqVneq => [-> ->|_ hxy /(lt_trans hxy) ->]; rewrite orbT.
+move=> y x z; rewrite !le_def; case: eqP => [->|_] //=.
+by case: eqP => [-> ->|_ hxy /(lt_trans hxy) ->]; rewrite orbT.
 Qed.
 
 Fact le_total : total (le m).
-Proof. by move=> x y; rewrite !le_def; case: eqVneq => //; exact: lt_total. Qed.
+Proof.
+move=> x y; rewrite !le_def (eq_sym y).
+by case: (altP eqP); last exact: lt_total.
+Qed.
 
 Definition orderMixin : leOrderMixin T :=
   @LeOrderMixin _ (le m) (lt m) (meet m) (join m)
