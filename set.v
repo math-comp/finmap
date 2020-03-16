@@ -186,6 +186,8 @@ Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_ele
 Definition eqType := @Equality.Pack (cT X) (xclass X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X).
+Definition latticeType := @Order.Lattice.Pack ddisp (cT X) (xclass X).
+Definition bLatticeType := @Order.BLattice.Pack ddisp (cT X) (xclass X).
 Definition distrLatticeType := @Order.DistrLattice.Pack ddisp (cT X) (xclass X).
 Definition bDistrLatticeType := @Order.BDistrLattice.Pack ddisp (cT X) (xclass X).
 Definition cbDistrLatticeType := @Order.CBDistrLattice.Pack ddisp (cT X) (xclass X).
@@ -198,6 +200,8 @@ Coercion sort       : type >-> Funclass.
 Coercion eqType     : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
+Coercion latticeType : type >-> Order.Lattice.type.
+Coercion bLatticeType : type >-> Order.BLattice.type.
 Coercion distrLatticeType : type >-> Order.DistrLattice.type.
 Coercion bDistrLatticeType : type >-> Order.BDistrLattice.type.
 Coercion cbDistrLatticeType : type >-> Order.CBDistrLattice.type.
@@ -205,6 +209,8 @@ Coercion cbDistrLatticeType : type >-> Order.CBDistrLattice.type.
 Canonical eqType.
 Canonical choiceType.
 Canonical porderType.
+Canonical latticeType.
+Canonical bLatticeType.
 Canonical distrLatticeType.
 Canonical bDistrLatticeType.
 Canonical cbDistrLatticeType.
@@ -953,6 +959,8 @@ Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_ele
 Definition eqType := @Equality.Pack (cT X) (xclass X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X).
+Definition latticeType := @Order.Lattice.Pack ddisp (cT X) (xclass X).
+Definition bLatticeType := @Order.BLattice.Pack ddisp (cT X) (xclass X).
 Definition distrLatticeType := @Order.DistrLattice.Pack ddisp (cT X) (xclass X).
 Definition bDistrLatticeType := @Order.BDistrLattice.Pack ddisp (cT X) (xclass X).
 Definition cbDistrLatticeType := @Order.CBDistrLattice.Pack ddisp (cT X) (xclass X).
@@ -969,6 +977,8 @@ Coercion sort      : type >-> Funclass.
 Coercion eqType    : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
+Coercion latticeType : type >-> Order.Lattice.type.
+Coercion bLatticeType : type >-> Order.BLattice.type.
 Coercion distrLatticeType : type >-> Order.DistrLattice.type.
 Coercion bDistrLatticeType : type >-> Order.BDistrLattice.type.
 Coercion cbDistrLatticeType : type >-> Order.CBDistrLattice.type.
@@ -978,6 +988,8 @@ Coercion semisetType : type >-> Semiset.type.
 Canonical eqType.
 Canonical choiceType.
 Canonical porderType.
+Canonical latticeType.
+Canonical bLatticeType.
 Canonical distrLatticeType.
 Canonical bDistrLatticeType.
 Canonical cbDistrLatticeType.
