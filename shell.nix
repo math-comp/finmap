@@ -3,7 +3,7 @@
   url = "https://github.com/NixOS/nixpkgs/archive/05f0934825c2a0750d4888c4735f9420c906b388.tar.gz";
   sha256 = "1g8c2w0661qn89ajp44znmwfmghbbiygvdzq0rzlvlpdiz28v6gy";
 }),
-coq-version ? "8.10",
+coq-version ? "8.11",
 mc ? "1.10.0",
 print-env ? false
 }:
@@ -16,6 +16,7 @@ let
               "8.8" = coqPackages_8_8;
               "8.9" = coqPackages_8_9;
               "8.10" = coqPackages_8_10;
+              "8.11" = coqPackages_8_11;
           }."${coq-version}");
         in
         coqPackages.overrideScope' (self: super: {
