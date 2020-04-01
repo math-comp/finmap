@@ -14,17 +14,16 @@ env:
   - NJOBS="2"
   - CONTRIB_NAME="finmap"
   matrix:
-  - DOCKERIMAGE="mathcomp/mathcomp:1.8.0-coq-8.7"
-  - DOCKERIMAGE="mathcomp/mathcomp:1.8.0-coq-8.8"
-  - DOCKERIMAGE="mathcomp/mathcomp:1.8.0-coq-8.9"
   - DOCKERIMAGE="mathcomp/mathcomp:1.9.0-coq-8.7"
   - DOCKERIMAGE="mathcomp/mathcomp:1.9.0-coq-8.8"
   - DOCKERIMAGE="mathcomp/mathcomp:1.9.0-coq-8.9"
   - DOCKERIMAGE="mathcomp/mathcomp:1.9.0-coq-8.10"
+  - DOCKERIMAGE="mathcomp/mathcomp:1.9.0-coq-8.11"
   - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.7"
   - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.8"
   - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.9"
-# - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.10"
+  - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.10"
+  - DOCKERIMAGE="mathcomp/mathcomp-dev:coq-8.11"
 
 install: |
   # Prepare the COQ container
