@@ -410,18 +410,18 @@ Variable (K : choiceType).
 Implicit Types (k : K) (ks : seq K).
 Definition f (s : seq K) := choose (perm_eq (undup s)) (undup s).
 Fact perm s : perm_eq (f s) (undup s).
-Proof. by rewrite perm_eq_sym chooseP. Qed.
+Proof. by rewrite perm_sym chooseP. Qed.
 Fact uniq s : uniq (f s).
-Proof. by rewrite (perm_eq_uniq (perm _)) undup_uniq. Qed.
+Proof. by rewrite (perm_uniq (perm _)) undup_uniq. Qed.
 Fact E (s : seq K) : f s =i s.
-Proof. by move=> x; rewrite (perm_eq_mem (perm _)) mem_undup. Qed.
+Proof. by move=> x; rewrite (perm_mem (perm _)) mem_undup. Qed.
 Lemma eq (s s' : seq K) : s =i s' <-> f s = f s'.
 Proof.
 split=> [eq_ss'|eq_ss' k]; last by rewrite -E eq_ss' E.
 rewrite /f; have peq_ss' : perm_eq (undup s) (undup s').
-  by apply: uniq_perm_eq; rewrite ?undup_uniq // => x; rewrite !mem_undup.
+  by apply: uniq_perm; rewrite ?undup_uniq // => x; rewrite !mem_undup.
 rewrite (@choose_id _ _ _ (undup s')) //=; apply: eq_choose => x /=.
-by apply: sym_left_transitive; [exact: perm_eq_sym | exact: (@perm_eq_trans)|].
+by apply: sym_left_transitive; [exact: perm_sym | exact: (@perm_trans)|].
 Qed.
 End SortKeys.
 End SortKeys.
@@ -472,7 +472,7 @@ by apply/eq_sort_keys => x; rewrite -sort_keysE eq_ks_ks' sort_keysE.
 Qed.
 
 Lemma size_sort_keys ks : size (sort_keys ks) = size (undup ks).
-Proof. exact: perm_eq_size. Qed.
+Proof. exact: perm_size. Qed.
 
 End ChoiceKeys.
 Arguments eq_sort_keys {K s s'}.
@@ -1115,7 +1115,7 @@ Lemma enum_imfset2  (T1 : choiceType) (T2 : T1 -> choiceType)
            [seq f x y | x <- enum_finmem p1, y <- enum_finmem (p2 x)].
 Proof.
 move=> f_inj; rewrite unlock.
-apply: uniq_perm_eq => [||i]; rewrite ?seq_fset_uniq ?seq_fsetE //.
+apply: uniq_perm => [||i]; rewrite ?seq_fset_uniq ?seq_fsetE //.
 rewrite allpairs_uniq_dep ?enum_finmem_uniq//.
   by move=> x; rewrite enum_finmem_uniq.
 move=> t0 t0' /allpairsPdep[t1 [t2]]; rewrite !enum_finmemE => -[tp1 tp2 ->/=].
@@ -2127,7 +2127,7 @@ Proof. by rewrite enumT unlock. Qed.
 Lemma enum_fset1 (T : choiceType) (x : T) :
   enum [finType of [fset x]] = [:: [`fset11 x]].
 Proof.
-apply/perm_eq_small=> //; apply/uniq_perm_eq => //.
+apply/perm_small_eq=> //; apply/uniq_perm => //.
   by apply/enum_uniq.
 case=> [y hy]; rewrite mem_seq1 mem_enum /in_mem /=.
 by rewrite eqE /=; rewrite in_fset1 in hy.
@@ -2266,7 +2266,7 @@ Proof. by rewrite big_seq_fsetE big_fset1. Qed.
 
 End BigFSet.
 
-Notation eq_big_imfset := (eq_big_perm _ (enum_imfset _ _)).
+Notation eq_big_imfset := (perm_big _ (enum_imfset _ _)).
 
 Section BigComFSet.
 Variable (R : Type) (idx : R) (op : Monoid.com_law idx).
@@ -2360,7 +2360,7 @@ End BigComFSet.
 Arguments big_fsetD1 {R idx op I} a [A F].
 
 
-Notation eq_big_imfset2 := (eq_big_perm _ (enum_imfset2 _ _)).
+Notation eq_big_imfset2 := (perm_big _ (enum_imfset2 _ _)).
 
 Section BigComImfset2.
 Variables (R : Type) (idx : R) (op : Monoid.com_law idx)

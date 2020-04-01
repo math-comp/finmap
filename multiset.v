@@ -230,7 +230,7 @@ Qed.
 
 Lemma perm_undup_mset A : perm_eq (undup A) (finsupp A).
 Proof.
-apply: uniq_perm_eq; rewrite ?undup_uniq // => a.
+apply: uniq_perm; rewrite ?undup_uniq // => a.
 by rewrite mem_undup msuppE.
 Qed.
 
@@ -242,7 +242,7 @@ Lemma big_mset X P F :
   \big[op/idx]_(i <- X | P i) F i =
   \big[op/idx]_(i <- finsupp X | P i) iterop (X i) op (F i) idx.
 Proof.
-rewrite [in RHS](eq_big_perm (undup X)) 1?perm_eq_sym ?perm_undup_mset//.
+rewrite [in RHS](perm_big (undup X)) 1?perm_sym ?perm_undup_mset//.
 rewrite -[in LHS]big_undup_iterop_count; apply: eq_bigr => i _.
 by rewrite count_mem_mset.
 Qed.
@@ -271,7 +271,7 @@ Proof. by apply/msetP=> a; rewrite mset_seqE count_mem_mset. Qed.
 
 Lemma eq_seq_msetP s s' : reflect (seq_mset s = seq_mset s') (perm_eq s s').
 Proof.
-apply: (iffP idP) => [/perm_eqP perm_ss'|eq_ss'].
+apply: (iffP idP) => [/permP perm_ss'|eq_ss'].
   by apply/msetP => a; rewrite !mset_seqE perm_ss'.
 by apply/allP => a _ /=; rewrite -!mset_seqE eq_ss'.
 Qed.

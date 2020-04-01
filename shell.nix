@@ -1,10 +1,10 @@
 {withEmacs ? false,
  nixpkgs ? (fetchTarball {
-  url = "https://github.com/NixOS/nixpkgs/archive/650a295621b27c4ebe0fa64a63fd25323e64deb3.tar.gz";
-  sha256 = "0rxjkfiq53ibz0rzggvnp341b6kgzgfr9x6q07m2my7ijlirs2da";
+  url = "https://github.com/NixOS/nixpkgs/archive/05f0934825c2a0750d4888c4735f9420c906b388.tar.gz";
+  sha256 = "1g8c2w0661qn89ajp44znmwfmghbbiygvdzq0rzlvlpdiz28v6gy";
 }),
-coq-version ? "8.9",
-mc ? "1.8.0",
+coq-version ? "8.11",
+mc ? "1.10.0",
 print-env ? false
 }:
 let
@@ -16,6 +16,7 @@ let
               "8.8" = coqPackages_8_8;
               "8.9" = coqPackages_8_9;
               "8.10" = coqPackages_8_10;
+              "8.11" = coqPackages_8_11;
           }."${coq-version}");
         in
         coqPackages.overrideScope' (self: super: {
