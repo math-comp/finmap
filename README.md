@@ -4,7 +4,9 @@
 
 ## AUTHORS
 
-Cyril Cohen, Kazuhiko Sakaguchi
+Cyril Cohen,
+Kazuhiko Sakaguchi (for the order library now moved to the main math-comp repository)
+and contributions from various people https://github.com/math-comp/finmap/graphs/contributors
 
 # RELATED WORK
 
