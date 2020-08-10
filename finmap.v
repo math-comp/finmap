@@ -3755,6 +3755,136 @@ Proof. by rewrite finsupp0 inE. Qed.
 
 End FsfunTheory.
 
+Section FsfunSet.
+Variables (K : choiceType) (V : eqType) (default : K -> V).
+
+Definition setfs_fmap (fm : {fmap K -> V}) (k : K) (v : V) : {fmap K -> V} :=
+if v == default k then if k \in fm then fm.[~ k] else fm
+else fm.[k <- v].
+
+Lemma setfs_fmap_neq_default (fs: {fsfun K -> V for default})
+ (k : K) (v : V) :
+ [forall k0, (setfs_fmap (fmap_of_fsfun fs) k v) k0 != default (val k0)].
+Proof.
+case: fs => fs /=; move/forallP => neq_default.
+apply/forallP; rewrite /= /setfs_fmap.
+case eq_v_default: (v == default k).
+  case k_in_fs: (k \in fs) => //; case => k' k'_in_fs.
+  move: (k'_in_fs); rewrite mem_remf1 in k'_in_fs.
+  move/andP: k'_in_fs => [k_neq_k' k'_in_fs].
+  move => k'_in_fs'; move: (neq_default (FSetSub k'_in_fs)).
+  rewrite /= => k'_neq_default.
+  apply/eqP => eq_default; case/eqP: k'_neq_default.
+  rewrite -eq_default.
+  suff Hsuff: Some fs.[k'_in_fs] = Some (fs.[~ k] [` k'_in_fs']).
+    by case: Hsuff.
+  by rewrite -2!in_fnd fnd_rem1 k_neq_k'.
+case => k'; case eq_k'_k: (k' == k).
+  move => k'_domf; rewrite ffunE /= eq_k'_k.
+  move/eqP: eq_k'_k k'_domf =>-> {k'} k'_domf.
+  by move/negP/negP: eq_v_default.
+move => k'_domf; move: (k'_domf).
+rewrite in_fsetU in_fset1 in k'_domf.
+case/orP: k'_domf; first by rewrite eq_k'_k.
+move => k'_domf; move: (neq_default (FSetSub k'_domf)).
+rewrite /= => k'_domf_neq_default.
+by move => k'_domf'; rewrite ffunE /= eq_k'_k in_fnd.
+Qed.
+
+Definition setfs (fs: {fsfun K -> V for default})
+ (k : K) (v : V) : {fsfun K -> V for default} :=
+@Fsfun K V default (setfs_fmap (fmap_of_fsfun fs) k v) (setfs_fmap_neq_default _ _ _).
+
+Local Arguments Fsfun : clear implicits.
+
+Lemma getfs_set (fs: {fsfun K -> V for default}) (k : K) (v : V) :
+ setfs fs k v k = v.
+Proof.
+case: fs => fm /=; rewrite /setfs /= => i.
+move: (setfs_fmap_neq_default _ _ _) => /=.
+rewrite /setfs_fmap /=.
+case eq_v_default: (v == default k); first case k_fm: (k \in fm).
+- move => k_neq_default.
+  move/eqP: eq_v_default =>->.
+  rewrite /fun_of_fsfun /= not_fnd //=.
+  rewrite inE /= in_fsetE /= inE /=.
+  apply/negP => k_domf; move/andP: k_domf => [k_domf k_domf_rem].
+  move: k_domf_rem; rewrite in_fsetD inE /=.
+  move/andP => [k_neq k_domf'].
+  by move/eqP: k_neq.
+- move => neq_default.
+  move/eqP: eq_v_default =>->.
+  rewrite /fun_of_fsfun /fmap_of_fsfun /= not_fnd //=.
+  by rewrite k_fm.
+- move => neq_default; rewrite /fun_of_fsfun in_fnd.
+    by rewrite inE /=; apply/orP; left; rewrite in_fset1.
+  move => k_domf.
+  rewrite ffunE /=.
+  case eq_k: (k == k) => //.
+  by move/eqP: eq_k.
+Qed.
+
+Lemma setfs_get (fs: {fsfun K -> V for default}) (k : K) :
+ setfs fs k (fs k) = fs.
+Proof.
+case: fs => fm Hfm; apply/fsfunP => k0.
+rewrite /setfs /= /setfs_fmap /= /fun_of_fsfun /=.
+case k_fm: (k \in fm).
+  rewrite (in_fnd k_fm) /=; move/forallP: Hfm => neq_default.
+  move: (neq_default (FSetSub k_fm)) => {neq_default}.
+  rewrite /=; case Heqd: (_ == _) => // _.
+  case k0_fm: (k0 \in fm).
+    rewrite fnd_set (in_fnd k0_fm).
+    case k0_eq_k: (k0 == k) => //=.
+    move: (k_fm) (k0_fm).
+    move/eqP: k0_eq_k =>-> k_fm0 k0_fm0.
+    exact: eq_getf.
+  rewrite fnd_set; case k0_eq_k: (_ == _) => //.
+  move/eqP: k0_eq_k =>->.
+  by rewrite in_fnd.
+move/negP/negP: k_fm => k_fm.
+rewrite (not_fnd k_fm).
+by case Hd: (_ == _) => //; move/eqP: Hd.
+Qed.
+
+Lemma setfsNK (fs: {fsfun K -> V for default}) (k k' : K) (v : V) :
+ setfs fs k v k' = if k' == k then v else fs k'.
+Proof.
+case k'_eq_k: (k' == k).
+  by move/eqP: k'_eq_k =>->; rewrite getfs_set.
+case: fs => fm /=; rewrite /setfs /= => i.
+move: (setfs_fmap_neq_default _ _ _) => /=.
+rewrite /setfs_fmap /=.
+case v_eq_default: (v == default k); first case Hkk: (k \in fm).
+- move => neq_default.
+  rewrite /fun_of_fsfun /fmap_of_fsfun /=.
+  case k'_fm: (k' \in fm).
+    rewrite (in_fnd k'_fm) /= in_fnd /=.
+      by rewrite inE /= inE in_fsetD1 k'_fm k'_eq_k.
+    move => k'_fm'; set fm' := [ffun x => _].
+    suff Hsuff: Some fm'.[k'_fm'] = Some (fm.[k'_fm]).
+      by case: Hsuff.
+    by rewrite -2!in_fnd fnd_rem1 k'_eq_k.
+  move/negP/negP: k'_fm => k'_fm.
+  rewrite (not_fnd k'_fm) /= not_fnd //= /finmap_of_finfun.
+  rewrite inE /= in_fsetE /= inE in_fsetD1 /=.
+  apply/andP; move => [k'_domf /andP [k'_neq k'_domf']].
+  by move: k'_fm; rewrite k'_domf.
+- by move => ?.
+- move => neq_default.
+  rewrite /fun_of_fsfun /fmap_of_fsfun /=.
+  case k'_fm: (k' \in fm).
+    rewrite (in_fnd k'_fm) /= in_fnd /=.
+      by rewrite in_fset1U k'_fm orbT.
+    move => k'_k_fm.
+    by rewrite ffunE /= k'_eq_k (in_fnd k'_fm).
+  move/negP/negP: k'_fm => k'_fm.
+  rewrite (not_fnd k'_fm) /= not_fnd //=.
+  by rewrite inE /= in_fset1U /= k'_eq_k.
+Qed.
+
+End FsfunSet.
+
 Module Import FsfunInE2.
 Definition inE := (inE, in_finsupp0).
 End FsfunInE2.
