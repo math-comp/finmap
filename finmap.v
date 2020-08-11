@@ -3760,13 +3760,31 @@ Variables (K : choiceType) (V : eqType) (default : K -> V).
 Implicit Types (f : {fsfun K -> V for default}) (x z : K) (y : V).
 
 Definition fun_delta_key (d : fun_delta K V) := let: FunDelta x y := d in x.
+
 Definition app_fsdelta (d : fun_delta K V) f : {fsfun K -> V for default} :=
   [fsfun z in fun_delta_key d |` finsupp f => [eta f with d] z].
+
+Definition app_fswithout x f : {fsfun K -> V for default} :=
+  app_fsdelta (x |-> default x)%FUN_DELTA f.
+
+End FsWith.
+
+Arguments app_fsdelta {K V default}.
+Arguments app_fswithout {K V default}.
 
 Notation "[ 'fsfun' f 'with' d1 , .. , dn ]" :=
   (app_fsdelta d1%FUN_DELTA .. (app_fsdelta dn%FUN_DELTA f) ..)
   (at level 0, format
   "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'with'  '[' d1 , '/'  .. , '/'  dn ']' ] ']'") : fun_scope.
+
+Notation "[ 'fsfun' f 'without' x1 , .. , xn ]" :=
+  (app_fswithout x1 .. (app_fswithout xn f) ..)
+  (at level 0, format
+  "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'without'  '[' x1 , '/'  .. , '/'  xn ']' ] ']'") : fun_scope.
+
+Section FsWithTheory.
+Variables (K : choiceType) (V : eqType) (default : K -> V).
+Implicit Types (f : {fsfun K -> V for default}) (x z : K) (y : V).
 
 Lemma fsfun_withE f x y z :
   [fsfun f with x |-> y] z = if z == x then y else f z.
@@ -3786,27 +3804,10 @@ rewrite (fun_if (fun t => t != _)) -mem_finsupp !inE.
 by case: (altP (z =P x)) => [->|_]; case: (altP (y =P _)).
 Qed.
 
-Definition app_fswithout x f := [fsfun f with x |-> default x].
-Notation "[ 'fsfun' f 'without' x1 , .. , xn ]" :=
-  (app_fswithout x1 .. (app_fswithout xn f) ..)
-  (at level 0, format
-  "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'without'  '[' x1 , '/'  .. , '/'  xn ']' ] ']'") : fun_scope.
-
 Lemma finsupp_without f x z : finsupp [fsfun f without x] = finsupp f `\ x.
 Proof. by rewrite finsupp_with eqxx. Qed.
 
-End FsWith.
-
-Arguments app_fsdelta {K V default}.
-Arguments app_fswithout {K V default}.
-Notation "[ 'fsfun' f 'with' d1 , .. , dn ]" :=
-  (app_fsdelta d1%FUN_DELTA .. (app_fsdelta dn%FUN_DELTA f) ..)
-  (at level 0, format
-  "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'with'  '[' d1 , '/'  .. , '/'  dn ']' ] ']'") : fun_scope.
-Notation "[ 'fsfun' f 'without' x1 , .. , xn ]" :=
-  (app_fswithout x1 .. (app_fswithout xn f) ..)
-  (at level 0, format
-  "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'without'  '[' x1 , '/'  .. , '/'  xn ']' ] ']'") : fun_scope.
+End FsWithTheory.
 
 Module Import FsfunInE2.
 Definition inE := (inE, in_finsupp0).
