@@ -3774,12 +3774,12 @@ Arguments app_fswithout {K V default}.
 
 Notation "[ 'fsfun' f 'with' d1 , .. , dn ]" :=
   (app_fsdelta d1%FUN_DELTA .. (app_fsdelta dn%FUN_DELTA f) ..)
-  (at level 0, format
+  (at level 0, f at level 99, format
   "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'with'  '[' d1 , '/'  .. , '/'  dn ']' ] ']'") : fun_scope.
 
 Notation "[ 'fsfun' f 'without' x1 , .. , xn ]" :=
   (app_fswithout x1 .. (app_fswithout xn f) ..)
-  (at level 0, format
+  (at level 0, f at level 99, format
   "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'without'  '[' x1 , '/'  .. , '/'  xn ']' ] ']'") : fun_scope.
 
 Section FsWithTheory.
