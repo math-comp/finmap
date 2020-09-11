@@ -1632,6 +1632,9 @@ Proof. by move=> Bx; rewrite !inE predU1r. Qed.
 Lemma fsetU1l x A b : x \in A -> x \in A `|` [fset b].
 Proof. by move=> Ax; rewrite !inE Ax. Qed.
 
+Lemma fsetU11 x B : x \in x |` B.
+Proof. by rewrite !inE eqxx. Qed.
+
 Lemma fsetU1r A b : b \in A `|` [fset b].
 Proof. by rewrite !inE eqxx orbT. Qed.
 
@@ -2332,7 +2335,7 @@ rewrite (_ : [fset _ | _ in _ & _] = [fset a]) ?big_seq_fset1//=.
 by apply/fsetP=> i; rewrite !inE /= andbC; case: eqP => //->.
 Qed.
 
-Lemma big_setU1 (a : I) (A : {fset I}) (F : I -> R) : a \notin A ->
+Lemma big_fsetU1 (a : I) (A : {fset I}) (F : I -> R) : a \notin A ->
    \big[op/idx]_(i <- (a |` A)) F i = op (F a) (\big[op/idx]_(i <- A) F i).
 Proof.
 move=> aNA; rewrite eq_big_imfset//= big_map undup_id ?big_cat ?big_seq_fset1//.
