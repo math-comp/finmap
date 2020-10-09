@@ -12,7 +12,7 @@
 ### Renamed
 
 - in `finmap.v`:
-  + `big_setU1` -> `bigfsetU1`
+  + `big_setU1` -> `big_fsetU1`
 
 ### Removed
 
