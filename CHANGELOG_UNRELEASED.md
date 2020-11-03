@@ -6,9 +6,9 @@
 
 - in `finmap.v`:
   + lemma `fsetU11`
-  + definitions `cover` and `trivIset`
-  + lemmas `leq_card_fsetU`, `leq_card_coverg`
-  + lemma `trivIsetP`, `cover_imfset`, `big_trivIset`
+  + definitions `fcover` and `trivIfset`
+  + lemmas `leq_card_fsetU`, `leq_card_fcover`
+  + lemma `trivIfsetP`, `fcover_imfset`, `big_trivIfset`
   + lemma `partition_disjoint_bigfcup`
 
 ### Changed

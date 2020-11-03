@@ -2492,8 +2492,8 @@ Variables T I : choiceType.
 Implicit Types (x y z : T) (A B D X : {fset T}) (P Q : {fset {fset T}}).
 Implicit Types (J : pred I) (F : I -> {fset T}).
 
-Definition cover P := (\bigcup_(B <- P) B)%fset.
-Definition trivIset P := (\sum_(B <- P) #|` B|)%N == #|` cover P|.
+Definition fcover P := (\bigcup_(B <- P) B)%fset.
+Definition trivIfset P := (\sum_(B <- P) #|` B|)%N == #|` fcover P|.
 
 Lemma leq_card_fsetU A B :
   ((#|` A `|` B|)%fset <= #|` A| + #|` B| ?= iff [disjoint A & B]%fset)%N.
@@ -2502,20 +2502,20 @@ rewrite -(addn0 #|`_|) -fsetI_eq0 -cardfs_eq0 -cardfsUI eq_sym.
 by rewrite (mono_leqif (leq_add2l _)).
 Qed.
 
-Lemma leq_card_cover P :
-  ((#|` cover P|)%fset <= \sum_(A <- P) #|`A| ?= iff trivIset P)%N.
+Lemma leq_card_fcover P :
+  ((#|` fcover P|)%fset <= \sum_(A <- P) #|`A| ?= iff trivIfset P)%N.
 Proof.
 split; last exact: eq_sym.
-rewrite /cover; elim/big_rec2: _ => [|A n U _ leUn]; first by rewrite cardfs0.
+rewrite /fcover; elim/big_rec2: _ => [|A n U _ leUn]; first by rewrite cardfs0.
 by rewrite (leq_trans (leq_card_fsetU A U).1) ?leq_add2l.
 Qed.
 
-Lemma trivIsetP P :
-  reflect {in P &, forall A B, A != B -> [disjoint A & B]%fset} (trivIset P).
+Lemma trivIfsetP P :
+  reflect {in P &, forall A B, A != B -> [disjoint A & B]%fset} (trivIfset P).
 Proof.
 have [l Pl ul] : {l | enum_fset P =i l & uniq l} by exists (enum_fset P).
 elim: l P Pl ul => [P P0 _|A e ih P PAe] /=.
-  rewrite /trivIset /cover.
+  rewrite /trivIfset /fcover.
   have -> : P = fset0 by apply/fsetP => i; rewrite P0 !inE.
   rewrite !big_seq_fset0 cardfs0 eqxx.
   by left => x y; rewrite in_fset0.
@@ -2524,10 +2524,10 @@ have {PAe} -> : P = [fset x | x in A :: e]%fset.
 move=> {P} /andP[]; rewrite fset_cons => Ae ue.
 set E := [fset x | x in e]%fset; have Ee : E =i e by move=> x; rewrite !inE.
 rewrite -Ee in Ae; move: (ih _ Ee ue) => {ih}ih.
-rewrite /trivIset /cover !big_setU1 // eq_sym.
-have := leq_card_cover E; rewrite -(mono_leqif (leq_add2l #|` A|)).
+rewrite /trivIfset /fcover !big_fsetU1 // eq_sym.
+have := leq_card_fcover E; rewrite -(mono_leqif (leq_add2l #|` A|)).
 move/(leqif_trans (leq_card_fsetU _ _)) => /= ->.
-have [dAcE|dAcE]/= := boolP [disjoint A & cover E]%fset; last first.
+have [dAcE|dAcE]/= := boolP [disjoint A & fcover E]%fset; last first.
   right=> tI; move/negP : dAcE; apply.
   rewrite -fsetI_eq0; apply/eqP/fsetP => t; apply/idP/idP => //; apply/negP.
   rewrite inE => /andP[tA].
@@ -2552,8 +2552,8 @@ rewrite -fsetI_eq0 => /eqP/fsetP/(_ t); rewrite !inE tA /= => /negP; apply.
 by apply/bigfcupP; exists B => //; rewrite BE.
 Qed.
 
-Lemma cover_imfset (J : {fset I}) F (P : pred I) :
-  cover [fset F i | i in J & P i]%fset = (\bigcup_(i <- J | P i) F i)%fset.
+Lemma fcover_imfset (J : {fset I}) F (P : pred I) :
+  fcover [fset F i | i in J & P i]%fset = (\bigcup_(i <- J | P i) F i)%fset.
 Proof.
 apply/fsetP=> x; apply/bigfcupP/bigfcupP => [[/= t]|[i /andP[iJ Pi xFi]]].
   by rewrite andbT => /imfsetP[i /= Ji -> xFi]; exists i.
@@ -2568,10 +2568,10 @@ Let rhs_cond P K E :=
   (\big[op/idx]_(A <- P) \big[op/idx]_(x <- A | K x) E x)%fset.
 Let rhs P E := (\big[op/idx]_(A <- P) \big[op/idx]_(x <- A) E x)%fset.
 
-Lemma big_trivIset P (E : T -> R) :
-  trivIset P -> \big[op/idx]_(x <- cover P) E x = rhs P E.
+Lemma big_trivIfset P (E : T -> R) :
+  trivIfset P -> \big[op/idx]_(x <- fcover P) E x = rhs P E.
 Proof.
-rewrite /rhs /cover => /trivIsetP tI.
+rewrite /rhs /fcover => /trivIfsetP tI.
 have {tI} : {in enum_fset P &, forall A B, A != B -> [disjoint A & B]%fset}.
   by [].
 elim: (enum_fset P) (fset_uniq P) => [_|h t ih /= /andP[ht ut] tP].
@@ -2597,13 +2597,13 @@ Lemma partition_disjoint_bigfcup (f : T -> R) (F : I -> {fset T})
   \big[op/idx]_(k <- K) (\big[op/idx]_(i <- F k) f i).
 Proof.
 move=> disjF; pose P := [fset F i | i in K & F i != fset0]%fset.
-have trivP : trivIset P.
-  apply/trivIsetP => _ _ /imfsetP[i _ ->] /imfsetP[j _ ->] neqFij.
+have trivP : trivIfset P.
+  apply/trivIfsetP => _ _ /imfsetP[i _ ->] /imfsetP[j _ ->] neqFij.
   by apply: disjF; apply: contraNneq neqFij => ->.
-have -> : (\bigcup_(i <- K) F i)%fset = cover P.
-  apply/esym; rewrite /P cover_imfset big_mkcond /=; apply eq_bigr => i _.
+have -> : (\bigcup_(i <- K) F i)%fset = fcover P.
+  apply/esym; rewrite /P fcover_imfset big_mkcond /=; apply eq_bigr => i _.
   by case: ifPn => // /negPn/eqP.
-rewrite big_trivIset // /rhs big_imfset => [|i j _ /andP[jK notFj0] eqFij] /=.
+rewrite big_trivIfset // /rhs big_imfset => [|i j _ /andP[jK notFj0] eqFij] /=.
   rewrite big_filter big_mkcond; apply eq_bigr => i _.
   by case: ifPn => // /negPn /eqP ->;  rewrite big_seq_fset0.
 by apply: contraNeq (disjF _ _) _; rewrite -fsetI_eq0 eqFij fsetIid.
