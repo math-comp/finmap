@@ -761,7 +761,7 @@ Lemma setIidPr A B : reflect (A :&: B = B) (B \subset A).
 Proof. by rewrite setIC; apply: setIidPl. Qed.
 
 Lemma setUidPl A B : reflect (A :|: B = A) (B \subset A).
-Proof. exact: join_idPr. Qed.
+Proof. by rewrite -eq_joinl; apply: eqP. Qed.
 
 Lemma setUidPr A B : reflect (A :|: B = B) (A \subset B).
 Proof. by rewrite setUC; apply: setUidPl. Qed.
