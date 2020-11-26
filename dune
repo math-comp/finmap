@@ -1,0 +1,4 @@
+(coq.theory
+ (name mathcomp.finmap)
+ (package coq-mathcomp-finmap)
+ (synopsis "Finite sets, finite maps, finitely supported functions"))

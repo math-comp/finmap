@@ -4,8 +4,9 @@
 (* DRAFT - PLEASE USE WITH CAUTION                                       *)
 (* License CeCILL-B                                                      *)
 (*************************************************************************)
-
+Set Warnings "-notation-incompatible-format".
 From mathcomp Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
+Set Warnings "notation-incompatible-format".
 From mathcomp Require Import choice path finset finfun fintype bigop tuple.
 Require Import finmap.
 
@@ -46,7 +47,7 @@ Lemma sumn_map_filter I s (f : I -> nat) P :
    sumn [seq f i | i <- s & P i] = \sum_(i <- s | P i) f i.
 Proof. by rewrite sumn_map big_filter. Qed.
 
-
+Declare Scope mset_scope.
 Delimit Scope mset_scope with mset.
 Local Open Scope fset_scope.
 Local Open Scope fmap_scope.
@@ -645,7 +646,7 @@ by have := AB a; rewrite !msetE -subn_eq0 => /eqP.
 Qed.
 
 Lemma msubset_refl A : A `<=` A. Proof. exact/msubsetP. Qed.
-Hint Resolve msubset_refl.
+Hint Resolve msubset_refl : core.
 
 Lemma msubset_trans : transitive (@msubset K).
 Proof.
@@ -707,15 +708,15 @@ Proof. by rewrite msetUC; apply/msetUidPr. Qed.
 
 Lemma msubsetUl A B : A `<=` A `|` B.
 Proof. by apply/msubsetP=> a; rewrite !msetE leq_maxl. Qed.
-Hint Resolve msubsetUl.
+Hint Resolve msubsetUl : core.
 
 Lemma msubsetUr A B : B `<=` (A `|` B).
 Proof. by rewrite msetUC. Qed.
-Hint Resolve msubsetUr.
+Hint Resolve msubsetUr : core.
 
 Lemma msubsetU1 x A : A `<=` (x |` A).
 Proof. by rewrite msubsetUr. Qed.
-Hint Resolve msubsetU1.
+Hint Resolve msubsetU1 : core.
 
 Lemma msubsetU A B C : (A `<=` B) || (A `<=` C) -> A `<=` (B `|` C).
 Proof. by move=> /orP [] /msubset_trans ->. Qed.
@@ -746,7 +747,7 @@ Proof. by rewrite negb_and negbK andb_orr andbN eqEmsubset. Qed.
 
 Lemma msub0set A : msubset mset0 A.
 Proof. by apply/msubsetP=> x; rewrite msetE. Qed.
-Hint Resolve msub0set.
+Hint Resolve msub0set : core.
 
 Lemma msubset0 A : (A `<=` mset0) = (A == mset0).
 Proof. by rewrite eqEmsubset msub0set andbT. Qed.
@@ -877,7 +878,7 @@ Proof. by apply/msubsetP=> x; rewrite msetE leq_subLR leq_addl. Qed.
 Lemma msubD1set A x : A `\ x `<=` A.
 Proof. by rewrite msubsetDl. Qed.
 
-Hint Resolve msubsetIl msubsetIr msubsetDl msubD1set.
+Hint Resolve msubsetIl msubsetIr msubsetDl msubD1set : core.
 
 (* cardinal lemmas for msets *)
 

@@ -1,7 +1,7 @@
-From mathcomp
-Require Import ssreflect ssrbool eqtype ssrfun ssrnat choice seq.
-From mathcomp
-Require Import fintype tuple bigop path.
+Set Warnings "-notation-incompatible-format".
+From mathcomp Require Import ssreflect ssrbool eqtype ssrfun ssrnat choice seq.
+Set Warnings "notation-incompatible-format".
+From mathcomp Require Import fintype tuple bigop path.
 
 (***********************************************************************)
 (*               Experimental library of generic sets                  *)
@@ -14,18 +14,20 @@ Require Import fintype tuple bigop path.
 
 From mathcomp Require Import order.
 
+Declare Scope abstract_set_scope.
+
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
 Reserved Notation "x \subset y" (at level 70, y at next level).
-Reserved Notation "x \contains y" (at level 70, y at next level, only parsing).
+Reserved Notation "x \superset y" (at level 70, y at next level).
 Reserved Notation "x \proper y" (at level 70, y at next level).
-Reserved Notation "x \containsproper y" (at level 70, y at next level, only parsing).
+Reserved Notation "x \superproper y" (at level 70, y at next level).
 Reserved Notation "x \subset y :> T" (at level 70, y at next level).
-Reserved Notation "x \contains y :> T" (at level 70, y at next level, only parsing).
+Reserved Notation "x \superset y :> T" (at level 70, y at next level).
 Reserved Notation "x \proper y :> T" (at level 70, y at next level).
-Reserved Notation "x \containsproper y :> T" (at level 70, y at next level, only parsing).
+Reserved Notation "x \superproper y :> T" (at level 70, y at next level).
 Reserved Notation "\subsets y" (at level 35).
 Reserved Notation "\supersets y" (at level 35).
 Reserved Notation "\propersets y" (at level 35).
@@ -83,9 +85,13 @@ Notation "\superpropersets y :> T" := (\superpropersets (y : T)) : abstract_set_
 
 Notation "x \subset y" := (\sub%set x y) : abstract_set_scope.
 Notation "x \subset y :> T" := ((x : T) \subset (y : T)) : abstract_set_scope.
+Notation "x \superset y" := (\sub%set y x) (only parsing) : abstract_set_scope.
+Notation "x \superset y :> T" := ((y : T) \subset (x : T)) (only parsing) : abstract_set_scope.
 
 Notation "x \proper y"  := (\proper%set x y) : abstract_set_scope.
 Notation "x \proper y :> T" := ((x : T) \proper (y : T)) : abstract_set_scope.
+Notation "x \superproper y"  := (\proper%set y x) (only parsing) : abstract_set_scope.
+Notation "x \superproper y :> T" := ((y : T) \proper (x : T)) (only parsing) : abstract_set_scope.
 
 Notation "x \subset y \subset z" := ((x \subset y)%set && (y \subset z)%set) : abstract_set_scope.
 Notation "x \proper y \subset z" := ((x \proper y)%set && (y \subset z)%set) : abstract_set_scope.
@@ -392,7 +398,7 @@ Proof. by rewrite (negPf (set1_neq0 _)). Qed.
 
 Lemma set11 x : x \in ([set x] : set X).
 Proof. by rewrite -sub1set. Qed.
-Hint Resolve set11.
+Hint Resolve set11 : core.
 
 Lemma set1_inj : injective (@set1 _ _ _ set X).
 Proof.
