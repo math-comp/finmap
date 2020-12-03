@@ -1,6 +1,9 @@
 (* (c) Copyright 2006-2019 Microsoft Corporation and Inria.                  *)
 (* Distributed under the terms of CeCILL-B.                                  *)
+
+Set Warnings "-notation-incompatible-format".
 From mathcomp Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
+Set Warnings "notation-incompatible-format".
 From mathcomp Require Import choice path finset finfun fintype bigop.
 
 (*****************************************************************************)
@@ -426,9 +429,7 @@ Qed.
 End SortKeys.
 End SortKeys.
 
-Hint Resolve SortKeys.perm.
-Hint Resolve SortKeys.uniq.
-Hint Resolve SortKeys.E.
+#[global] Hint Resolve SortKeys.perm SortKeys.uniq SortKeys.E : core.
 
 Notation sort_keys      := SortKeys.f.
 Notation sort_keys_perm := SortKeys.perm.
@@ -573,8 +574,9 @@ End FinTypeSet.
 
 Identity Coercion finSet_sub_type : finset_of >-> finSet.
 Coercion fset_sub_type : finSet >-> predArgType.
-Hint Resolve fsvalP fset_uniq mem_fset_sub_enum.
+#[global] Hint Resolve fsvalP fset_uniq mem_fset_sub_enum : core.
 
+Declare Scope fset_scope.
 Delimit Scope fset_scope with fset.
 Local Open Scope fset_scope.
 
@@ -614,8 +616,7 @@ Proof. by rewrite [seq_fset]unlock //= sort_keys_perm. Qed.
 
 End SeqFset.
 
-Hint Resolve keys_canonical.
-Hint Resolve sort_keys_uniq.
+#[global] Hint Resolve keys_canonical sort_keys_uniq : core.
 
 Canonical  finSetSubType K := [subType for (@enum_fset K)].
 Definition finSetEqMixin (K : choiceType) := [eqMixin of {fset K} by <:].
@@ -1384,7 +1385,7 @@ by rewrite !inE andbC; apply/negP => /andP [/sAB ->].
 Qed.
 
 Lemma fsubset_refl A : A `<=` A. Proof. exact/fsubsetP. Qed.
-Hint Resolve fsubset_refl.
+Hint Resolve fsubset_refl : core.
 
 Definition fincl A B (AsubB : A `<=` B) (a : A) : B :=
   [` (fsubsetP AsubB) _ (valP a)].
@@ -1445,22 +1446,22 @@ Proof. by rewrite fsetUC; apply/fsetUidPr. Qed.
 
 Lemma fsubsetUl A B : A `<=` A `|` B.
 Proof. by apply/fsubsetP => a; rewrite inE => ->. Qed.
-Hint Resolve fsubsetUl.
+Hint Resolve fsubsetUl : core.
 
 Lemma fsubsetUr A B : B `<=` A `|` B.
 Proof. by rewrite fsetUC. Qed.
-Hint Resolve fsubsetUr.
+Hint Resolve fsubsetUr : core.
 
 Lemma fsubsetU1 x A : A `<=` x |` A.
 Proof. by rewrite fsubsetUr. Qed.
-Hint Resolve fsubsetU1.
+Hint Resolve fsubsetU1 : core.
 
 Lemma fsubsetU A B C : (A `<=` B) || (A `<=` C) -> A `<=` B `|` C.
 Proof. by move=> /orP [] /fsubset_trans ->. Qed.
 
 Lemma fincl_inj A B (AsubB : A `<=` B) : injective (fincl AsubB).
 Proof. by move=> a b [eq_ab]; apply: val_inj. Qed.
-Hint Resolve fincl_inj.
+Hint Resolve fincl_inj : core.
 
 Lemma fsub_inj B : {in [pred A | A `<=` B] &, injective (fsub B)}.
 Proof.
@@ -1469,7 +1470,7 @@ apply/idP/idP => mem_a.
   by have := eqAA' (fincl sAB [` mem_a]); rewrite !inE // => <-.
 by have := eqAA' (fincl sA'B [` mem_a]); rewrite !inE // => ->.
 Qed.
-Hint Resolve fsub_inj.
+Hint Resolve fsub_inj : core.
 
 Lemma eqEfsubset A B : (A == B) = (A `<=` B) && (B `<=` A).
 Proof.
@@ -1522,7 +1523,7 @@ Qed.
 
 Lemma fsub0set A : fset0 `<=` A.
 Proof. by apply/fsubsetP=> x; rewrite inE. Qed.
-Hint Resolve fsub0set.
+Hint Resolve fsub0set : core.
 
 Lemma fsubset0 A : (A `<=` fset0) = (A == fset0).
 Proof. by rewrite eqEfsubset fsub0set andbT. Qed.
@@ -1791,7 +1792,7 @@ move=> sAC sBC; apply/idP/idP; last exact: fsetDS.
 by move=> /(@fsetDS C); rewrite !fsetDK //; apply; apply: fsubsetDl.
 Qed.
 
-Hint Resolve fsubsetIl fsubsetIr fsubsetDl fsubD1set.
+Hint Resolve fsubsetIl fsubsetIr fsubsetDl fsubD1set : core.
 
 (* cardinal lemmas for fsets *)
 
@@ -2066,12 +2067,17 @@ Lemma fdisjointP_sym {A B} :
   reflect (forall a, a \in A -> a \notin B) [disjoint B & A]%fset.
 Proof. by rewrite fdisjoint_sym; apply: fdisjointP. Qed.
 
-Lemma fdisjoint_trans A B C :
-   A `<=` B -> [disjoint B & C] -> [disjoint A & C].
+Lemma fdisjointWl A B C :
+  A `<=` B -> [disjoint B & C] -> [disjoint A & C].
 Proof.
 move=> AsubB; rewrite -!(@disjoint_fsub (B `|` C)) ?fsetSU //.
 by apply: disjoint_trans; rewrite subset_fsub.
 Qed.
+Notation fdisjoint_trans := fdisjointWl.
+
+Lemma fdisjointWr A B C :
+  A `<=` B -> [disjoint C & B] -> [disjoint C & A].
+Proof. by rewrite ![[disjoint C & _]]fdisjoint_sym; apply: fdisjointWl. Qed.
 
 Lemma fdisjoint0X A : [disjoint fset0 & A].
 Proof. by rewrite -fsetI_eq0 fset0I. Qed.
@@ -2112,10 +2118,8 @@ Lemma FSetK A (X : {set A}) : fsub A [fsetval k in X] = X.
 Proof. by apply/setP => x; rewrite !inE. Qed.
 
 End Theory.
-Hint Resolve fsubset_refl.
-Hint Resolve fsubset_trans.
-Hint Resolve fproper_irrefl.
-Hint Resolve fsub0set.
+#[global] Hint Resolve fsubset_refl fsubset_trans : core.
+#[global] Hint Resolve fproper_irrefl fsub0set : core.
 
 Module Import FSetInE.
 Definition inE := (inE, in_fsetE).
@@ -2523,7 +2527,7 @@ have {PAe} -> : P = [fset x | x in A :: e]%fset.
   by apply/fsetP => i; rewrite !inE /= PAe inE.
 move=> {P} /andP[]; rewrite fset_cons => Ae ue.
 set E := [fset x | x in e]%fset; have Ee : E =i e by move=> x; rewrite !inE.
-rewrite -Ee in Ae; move: (ih _ Ee ue) => {ih}ih.
+rewrite -Ee in Ae; move: (ih _ Ee ue) => {}ih.
 rewrite /trivIfset /fcover !big_fsetU1 // eq_sym.
 have := leq_card_fcover E; rewrite -(mono_leqif (leq_add2l #|` A|)).
 move/(leqif_trans (leq_card_fsetU _ _)) => /= ->.
@@ -2631,7 +2635,7 @@ Lemma fset_bounded_coind (T : choiceType) (P : {fset T} -> Type) (U : {fset T}):
 Proof.
 move=> Psuper X XsubU; rewrite -[X](fsetDK XsubU)//.
 have {XsubU}: (U `\` X) `<=` U by rewrite fsubsetDl.
-elim: (_ `\` X) => {X} X IHX XsubU.
+elim: (_ `\` X) => {}X IHX XsubU.
 apply: Psuper => Y /fsetDK<-; rewrite fproperD2l ?fsubsetDl //.
 by move=> /IHX; apply; rewrite fsubsetDl.
 Qed.
@@ -2668,7 +2672,7 @@ suff iter_big k : k <= n.+1 -> k <= #|iter k F set0|.
 elim: k => [|k IHk] k_lt //=; apply: (leq_ltn_trans (IHk (ltnW k_lt))).
 by rewrite proper_card// properEneq// set_iterF_sub neq_iter.
 Qed.
-Hint Resolve fixsetK.
+Hint Resolve fixsetK : core.
 
 Lemma minset_fix : minset [pred X | F X == X] fixset.
 Proof.
@@ -2751,7 +2755,7 @@ Definition funsetC X := ~: (F (~: X)).
 Notation G := funsetC.
 Lemma funsetC_mono : {homo G : X Y / X \subset Y}.
 Proof. by move=> *; rewrite subCset setCK F_mono// subCset setCK. Qed.
-Hint Resolve funsetC_mono.
+Hint Resolve funsetC_mono : core.
 
 Definition cofixset := ~: fixset G.
 
@@ -2793,7 +2797,7 @@ Proof.
 move=> X Y subXY; apply: subset_fsub; last by apply/F_bound/fset_sub_val.
 by apply/F_mono/subset_imfset/subsetP.
 Qed.
-Hint Resolve Fsub_mono.
+Hint Resolve Fsub_mono : core.
 
 Definition fixfset := [fsetval x in fixset Fsub].
 
@@ -2810,7 +2814,7 @@ Lemma fixfsetK : F fixfset = fixfset.
 Proof.
 by rewrite /fixfset -[in RHS]fixsetK// fset_fsub// F_bound//= fset_sub_val.
 Qed.
-Hint Resolve fixfsetK.
+Hint Resolve fixfsetK : core.
 
 Lemma fixfsetKn k : iter k F fixfset = fixfset.
 Proof. by rewrite iter_fix. Qed.
@@ -2897,6 +2901,7 @@ Definition pred_of_finmap (K : choiceType) (V : Type)
 Canonical finMapPredType (K : choiceType) (V : Type) :=
   PredType (@pred_of_finmap K V).
 
+Declare Scope fmap_scope.
 Delimit Scope fmap_scope with fmap.
 Local Open Scope fmap_scope.
 Notation "f .[ kf ]" := (f [` kf]) : fmap_scope.
@@ -3749,6 +3754,7 @@ Definition fsfun_choiceMixin (K V : choiceType) (d : K -> V) :=
 Canonical  fsfun_choiceType (K V : choiceType) (d : K -> V) :=
   ChoiceType (fsfun d) (fsfun_choiceMixin d).
 
+Declare Scope fsfun_scope.
 Delimit Scope fsfun_scope with fsfun.
 
 Notation "[ 'fsfun[' key ] x : aT => F | default ]" :=
