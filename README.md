@@ -20,7 +20,7 @@ which will be used to subsume notations for finite sets, eventually.
   - Cyril Cohen (initial)
   - Kazuhiko Sakaguchi
 - License: [CeCILL-B](CECILL-B)
-- Compatible Coq versions: Coq 8.10 to 8.12
+- Compatible Coq versions: Coq 8.10 to 8.13
 - Additional dependencies:
   - [MathComp ssreflect 1.10 to 1.12](https://math-comp.github.io)
   - [MathComp bigenough 1.0.0 or later](https://github.com/math-comp/bigenough)
