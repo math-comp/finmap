@@ -1,6 +1,7 @@
 (* (c) Copyright 2006-2019 Microsoft Corporation and Inria.                  *)
 (* Distributed under the terms of CeCILL-B.                                  *)
 
+From HB Require Import structures.
 Set Warnings "-notation-incompatible-format".
 From mathcomp Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
 Set Warnings "notation-incompatible-format".
@@ -505,11 +506,8 @@ Section FinSetCanonicals.
 
 Variable (K : choiceType).
 
-Canonical fsetType := Eval hnf in [subType for (@enum_fset K)].
-Definition fset_eqMixin := Eval hnf in [eqMixin of {fset K} by <:].
-Canonical fset_eqType := Eval hnf in EqType {fset K} fset_eqMixin.
-Definition fset_choiceMixin := Eval hnf in [choiceMixin of {fset K} by <:].
-Canonical fset_choiceType := Eval hnf in ChoiceType {fset K} fset_choiceMixin.
+HB.instance Definition _ := [isSub for (@enum_fset K)].
+HB.instance Definition _ := [Choice of {fset K} by <:].
 
 End FinSetCanonicals.
 
@@ -526,14 +524,9 @@ Proof. by rewrite canonical_uniq // keys_canonical. Qed.
 Record fset_sub_type : predArgType :=
   FSetSub {fsval : K; fsvalP : in_mem fsval (@mem K _ A)}.
 
-Canonical fset_sub_subType := Eval hnf in [subType for fsval].
-Definition fset_sub_eqMixin := Eval hnf in [eqMixin of fset_sub_type by <:].
-Canonical fset_sub_eqType := Eval hnf in EqType fset_sub_type fset_sub_eqMixin.
-Definition fset_sub_choiceMixin := Eval hnf in [choiceMixin of fset_sub_type by <:].
-Canonical fset_sub_choiceType := Eval hnf in ChoiceType fset_sub_type fset_sub_choiceMixin.
-Definition fset_countMixin (T : countType) := Eval hnf in [countMixin of {fset T} by <:].
-Canonical fset_countType (T : countType) := Eval hnf in CountType {fset T} (fset_countMixin T).
-
+HB.instance Definition _ := [isSub for fsval].
+HB.instance Definition _ := [Choice of fset_sub_type by <:].
+HB.instance Definition _ (T : countType) := [Countable of {fset T} by <:].
 
 Definition fset_sub_enum : seq fset_sub_type :=
   undup (pmap insub (enum_fset A)).
@@ -556,13 +549,10 @@ rewrite /fset_sub_unpickle => x.
 by rewrite (nth_map x) ?nth_index ?index_mem ?mem_fset_sub_enum.
 Qed.
 
-Definition fset_sub_countMixin := CountMixin fset_sub_pickleK.
-Canonical fset_sub_countType := Eval hnf in CountType fset_sub_type fset_sub_countMixin.
-
-Definition fset_sub_finMixin :=
-  Eval hnf in UniqFinMixin (undup_uniq _) mem_fset_sub_enum.
-Canonical fset_sub_finType := Eval hnf in FinType fset_sub_type fset_sub_finMixin.
-Canonical fset_sub_subfinType := [subFinType of fset_sub_type].
+HB.instance Definition _ :=
+  Countable.copy fset_sub_type (pcan_type fset_sub_pickleK).
+HB.instance Definition _ := isFinite.Build fset_sub_type
+  (Finite.uniq_enumP (undup_uniq _) mem_fset_sub_enum).
 
 Lemma enum_fsetE : enum_fset A = [seq val i | i <- enum fset_sub_type].
 Proof. by rewrite enumT unlock val_fset_sub_enum. Qed.
@@ -618,11 +608,8 @@ End SeqFset.
 
 #[global] Hint Resolve keys_canonical sort_keys_uniq : core.
 
-Canonical  finSetSubType K := [subType for (@enum_fset K)].
-Definition finSetEqMixin (K : choiceType) := [eqMixin of {fset K} by <:].
-Canonical  finSetEqType  (K : choiceType) := EqType {fset K} (finSetEqMixin K).
-Definition finSetChoiceMixin (K : choiceType) := [choiceMixin of {fset K} by <:].
-Canonical  finSetChoiceType  (K : choiceType) := ChoiceType {fset K} (finSetChoiceMixin K).
+HB.instance Definition _ K := [isSub for (@enum_fset K)].
+HB.instance Definition _ (K : choiceType) := [Choice of {fset K} by <:].
 
 Section FinPredStruct.
 
@@ -1057,7 +1044,7 @@ Lemma imfset_rec (T : choiceType) (f : T -> K) (p : finmempred T)
 Proof.
 move=> PP v; have /imfsetP [k pk vv_eq] := valP v.
 pose vP := in_imfset f pk; suff -> : P v = P [` vP] by apply: PP.
-by congr P; apply/val_inj => /=; rewrite vv_eq.
+by congr P; apply/val_inj => /=; rewrite -vv_eq (*FIXME: was rewrite vv_eq*).
 Qed.
 
 Lemma mem_imfset (T : choiceType) (f : T -> K) (p : finmempred T) :
@@ -1138,7 +1125,7 @@ Lemma val_in_fset A (p : finmempred _) (k : A) :
    (val k \in imfset key val p) = (in_mem k p).
 Proof. by rewrite mem_imfset ?in_finmempred //; exact: val_inj. Qed.
 
-Lemma in_fset_val A (p : finmempred [eqType of A]) (k : K) :
+Lemma in_fset_val A (p : finmempred A) (k : K) :
   (k \in imfset key val p) = if insub k is Some a then in_mem a p else false.
 Proof.
 have [a _ <- /=|kNA] := insubP; first by rewrite val_in_fset.
@@ -1156,7 +1143,7 @@ apply: (iffP (imfsetP _ _ _ _)) => [|[kA xkA]]; last by exists [`kA].
 by move=> /sig2_eqW[/= x Xx ->]; exists (valP x); rewrite fsetsubE.
 Qed.
 
-Lemma in_fset_valF A (p : finmempred [eqType of A]) (k : K) : k \notin A ->
+Lemma in_fset_valF A (p : finmempred A) (k : K) : k \notin A ->
   (k \in imfset key val p) = false.
 Proof. by apply: contraNF => /imfsetP[/= a Xa->]. Qed.
 
@@ -1370,7 +1357,7 @@ apply: (iffP fset_eqP) => AsubB a; first by rewrite -AsubB inE => /andP[].
 by rewrite inE; have [/AsubB|] := boolP (a \in A).
 Qed.
 
-Lemma fset_sub_val A (p : finmempred [eqType of A]) :
+Lemma fset_sub_val A (p : finmempred A) :
   (imfset key val p) `<=` A.
 Proof. by apply/fsubsetP => k /in_fset_valP []. Qed.
 
@@ -2128,11 +2115,11 @@ End FSetInE.
 Section Enum.
 
 Lemma enum_fset0 (T : choiceType) :
-  enum [finType of fset0] = [::] :> seq (@fset0 T).
+  enum (fset0 : finType) = [::] :> seq (@fset0 T).
 Proof. by rewrite enumT unlock. Qed.
 
 Lemma enum_fset1 (T : choiceType) (x : T) :
-  enum [finType of [fset x]] = [:: [`fset11 x]].
+  enum ([fset x] : finType) = [:: [`fset11 x]].
 Proof.
 apply/perm_small_eq=> //; apply/uniq_perm => //.
   by apply/enum_uniq.
@@ -2231,8 +2218,7 @@ Proof. by move=> s; apply/fsetP=> x; rewrite !inE. Qed.
 Lemma unpickleK : cancel unpickle pickle.
 Proof. by move=> s; apply/setP=> x; rewrite !inE. Qed.
 
-Definition fset_finMixin := CanFinMixin pickleK.
-Canonical fset_finType := Eval hnf in FinType {fset T} fset_finMixin.
+HB.instance Definition _ : fintype.isFinite {fset T} := CanIsFinite pickleK.
 
 Lemma card_fsets : #|{:{fset T}}| = 2^#|T|.
 Proof.
@@ -2449,8 +2435,8 @@ Section FSetMonoids.
 Import Monoid.
 Variable (T : choiceType).
 
-Canonical fsetU_monoid := Law (@fsetUA T) (@fset0U T) (@fsetU0 T).
-Canonical fsetU_comoid := ComLaw (@fsetUC T).
+HB.instance Definition _ := isComLaw.Build {fset T} fset0 fsetU
+  (@fsetUA T) (@fsetUC T) (@fset0U T).
 
 End FSetMonoids.
 Section BigFOpsSeq.
@@ -2969,26 +2955,26 @@ Proof. by case. Qed.
 End FinMapEncode.
 
 Section FinMapEqType.
-Variable (K : choiceType) (V : eqType).
+Variables (K : choiceType) (V : eqType).
 
-Definition finMap_eqMixin := CanEqMixin (@finMap_codeK K V).
-Canonical finMap_eqType := EqType {fmap K -> V} finMap_eqMixin.
+HB.instance Definition _ := Equality.copy {fmap K -> V}
+  (can_type (@finMap_codeK K V)).
 
 End FinMapEqType.
 
 Section FinMapChoiceType.
-Variable (K V : choiceType).
+Variables K V : choiceType.
 
-Definition finMap_choiceMixin := CanChoiceMixin (@finMap_codeK K V).
-Canonical finMap_choiceType := ChoiceType {fmap K -> V} finMap_choiceMixin.
+HB.instance Definition _ := Choice.copy {fmap K -> V}
+  (can_type (@finMap_codeK K V)).
 
 End FinMapChoiceType.
 
 Section FinMapCountType.
-Variable (K V : countType).
+Variables K V : countType.
 
-Definition finMap_countMixin := CanCountMixin (@finMap_codeK K V).
-Canonical finMap_countType := CountType {fmap K -> V} finMap_countMixin.
+HB.instance Definition _ := Countable.copy {fmap K -> V}
+  (can_type (@finMap_codeK K V)).
 
 End FinMapCountType.
 
@@ -3617,9 +3603,8 @@ Record fsfun := Fsfun {
        fmap_of_fsfun k != default (val k)]
 }.
 
-Canonical fsfun_subType := Eval hnf in [subType for fmap_of_fsfun].
-Definition fsfun_eqMixin := [eqMixin of fsfun by <:].
-Canonical  fsfun_eqType := EqType fsfun fsfun_eqMixin.
+HB.instance Definition _ := [isSub for fmap_of_fsfun].
+HB.instance Definition _ := [Equality of fsfun by <:].
 
 Fact fsfun_subproof (f : fsfun) :
   forall (k : K) (kf : k \in fmap_of_fsfun f),
@@ -3773,15 +3758,10 @@ Definition fsfun_of_ffun key (K : choiceType) (V : eqType)
   (S : {fset K}) (h : S -> V) (default : K -> V) :=
   (Fsfun.of_ffun default h key).
 
-Definition fsfun_choiceMixin (K V : choiceType) (d : K -> V) :=
-  [choiceMixin of fsfun d by <:].
-Canonical  fsfun_choiceType (K V : choiceType) (d : K -> V) :=
-  ChoiceType (fsfun d) (fsfun_choiceMixin d).
-
-Definition fsfun_countMixin (K V : countType) (d : K -> V) :=
-  [countMixin of fsfun d by <:].
-Canonical  fsfun_countType (K V : countType) (d : K -> V) :=
-  CountType (fsfun d) (fsfun_countMixin d).
+HB.instance Definition _ (K V : choiceType) (d : K -> V) :=
+  [Choice of fsfun d by <:].
+HB.instance Definition _ (K V : countType) (d : K -> V) :=
+  [Countable of fsfun d by <:].
 
 Declare Scope fsfun_scope.
 Delimit Scope fsfun_scope with fsfun.
