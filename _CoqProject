@@ -11,3 +11,5 @@ set.v
 -arg -w -arg +undeclared-scope
 -arg -w -arg -ambiguous-paths
 -arg -w -arg -uniform-inheritance
+
+-R ../math-comp/mathcomp mathcomp

@@ -1,3 +1,4 @@
+From HB Require Import structures.
 Set Warnings "-notation-incompatible-format".
 From mathcomp Require Import ssreflect ssrbool eqtype ssrfun ssrnat choice seq.
 Set Warnings "notation-incompatible-format".
@@ -117,6 +118,48 @@ Notation "~: x"    := (setC x).
 Notation "x \subset y" := (\sub%set x y) : bool_scope.
 Notation "x \proper y" := (\proper%set x y) : bool_scope.
 End SetSyntax.
+
+(*Coercion eqType_of_elementType : elementType >-> eqType.*)
+(*Implicit Types (X Y : elementType).*)
+HB.mixin Record IsSemiset (elementType : Type (* Universe type *))
+    (eqType_of_elementType : elementType -> eqType)
+    d (set : elementType -> cbDistrLatticeType (display_set d)) := {
+  memset : forall X, set X -> eqType_of_elementType X -> bool;
+  set1 : forall X, eqType_of_elementType X -> set X;
+  notin_set0 : forall X (x : eqType_of_elementType X), ~~ memset _ set0 x; (* set0 is empty instead *)
+  in_set1 : forall X (x y : eqType_of_elementType X), memset _ (set1 _ y) x = (x == y);
+  sub1set : forall X (x : eqType_of_elementType X) A, (set1 _ x \subset A) = (memset _ A x);
+  set_gt0_ex : forall X (A : set X), (set0 \proper A) -> {x | memset _ A x} ; (* exists or sig ?? *)
+  subsetP_subproof : forall X (A B : set X), {subset memset _ A <= memset _ B} -> A \subset B;
+  in_setU : forall X (x : eqType_of_elementType X) A B, (memset _ (A :|: B) x) =
+                    (memset _ A x) || (memset _ B x);
+  (* there is no closure in a set *)
+  funsort : elementType -> elementType -> Type;
+  fun_of_funsort : forall X Y : elementType, funsort X Y -> eqType_of_elementType X -> eqType_of_elementType Y;
+  imset : forall X Y, funsort X Y -> set X -> set Y;
+  FIXME(*couldn't find the name*) : forall X Y (f : funsort X Y) (A : set X) (y : eqType_of_elementType Y),
+    reflect (exists2 x : eqType_of_elementType X, memset _ A x & y = fun_of_funsort _ _ f x)
+            (memset _ (imset _ _ f A) y)
+}.
+
+HB.structure Definition Semiset
+    (elementType : Type)
+    (eqType_of_elementType : elementType -> eqType)
+    d :=
+  {T of @IsSemiset elementType eqType_of_elementType d T }.
+
+(* FIXME: how to integrate the constraint Order.CBDistrLattice d T ?
+forall x, Order.HasSub d (T x) ? *)
+
+(* STOP
+
+Record class_of (set : elementType -> Type) := Class {
+  base  : forall X, @Order.CBDistrLattice.class_of (set X);
+  mixin_disp : unit;
+  mixin : mixin_of (fun X => Order.CBDistrLattice.Pack (display_set mixin_disp) (base X))
+}.
+
+
 
 Module Semiset.
 Section ClassDef.
@@ -1042,5 +1085,7 @@ Export SemisetTheory.
 Export setTheory.
 
 End Theory.
+
+*)
 
 End SET.
