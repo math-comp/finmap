@@ -2143,8 +2143,8 @@ Qed.
 End Enum.
 
 Section ImfsetTh.
-Variables (key : unit) (K V : choiceType).
-Implicit Types (f : K -> V) (g : V -> K) (A V : {fset K}).
+Variables (key : unit) (K V V' : choiceType).
+Implicit Types (f : K -> V) (g : V -> V') (A V : {fset K}).
 
 Lemma imfset_id (A : {fset K}) : id @` A = A.
 Proof. by apply/fsetP=> a; rewrite in_fset. Qed.
