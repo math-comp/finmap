@@ -1,9 +1,13 @@
+<!---
+This file was generated from `meta.yml`, please do not edit manually.
+Follow the instructions on https://github.com/coq-community/templates to regenerate.
+--->
 # Finite maps
 
-[![CI][action-shield]][action-link]
+[![Docker CI][docker-action-shield]][docker-action-link]
 
-[action-shield]: https://github.com/math-comp/finmap/workflows/CI/badge.svg?branch=master
-[action-link]: https://github.com/math-comp/finmap/actions?query=workflow%3ACI
+[docker-action-shield]: https://github.com/math-comp/finmap/workflows/Docker%20CI/badge.svg?branch=master
+[docker-action-link]: https://github.com/math-comp/finmap/actions?query=workflow:"Docker%20CI"
 
 
 
@@ -20,10 +24,9 @@ which will be used to subsume notations for finite sets, eventually.
   - Cyril Cohen (initial)
   - Kazuhiko Sakaguchi
 - License: [CeCILL-B](CECILL-B)
-- Compatible Coq versions: Coq 8.10 to 8.13
+- Compatible Coq versions: Coq 8.11 to 8.14
 - Additional dependencies:
   - [MathComp ssreflect 1.10 to 1.12](https://math-comp.github.io)
-  - [MathComp bigenough 1.0.0 or later](https://github.com/math-comp/bigenough)
 - Coq namespace: `mathcomp.finmap`
 - Related publication(s): none
 
