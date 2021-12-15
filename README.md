@@ -24,9 +24,9 @@ which will be used to subsume notations for finite sets, eventually.
   - Cyril Cohen (initial)
   - Kazuhiko Sakaguchi
 - License: [CeCILL-B](CECILL-B)
-- Compatible Coq versions: Coq 8.11 to 8.14
+- Compatible Coq versions: Coq 8.11 to 8.15
 - Additional dependencies:
-  - [MathComp ssreflect 1.10 to 1.12](https://math-comp.github.io)
+  - [MathComp ssreflect 1.11 to 1.14](https://math-comp.github.io)
 - Coq namespace: `mathcomp.finmap`
 - Related publication(s): none
 
