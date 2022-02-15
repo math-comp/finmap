@@ -1202,7 +1202,7 @@ Implicit Types (a b x : K) (A B C D : {fset K}) (E : {fset K'})
 Lemma fsetP {A B} : A =i B <-> A = B.
 Proof. by split=> [eqAB|-> //]; apply/val_inj/canonical_eq_keys => //= a. Qed.
 
-CoInductive in_fset_spec (A : {fset K}) (x : K) : K -> bool -> Prop :=
+Variant in_fset_spec (A : {fset K}) (x : K) : K -> bool -> Prop :=
  | InFset (u : A) & x = val u : in_fset_spec A x (val u) true
  | OutFset of x \notin A : in_fset_spec A x x false.
 
@@ -3640,7 +3640,7 @@ Proof. by rewrite mem_finsupp negbK. Qed.
 Lemma fsfun_dflt f k : k \notin finsupp f -> f k = default k.
 Proof. by rewrite mem_finsupp negbK => /eqP. Qed.
 
-CoInductive fsfun_spec f k : V -> bool -> Type :=
+Variant fsfun_spec f k : V -> bool -> Type :=
   | FsfunOut : k \notin finsupp f -> fsfun_spec f k (default k) false
   | FsfunIn  (kf : k \in finsupp f) : fsfun_spec f k (f k) true.
 
