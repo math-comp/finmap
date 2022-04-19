@@ -2954,6 +2954,8 @@ Notation "x .[ k <- v ]" := (setf x k v) : fmap_scope.
 Notation "f .[? k ]" := (fnd f k) : fmap_scope.
 
 Section FinMapCanonicals.
+
+Section FinMapEncode.
 Variable K : choiceType.
 
 Let finMap_on (V : Type) (d : {fset K}) := {ffun d -> V}.
@@ -2964,21 +2966,31 @@ Definition finMap_decode V (f : finMap_ V) := FinMap (tagged f).
 Lemma finMap_codeK V : cancel (@finMap_encode V) (@finMap_decode V).
 Proof. by case. Qed.
 
-Section FinMapEqType.
-Variable V : eqType.
+End FinMapEncode.
 
-Definition finMap_eqMixin := CanEqMixin (@finMap_codeK V).
+Section FinMapEqType.
+Variable (K : choiceType) (V : eqType).
+
+Definition finMap_eqMixin := CanEqMixin (@finMap_codeK K V).
 Canonical finMap_eqType := EqType {fmap K -> V} finMap_eqMixin.
 
 End FinMapEqType.
 
 Section FinMapChoiceType.
-Variable V : choiceType.
+Variable (K V : choiceType).
 
-Definition finMap_choiceMixin := CanChoiceMixin (@finMap_codeK V).
+Definition finMap_choiceMixin := CanChoiceMixin (@finMap_codeK K V).
 Canonical finMap_choiceType := ChoiceType {fmap K -> V} finMap_choiceMixin.
 
 End FinMapChoiceType.
+
+Section FinMapCountType.
+Variable (K V : countType).
+
+Definition finMap_countMixin := CanCountMixin (@finMap_codeK K V).
+Canonical finMap_countType := CountType {fmap K -> V} finMap_countMixin.
+
+End FinMapCountType.
 
 End FinMapCanonicals.
 
@@ -3753,6 +3765,11 @@ Definition fsfun_choiceMixin (K V : choiceType) (d : K -> V) :=
   [choiceMixin of fsfun d by <:].
 Canonical  fsfun_choiceType (K V : choiceType) (d : K -> V) :=
   ChoiceType (fsfun d) (fsfun_choiceMixin d).
+
+Definition fsfun_countMixin (K V : countType) (d : K -> V) :=
+  [countMixin of fsfun d by <:].
+Canonical  fsfun_countType (K V : countType) (d : K -> V) :=
+  CountType (fsfun d) (fsfun_countMixin d).
 
 Declare Scope fsfun_scope.
 Delimit Scope fsfun_scope with fsfun.
