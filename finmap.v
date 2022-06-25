@@ -2908,13 +2908,13 @@ Notation "f .[ kf ]" := (f [` kf]) : fmap_scope.
 Arguments ffun_of_fmap : simpl never.
 
 Notation "[ 'fmap' x : aT => F ]" := (FinMap [ffun x : aT => F])
-  (at level 0, x ident, only parsing) : fun_scope.
+  (at level 0, x name, only parsing) : fun_scope.
 
 Notation "[ 'fmap' : aT => F ]" := (FinMap [ffun _ : aT => F])
   (at level 0, only parsing) : fun_scope.
 
 Notation "[ 'fmap' x => F ]" := [fmap x : _ => F]
-  (at level 0, x ident, format "[ 'fmap'  x  =>  F ]") : fun_scope.
+  (at level 0, x name, format "[ 'fmap'  x  =>  F ]") : fun_scope.
 
 Notation "[ 'fmap' => F ]" := [fmap: _ => F]
   (at level 0, format "[ 'fmap' =>  F ]") : fun_scope.

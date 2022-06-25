@@ -60,11 +60,11 @@ Notation "'{mset' T }" := (@multiset_of _ (Phant T))
   (format "'{mset'  T }") : mset_scope.
 
 Notation "[ 'mset[' key ] x 'in' aT => F ]" := ([fsfun[key] x in aT => F] : {mset _})
-  (at level 0, x ident, only parsing) : mset_scope.
+  (at level 0, x name, only parsing) : mset_scope.
 Notation "[ 'mset' x 'in' aT => F ]" := ([fsfun x in aT => F] : {mset _})
-  (at level 0, x ident, only parsing) : mset_scope.
+  (at level 0, x name, only parsing) : mset_scope.
 Notation "[ 'm' 'set' x 'in' aT => F ]" := ([fsfun[_] x in aT => F] : {mset _})
-  (at level 0, x ident, format "[ 'm' 'set'  x  'in'  aT  =>  F ]") : mset_scope.
+  (at level 0, x name, format "[ 'm' 'set'  x  'in'  aT  =>  F ]") : mset_scope.
 
 Identity Coercion multiset_multiset_of : multiset_of >-> multiset.
 
