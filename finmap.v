@@ -2071,7 +2071,7 @@ Lemma fdisjointWl A B C :
   A `<=` B -> [disjoint B & C] -> [disjoint A & C].
 Proof.
 move=> AsubB; rewrite -!(@disjoint_fsub (B `|` C)) ?fsetSU //.
-by apply: disjoint_trans; rewrite subset_fsub.
+by apply: disjointWl; rewrite subset_fsub.
 Qed.
 Notation fdisjoint_trans := fdisjointWl.
 
@@ -2665,7 +2665,7 @@ Definition fixset := iterF n.
 Lemma fixsetK : F fixset = fixset.
 Proof.
 suff /'exists_eqP[x /= e]: [exists k : 'I_n.+1, iterF k == iterF k.+1].
-  by rewrite /fixset -(subnK (leq_ord x)) iter_add iter_fix.
+  by rewrite /fixset -(subnK (leq_ord x)) iterD iter_fix.
 apply: contraT; rewrite negb_exists => /forallP /(_ (Ordinal _)) /= neq_iter.
 suff iter_big k : k <= n.+1 -> k <= #|iter k F set0|.
   by have := iter_big _ (leqnn _); rewrite ltnNge max_card.
@@ -2688,7 +2688,7 @@ Proof. by rewrite iter_fix. Qed.
 Lemma iter_sub_fix k : iterF k \subset fixset.
 Proof.
 have [/set_iterF_mono//|/ltnW/subnK<-] := leqP k n;
-by rewrite iter_add fixsetKn.
+by rewrite iterD fixsetKn.
 Qed.
 
 Lemma fix_order_proof x : x \in fixset -> exists n, x \in iterF n.
@@ -2908,13 +2908,13 @@ Notation "f .[ kf ]" := (f [` kf]) : fmap_scope.
 Arguments ffun_of_fmap : simpl never.
 
 Notation "[ 'fmap' x : aT => F ]" := (FinMap [ffun x : aT => F])
-  (at level 0, x ident, only parsing) : fun_scope.
+  (at level 0, x name, only parsing) : fun_scope.
 
 Notation "[ 'fmap' : aT => F ]" := (FinMap [ffun _ : aT => F])
   (at level 0, only parsing) : fun_scope.
 
 Notation "[ 'fmap' x => F ]" := [fmap x : _ => F]
-  (at level 0, x ident, format "[ 'fmap'  x  =>  F ]") : fun_scope.
+  (at level 0, x name, format "[ 'fmap'  x  =>  F ]") : fun_scope.
 
 Notation "[ 'fmap' => F ]" := [fmap: _ => F]
   (at level 0, format "[ 'fmap' =>  F ]") : fun_scope.
