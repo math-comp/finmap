@@ -2495,7 +2495,7 @@ Lemma bigfcup_imfset (I T : choiceType) (P : {fset I}) (f : I -> T) :
   \bigcup_(i <- P) [fset f i] = f @` P.
 Proof.
 apply/eqP; rewrite eqEfsubset; apply/andP; split; apply/fsubsetP => x.
-- by case/bigfcupP=> i /andP [] iP _ /[1!inE] /eqP ->; apply/imfsetP; exists i.
+- by case/bigfcupP=> i /andP [] iP _; rewrite inE => /eqP ->; apply/imfsetP; exists i.
 - case/imfsetP => i /= iP ->; apply/bigfcupP; exists i; rewrite ?andbT //.
   by apply/imfsetP; exists (f i); rewrite ?inE.
 Qed.
