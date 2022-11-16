@@ -10,6 +10,8 @@
   + lemmas `leq_card_fsetU`, `leq_card_fcover`
   + lemma `trivIfsetP`, `fcover_imfset`, `big_trivIfset`
   + lemma `partition_disjoint_bigfcup`
+- in `finmap.v`:
+  + lemmas `bigfcup_imfset`, `fbig_pred1_inj`
 
 ### Changed
 
