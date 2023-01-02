@@ -3587,6 +3587,18 @@ move: fk'_eq; rewrite fnd_set.
 by have [->|//] := altP eqP; rewrite fnd_rem inE eqxx.
 Qed.
 
+Lemma codomf_cat (f g : {fmap K -> V}) :
+  codomf (f + g) = codomf g `|` codomf f.[\domf g].
+Proof.
+apply/fsetP => v'; rewrite !inE.
+apply/codomfP/(orPP (codomfP _ _) (codomfP _ _)); last first.
+  move=> [] [x xI]; exists x; rewrite fnd_cat; first by case: fndP xI.
+  by move: xI; rewrite fnd_rem; case: ifP.
+move=> []x; rewrite fnd_cat; case: fndP => // [xg gx|xNg fx].
+  by left; exists x; rewrite in_fnd.
+by right; exists x; rewrite fnd_rem ifN.
+Qed.
+
 End FinMapKeyType.
 
 Module Import FinmapInE.
