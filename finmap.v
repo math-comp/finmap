@@ -3590,22 +3590,13 @@ Qed.
 Lemma codomf_cat (f g : {fmap K -> V}) :
   codomf (f + g) = codomf g `|` codomf f.[\domf g].
 Proof.
-apply/fsetP=> v'; rewrite ![RHS]inE.
-apply/codomfP/orP => [[x /fndSomeP[xI]]|
-                      [/codomfP[x /fndSomeP[xI xM]]|/codomfP[x]]]; last 2 first.
-- exists x.
-  by rewrite fnd_cat xI; apply/fndSomeP; exists xI.
-- rewrite fnd_rem.
-  case: (boolP (_ \in _)) => // xNIg /fndSomeP[xIm <-].
-  exists x; apply/fndSomeP.
-  have xH : x \in domf (f + g) by rewrite !inE xNIg xIm.
-  by exists xH; rewrite getf_catl.
-have [xIg|xNIg] := (boolP (x \in domf g)).
-  by rewrite getf_catr // => <-; left; rewrite in_codomf.
-rewrite getf_catl // => [|x1 <-].
-  by rewrite !inE (negPf xNIg) orbF in xI.
-right; apply/codomfP; exists x.
-by rewrite fnd_rem (negPf xNIg); apply/fndSomeP; exists x1.
+apply/fsetP => v'; rewrite !inE.
+apply/codomfP/(orPP (codomfP _ _) (codomfP _ _)); last first.
+  move=> [] [x xI]; exists x; rewrite fnd_cat; first by case: fndP xI.
+  by move: xI; rewrite fnd_rem; case: ifP.
+move=> []x; rewrite fnd_cat; case: fndP => // [xg gx|xNg fx].
+  by left; exists x; rewrite in_fnd.
+by right; exists x; rewrite fnd_rem ifN.
 Qed.
 
 End FinMapKeyType.
