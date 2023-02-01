@@ -63,7 +63,7 @@ Arguments PredType [T pT] toP.
 Module SET.
 Import Order.Theory.
 
-Fact display_set : unit -> unit. Proof. exact. Qed.
+Fact display_set : Order.disp_t -> Order.disp_t. Proof. exact. Qed.
 
 Module Import SetSyntax.
 
@@ -148,17 +148,17 @@ Structure mixin_of d (set : elementType -> (cbDistrLatticeType (display_set d)))
 
 Record class_of (set : elementType -> Type) := Class {
   base  : forall X, @Order.CBDistrLattice.class_of (set X);
-  mixin_disp : unit;
+  mixin_disp : Order.disp_t;
   mixin : mixin_of (fun X => Order.CBDistrLattice.Pack (display_set mixin_disp) (base X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
 
-Structure type (disp : unit) := Pack { sort ; _ : class_of sort }.
+Structure type (disp : Order.disp_t) := Pack { sort ; _ : class_of sort }.
 
 Local Coercion sort : type >-> Funclass.
 
-Variables (set : elementType -> Type) (disp : unit) (cT : type disp).
+Variables (set : elementType -> Type) (disp : Order.disp_t) (cT : type disp).
 
 Definition class := let: Pack _ c as cT' := cT return class_of cT' in c.
 Definition clone c & phant_id class c := @Pack disp set c.
@@ -183,7 +183,7 @@ Notation type := (type eqType_of_elementType).
 Local Coercion base : class_of >-> Funclass.
 Local Coercion sort : type >-> Funclass.
 Variables (set : elementType -> Type) (X : elementType).
-Variables (disp : unit) (cT : type disp).
+Variables (disp : Order.disp_t) (cT : type disp).
 Local Notation ddisp := (display_set disp).
 
 Let xset := let: Pack set _ := cT in set.
@@ -192,6 +192,11 @@ Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_ele
 Definition eqType := @Equality.Pack (cT X) (xclass X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X).
+Definition bPOrderType := @Order.BPOrder.Pack ddisp (cT X) (xclass X).
+Definition meetSemilatticeType := @Order.MeetSemilattice.Pack ddisp (cT X) (xclass X).
+Definition bMeetSemilatticeType := @Order.BMeetSemilattice.Pack ddisp (cT X) (xclass X).
+Definition joinSemilatticeType := @Order.JoinSemilattice.Pack ddisp (cT X) (xclass X).
+Definition bJoinSemilatticeType := @Order.BJoinSemilattice.Pack ddisp (cT X) (xclass X).
 Definition latticeType := @Order.Lattice.Pack ddisp (cT X) (xclass X).
 Definition bLatticeType := @Order.BLattice.Pack ddisp (cT X) (xclass X).
 Definition distrLatticeType := @Order.DistrLattice.Pack ddisp (cT X) (xclass X).
@@ -206,6 +211,11 @@ Coercion sort       : type >-> Funclass.
 Coercion eqType     : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
+Coercion bPOrderType : type >-> Order.BPOrder.type.
+Coercion meetSemilatticeType : type >-> Order.MeetSemilattice.type.
+Coercion bMeetSemilatticeType : type >-> Order.BMeetSemilattice.type.
+Coercion joinSemilatticeType : type >-> Order.JoinSemilattice.type.
+Coercion bJoinSemilatticeType : type >-> Order.BJoinSemilattice.type.
 Coercion latticeType : type >-> Order.Lattice.type.
 Coercion bLatticeType : type >-> Order.BLattice.type.
 Coercion distrLatticeType : type >-> Order.DistrLattice.type.
@@ -215,6 +225,11 @@ Coercion cbDistrLatticeType : type >-> Order.CBDistrLattice.type.
 Canonical eqType.
 Canonical choiceType.
 Canonical porderType.
+Canonical bPOrderType.
+Canonical meetSemilatticeType.
+Canonical bMeetSemilatticeType.
+Canonical joinSemilatticeType.
+Canonical bJoinSemilatticeType.
 Canonical latticeType.
 Canonical bLatticeType.
 Canonical distrLatticeType.
@@ -244,7 +259,7 @@ Import Semiset.Exports.
 Section SemisetOperations.
 Context {elementType : Type} {eqType_of_elementType : elementType -> eqType}.
 Coercion eqType_of_elementType : elementType >-> eqType.
-Context {disp : unit}.
+Context {disp : Order.disp_t}.
 
 Section setfun.
 Variable (set : semisetType eqType_of_elementType disp).
@@ -324,7 +339,7 @@ Section SemisetTheory.
 Variable elementType : Type.
 Variable eqType_of_elementType : elementType -> eqType.
 Coercion eqType_of_elementType : elementType >-> eqType.
-Variable disp : unit.
+Variable disp : Order.disp_t.
 Variable set : semisetType eqType_of_elementType disp.
 
 Section setX.
@@ -918,7 +933,7 @@ Implicit Types (X Y : elementType).
 
 Record class_of (set : elementType -> Type) := Class {
   base  : forall X, Order.CTBDistrLattice.class_of (set X);
-  mixin_disp : unit;
+  mixin_disp : Order.disp_t;
   mixin : Semiset.mixin_of eqType_of_elementType
             (fun X => Order.CBDistrLattice.Pack (display_set mixin_disp) (base X))
 }.
@@ -928,11 +943,11 @@ Definition base2 (set : elementType -> Type)
          (c : class_of set) := Semiset.Class (@mixin set c).
 Local Coercion base2 : class_of >-> Semiset.class_of.
 
-Structure type (disp : unit) := Pack { sort ; _ : class_of sort }.
+Structure type (disp : Order.disp_t) := Pack { sort ; _ : class_of sort }.
 
 Local Coercion sort : type >-> Funclass.
 
-Variables (set : elementType -> Type) (disp : unit) (cT : type disp).
+Variables (set : elementType -> Type) (disp : Order.disp_t) (cT : type disp).
 
 Definition class := let: Pack _ c as cT' := cT return class_of cT' in c.
 Let xset := let: Pack set _ := cT in set.
@@ -956,7 +971,7 @@ Local Coercion sort : type >-> Funclass.
 Local Coercion base : class_of >-> Funclass.
 Local Coercion base2 : class_of >-> Semiset.class_of.
 Variables (set : elementType -> Type) (X : elementType).
-Variable (disp : unit) (cT : type disp).
+Variable (disp : Order.disp_t) (cT : type disp).
 Local Notation ddisp := (display_set disp).
 
 Let xset := let: Pack set _ := cT in set.
@@ -965,13 +980,48 @@ Notation xclass := (@class _ eqType_of_elementType _ cT : class_of eqType_of_ele
 Definition eqType := @Equality.Pack (cT X) (xclass X).
 Definition choiceType := @Choice.Pack (cT X) (xclass X).
 Definition porderType := @Order.POrder.Pack ddisp (cT X) (xclass X).
+Definition bPOrderType := @Order.BPOrder.Pack ddisp (cT X) (xclass X).
+Definition tPOrderType := @Order.TPOrder.Pack ddisp (cT X) (xclass X).
+Definition tbPOrderType := @Order.TBPOrder.Pack ddisp (cT X) (xclass X).
+Definition meetSemilatticeType := @Order.MeetSemilattice.Pack ddisp (cT X) (xclass X).
+Definition bMeetSemilatticeType := @Order.BMeetSemilattice.Pack ddisp (cT X) (xclass X).
+Definition tMeetSemilatticeType := @Order.TMeetSemilattice.Pack ddisp (cT X) (xclass X).
+Definition tbMeetSemilatticeType := @Order.TBMeetSemilattice.Pack ddisp (cT X) (xclass X).
+Definition joinSemilatticeType := @Order.JoinSemilattice.Pack ddisp (cT X) (xclass X).
+Definition bJoinSemilatticeType := @Order.BJoinSemilattice.Pack ddisp (cT X) (xclass X).
+Definition tJoinSemilatticeType := @Order.TJoinSemilattice.Pack ddisp (cT X) (xclass X).
+Definition tbJoinSemilatticeType := @Order.TBJoinSemilattice.Pack ddisp (cT X) (xclass X).
 Definition latticeType := @Order.Lattice.Pack ddisp (cT X) (xclass X).
 Definition bLatticeType := @Order.BLattice.Pack ddisp (cT X) (xclass X).
+Definition tLatticeType := @Order.TLattice.Pack ddisp (cT X) (xclass X).
+Definition tbLatticeType := @Order.TBLattice.Pack ddisp (cT X) (xclass X).
 Definition distrLatticeType := @Order.DistrLattice.Pack ddisp (cT X) (xclass X).
 Definition bDistrLatticeType := @Order.BDistrLattice.Pack ddisp (cT X) (xclass X).
+Definition tDistrLatticeType := @Order.TDistrLattice.Pack ddisp (cT X) (xclass X).
+Definition tbDistrLatticeType := @Order.TBDistrLattice.Pack ddisp (cT X) (xclass X).
 Definition cbDistrLatticeType := @Order.CBDistrLattice.Pack ddisp (cT X) (xclass X).
 Definition ctbDistrLatticeType := @Order.CTBDistrLattice.Pack ddisp (cT X) (xclass X).
 Definition semisetType := @Semiset.Pack _ _ disp cT xclass.
+Definition semiset_tPOrderType :=
+  @Order.TPOrder.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tbPOrderType :=
+  @Order.TBPOrder.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tMeetSemilatticeType :=
+  @Order.TMeetSemilattice.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tbMeetSemilatticeType :=
+  @Order.TBMeetSemilattice.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tJoinSemilatticeType :=
+  @Order.TJoinSemilattice.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tbJoinSemilatticeType :=
+  @Order.TBJoinSemilattice.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tLatticeType :=
+  @Order.TLattice.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tbLatticeType :=
+  @Order.TBLattice.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tDistrLatticeType :=
+  @Order.TDistrLattice.Pack ddisp (semisetType X) (xclass X).
+Definition semiset_tbDistrLatticeType :=
+  @Order.TBDistrLattice.Pack ddisp (semisetType X) (xclass X).
 Definition semiset_ctbDistrLatticeType :=
   @Order.CTBDistrLattice.Pack ddisp (semisetType X) (xclass X).
 End CanonicalDef.
@@ -983,10 +1033,25 @@ Coercion sort      : type >-> Funclass.
 Coercion eqType    : type >-> Equality.type.
 Coercion choiceType : type >-> Choice.type.
 Coercion porderType : type >-> Order.POrder.type.
+Coercion bPOrderType : type >-> Order.BPOrder.type.
+Coercion tPOrderType : type >-> Order.TPOrder.type.
+Coercion tbPOrderType : type >-> Order.TBPOrder.type.
+Coercion meetSemilatticeType : type >-> Order.MeetSemilattice.type.
+Coercion bMeetSemilatticeType : type >-> Order.BMeetSemilattice.type.
+Coercion tMeetSemilatticeType : type >-> Order.TMeetSemilattice.type.
+Coercion tbMeetSemilatticeType : type >-> Order.TBMeetSemilattice.type.
+Coercion joinSemilatticeType : type >-> Order.JoinSemilattice.type.
+Coercion bJoinSemilatticeType : type >-> Order.BJoinSemilattice.type.
+Coercion tJoinSemilatticeType : type >-> Order.TJoinSemilattice.type.
+Coercion tbJoinSemilatticeType : type >-> Order.TBJoinSemilattice.type.
 Coercion latticeType : type >-> Order.Lattice.type.
 Coercion bLatticeType : type >-> Order.BLattice.type.
+Coercion tLatticeType : type >-> Order.TLattice.type.
+Coercion tbLatticeType : type >-> Order.TBLattice.type.
 Coercion distrLatticeType : type >-> Order.DistrLattice.type.
 Coercion bDistrLatticeType : type >-> Order.BDistrLattice.type.
+Coercion tDistrLatticeType : type >-> Order.TDistrLattice.type.
+Coercion tbDistrLatticeType : type >-> Order.TBDistrLattice.type.
 Coercion cbDistrLatticeType : type >-> Order.CBDistrLattice.type.
 Coercion ctbDistrLatticeType : type >-> Order.CTBDistrLattice.type.
 Coercion semisetType : type >-> Semiset.type.
@@ -994,13 +1059,39 @@ Coercion semisetType : type >-> Semiset.type.
 Canonical eqType.
 Canonical choiceType.
 Canonical porderType.
+Canonical bPOrderType.
+Canonical tPOrderType.
+Canonical tbPOrderType.
+Canonical meetSemilatticeType.
+Canonical bMeetSemilatticeType.
+Canonical tMeetSemilatticeType.
+Canonical tbMeetSemilatticeType.
+Canonical joinSemilatticeType.
+Canonical bJoinSemilatticeType.
+Canonical tJoinSemilatticeType.
+Canonical tbJoinSemilatticeType.
 Canonical latticeType.
 Canonical bLatticeType.
+Canonical tLatticeType.
+Canonical tbLatticeType.
 Canonical distrLatticeType.
 Canonical bDistrLatticeType.
+Canonical tDistrLatticeType.
+Canonical tbDistrLatticeType.
 Canonical cbDistrLatticeType.
 Canonical ctbDistrLatticeType.
 Canonical semisetType.
+Canonical semiset_tPOrderType.
+Canonical semiset_tbPOrderType.
+Canonical semiset_tMeetSemilatticeType.
+Canonical semiset_tbMeetSemilatticeType.
+Canonical semiset_tJoinSemilatticeType.
+Canonical semiset_tbJoinSemilatticeType.
+Canonical semiset_tLatticeType.
+Canonical semiset_tbLatticeType.
+Canonical semiset_tDistrLatticeType.
+Canonical semiset_tbDistrLatticeType.
+Canonical semiset_ctbDistrLatticeType.
 
 Notation setType  := type.
 
@@ -1018,7 +1109,7 @@ Section setTheory.
 Variable elementType : Type.
 Variable eqType_of_elementType : elementType -> eqType.
 Coercion eqType_of_elementType : elementType >-> eqType.
-Variable disp : unit.
+Variable disp : Order.disp_t.
 Variable set : setType eqType_of_elementType disp.
 
 Section setX.
