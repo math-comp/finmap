@@ -63,7 +63,7 @@ Arguments PredType [T pT] toP.
 Module SET.
 Import Order.Theory.
 
-Fact display_set : unit -> unit. Proof. exact. Qed.
+Fact display_set : Order.disp_t -> Order.disp_t. Proof. exact. Qed.
 
 Module Import SetSyntax.
 
@@ -148,17 +148,17 @@ Structure mixin_of d (set : elementType -> (cbDistrLatticeType (display_set d)))
 
 Record class_of (set : elementType -> Type) := Class {
   base  : forall X, @Order.CBDistrLattice.class_of (set X);
-  mixin_disp : unit;
+  mixin_disp : Order.disp_t;
   mixin : mixin_of (fun X => Order.CBDistrLattice.Pack (display_set mixin_disp) (base X))
 }.
 
 Local Coercion base : class_of >-> Funclass.
 
-Structure type (disp : unit) := Pack { sort ; _ : class_of sort }.
+Structure type (disp : Order.disp_t) := Pack { sort ; _ : class_of sort }.
 
 Local Coercion sort : type >-> Funclass.
 
-Variables (set : elementType -> Type) (disp : unit) (cT : type disp).
+Variables (set : elementType -> Type) (disp : Order.disp_t) (cT : type disp).
 
 Definition class := let: Pack _ c as cT' := cT return class_of cT' in c.
 Definition clone c & phant_id class c := @Pack disp set c.
@@ -183,7 +183,7 @@ Notation type := (type eqType_of_elementType).
 Local Coercion base : class_of >-> Funclass.
 Local Coercion sort : type >-> Funclass.
 Variables (set : elementType -> Type) (X : elementType).
-Variables (disp : unit) (cT : type disp).
+Variables (disp : Order.disp_t) (cT : type disp).
 Local Notation ddisp := (display_set disp).
 
 Let xset := let: Pack set _ := cT in set.
@@ -259,7 +259,7 @@ Import Semiset.Exports.
 Section SemisetOperations.
 Context {elementType : Type} {eqType_of_elementType : elementType -> eqType}.
 Coercion eqType_of_elementType : elementType >-> eqType.
-Context {disp : unit}.
+Context {disp : Order.disp_t}.
 
 Section setfun.
 Variable (set : semisetType eqType_of_elementType disp).
@@ -339,7 +339,7 @@ Section SemisetTheory.
 Variable elementType : Type.
 Variable eqType_of_elementType : elementType -> eqType.
 Coercion eqType_of_elementType : elementType >-> eqType.
-Variable disp : unit.
+Variable disp : Order.disp_t.
 Variable set : semisetType eqType_of_elementType disp.
 
 Section setX.
@@ -933,7 +933,7 @@ Implicit Types (X Y : elementType).
 
 Record class_of (set : elementType -> Type) := Class {
   base  : forall X, Order.CTBDistrLattice.class_of (set X);
-  mixin_disp : unit;
+  mixin_disp : Order.disp_t;
   mixin : Semiset.mixin_of eqType_of_elementType
             (fun X => Order.CBDistrLattice.Pack (display_set mixin_disp) (base X))
 }.
@@ -943,11 +943,11 @@ Definition base2 (set : elementType -> Type)
          (c : class_of set) := Semiset.Class (@mixin set c).
 Local Coercion base2 : class_of >-> Semiset.class_of.
 
-Structure type (disp : unit) := Pack { sort ; _ : class_of sort }.
+Structure type (disp : Order.disp_t) := Pack { sort ; _ : class_of sort }.
 
 Local Coercion sort : type >-> Funclass.
 
-Variables (set : elementType -> Type) (disp : unit) (cT : type disp).
+Variables (set : elementType -> Type) (disp : Order.disp_t) (cT : type disp).
 
 Definition class := let: Pack _ c as cT' := cT return class_of cT' in c.
 Let xset := let: Pack set _ := cT in set.
@@ -971,7 +971,7 @@ Local Coercion sort : type >-> Funclass.
 Local Coercion base : class_of >-> Funclass.
 Local Coercion base2 : class_of >-> Semiset.class_of.
 Variables (set : elementType -> Type) (X : elementType).
-Variable (disp : unit) (cT : type disp).
+Variable (disp : Order.disp_t) (cT : type disp).
 Local Notation ddisp := (display_set disp).
 
 Let xset := let: Pack set _ := cT in set.
@@ -1109,7 +1109,7 @@ Section setTheory.
 Variable elementType : Type.
 Variable eqType_of_elementType : elementType -> eqType.
 Coercion eqType_of_elementType : elementType >-> eqType.
-Variable disp : unit.
+Variable disp : Order.disp_t.
 Variable set : setType eqType_of_elementType disp.
 
 Section setX.
