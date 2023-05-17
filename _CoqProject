@@ -1,5 +1,6 @@
 finmap.v
 multiset.v
+set.v
 
 -R . mathcomp.finmap
 -arg -w -arg -projection-no-head-constant
