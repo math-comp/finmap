@@ -2491,7 +2491,7 @@ Qed.
 
 End BigFOpsSeq.
 
-Lemma bigfcup_imfset (I T : choiceType) (P : {fset I}) (f : I -> T) :
+Lemma bigfcup_imfset1 (I T : choiceType) (P : {fset I}) (f : I -> T) :
   \bigcup_(i <- P) [fset f i] = f @` P.
 Proof.
 apply/eqP; rewrite eqEfsubset; apply/andP; split; apply/fsubsetP => x.
