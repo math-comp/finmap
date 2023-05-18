@@ -5,7 +5,7 @@
 ### Added
 
 - in `finmap.v`:
-  + lemmas `bigfcup_imfset`, `fbig_pred1_inj`
+  + lemmas `bigfcup_imfset1`, `fbig_pred1_inj`
 
 ### Changed
 
