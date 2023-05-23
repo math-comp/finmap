@@ -2439,6 +2439,7 @@ HB.instance Definition _ := isComLaw.Build {fset T} fset0 fsetU
   (@fsetUA T) (@fsetUC T) (@fset0U T).
 
 End FSetMonoids.
+
 Section BigFOpsSeq.
 
 Variables (T : choiceType) (I : eqType) (r : seq I).
@@ -2475,6 +2476,30 @@ by apply/fsubsetP=> x /bigfcupP[i /andP[ri Pi]]; apply/fsubsetP/sFU.
 Qed.
 
 End BigFOpsSeq.
+
+Lemma bigfcup_imfset1 (I T : choiceType) (P : {fset I}) (f : I -> T) :
+  \bigcup_(i <- P) [fset f i] = f @` P.
+Proof.
+apply/eqP; rewrite eqEfsubset; apply/andP; split; apply/fsubsetP => x.
+- by case/bigfcupP=> i /andP [] iP _; rewrite inE => /eqP ->; apply/imfsetP; exists i.
+- case/imfsetP => i /= iP ->; apply/bigfcupP; exists i; rewrite ?andbT //.
+  by apply/imfsetP; exists (f i); rewrite ?inE.
+Qed.
+
+Section fbig_pred1_inj.
+Variables (R : Type) (idx : R) (op : Monoid.com_law idx).
+
+Lemma fbig_pred1_inj (I : choiceType) (T : eqType) f (k : I -> T) (d : {fset I}) i :
+  i \in d -> injective k -> \big[op/idx]_(j <- d | k j == k i) f j = f i.
+Proof.
+move=> di kinj.
+rewrite big_fset_condE -(big_seq_fset1 op); apply eq_fbig => // j.
+rewrite !inE /=; apply/idP/idP => [|/eqP ->]; last by rewrite eqxx andbT.
+by case/andP => _ /eqP /kinj ->.
+Qed.
+
+End fbig_pred1_inj.
+Arguments fbig_pred1_inj [R] [idx] [op] [I] [T] [f] [k].
 
 Section FsetPartitions.
 
