@@ -31,37 +31,27 @@ license:
   file: CECILL-B
 
 supported_coq_versions:
-  text: Coq 8.13 to 8.16
-  opam: '{ (>= "8.13" & < "8.17~") | (= "dev") }'
+  text: Coq 8.16 to 8.18
+  opam: '{ (>= "8.16" & < "8.19~") | (= "dev") }'
 
 tested_coq_opam_versions:
-- version: '1.13.0-coq-8.13'
+- version: '2.0.0-coq-8.16'
   repo: 'mathcomp/mathcomp'
-- version: '1.13.0-coq-8.14'
+- version: '2.0.0-coq-8.17'
   repo: 'mathcomp/mathcomp'
-- version: '1.13.0-coq-8.15'
+- version: '2.0.0-coq-8.18'
   repo: 'mathcomp/mathcomp'
-- version: '1.14.0-coq-8.13'
+- version: '2.1.0-coq-8.16'
   repo: 'mathcomp/mathcomp'
-- version: '1.14.0-coq-8.14'
+- version: '2.1.0-coq-8.17'
   repo: 'mathcomp/mathcomp'
-- version: '1.14.0-coq-8.15'
+- version: '2.1.0-coq-8.18'
   repo: 'mathcomp/mathcomp'
-- version: '1.15.0-coq-8.13'
-  repo: 'mathcomp/mathcomp'
-- version: '1.15.0-coq-8.14'
-  repo: 'mathcomp/mathcomp'
-- version: '1.15.0-coq-8.15'
-  repo: 'mathcomp/mathcomp'
-- version: '1.15.0-coq-8.16'
-  repo: 'mathcomp/mathcomp'
-- version: 'coq-8.13'
-  repo: 'mathcomp/mathcomp-dev'
-- version: 'coq-8.14'
-  repo: 'mathcomp/mathcomp-dev'
-- version: 'coq-8.15'
-  repo: 'mathcomp/mathcomp-dev'
 - version: 'coq-8.16'
+  repo: 'mathcomp/mathcomp-dev'
+- version: 'coq-8.17'
+  repo: 'mathcomp/mathcomp-dev'
+- version: 'coq-8.18'
   repo: 'mathcomp/mathcomp-dev'
 - version: 'coq-dev'
   repo: 'mathcomp/mathcomp-dev'
@@ -69,9 +59,9 @@ tested_coq_opam_versions:
 dependencies:
 - opam:
     name: coq-mathcomp-ssreflect
-    version: '{ (>= "1.13.0" & < "1.16~") | (= "dev") }'
+    version: '{ (>= "2.0" & < "2.2~") | (= "dev") }'
   description: |-
-    [MathComp ssreflect 1.13 to 1.15](https://math-comp.github.io)
+    [MathComp ssreflect 2.0 to 2.1](https://math-comp.github.io)
 
 namespace: mathcomp.finmap
 
