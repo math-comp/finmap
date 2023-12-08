@@ -2919,16 +2919,16 @@ Notation "f .[ kf ]" := (f [` kf]) : fmap_scope.
 Arguments ffun_of_fmap : simpl never.
 
 Notation "[ 'fmap' x : aT => F ]" := (FinMap [ffun x : aT => F])
-  (at level 0, x name, only parsing) : fun_scope.
+  (at level 0, x name, only parsing) : function_scope.
 
 Notation "[ 'fmap' : aT => F ]" := (FinMap [ffun _ : aT => F])
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fmap' x => F ]" := [fmap x : _ => F]
-  (at level 0, x name, format "[ 'fmap'  x  =>  F ]") : fun_scope.
+  (at level 0, x name, format "[ 'fmap'  x  =>  F ]") : function_scope.
 
 Notation "[ 'fmap' => F ]" := [fmap: _ => F]
-  (at level 0, format "[ 'fmap' =>  F ]") : fun_scope.
+  (at level 0, format "[ 'fmap' =>  F ]") : function_scope.
 
 Canonical finmap_of_finfun (K : choiceType) V (A : {fset K}) (f : {ffun A -> V}) := FinMap f.
 Arguments finmap_of_finfun /.
@@ -3794,43 +3794,43 @@ Delimit Scope fsfun_scope with fsfun.
 
 Notation "[ 'fsfun[' key ] x : aT => F | default ]" :=
   (fsfun_of_ffun key (fun x : aT => F) (fun x => default))
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun' x : aT => F | default ]" :=
   [fsfun[fsfun_key] x : aT => F | default]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun[' key ] x : aT => F ]" := [fsfun[key] x : aT => F | _]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun' x : aT => F ]" := [fsfun x : aT => F | _]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun[' key ] x => F | default ]" :=
   [fsfun[key] x : _ => F | default ]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun' x => F | default ]" := [fsfun x : _ => F | default]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun[' key ] x => F ]" := [fsfun[key] x => F | _]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun' x => F ]" := [fsfun x => F | _]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun[' key ]=> F | default ]" :=
   [fsfun[key] _ => F | default ]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fsfun=>' F | default ]" := [fsfun _ => F | default]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fsfun[' key ]=> F ]" := [fsfun[key]=> F | _]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fsfun=>' F ]" := [fsfun=> F | _]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Definition fsfun_of_fun key (K : choiceType) (V : eqType)
    (S : {fset K}) (h : K -> V) default :=
@@ -3838,57 +3838,57 @@ Definition fsfun_of_fun key (K : choiceType) (V : eqType)
 
 Notation "[ 'fsfun[' key ] x 'in' S => F | default ]" :=
   (fsfun_of_fun key S (fun x => F) (fun x => default))
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun' x 'in' S => F | default ]" :=
   [fsfun[fsfun_key] x in S => F | default]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun[' key ] x 'in' S => F ]" :=
   [fsfun[key] x in S => F | _]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun' x 'in' S => F ]" :=
   [fsfun[fsfun_key] x in S => F | _]
-  (at level 0, x at level 99, only parsing) : fun_scope.
+  (at level 0, x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun[' key ] 'in' S => F | default ]" :=
   [fsfun[key] _ in S => F | default]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fsfun' 'in' S => F | default ]" :=
   [fsfun[fsfun_key] in S => F | default]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fsfun[' key ] 'in' S => F ]" :=
   [fsfun[key] in S => F | _]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fsfun' 'in' S => F ]" :=
   [fsfun[fsfun_key] in S => F | _]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 (* only printing *)
 Notation "[ 'fs' 'fun' x : aT => F ]" := [fsfun[_] x : aT => F]
   (at level 0, x at level 99,
-  format "[ 'fs' 'fun'  x  :  aT  =>  F ]") : fun_scope.
+  format "[ 'fs' 'fun'  x  :  aT  =>  F ]") : function_scope.
 
 Notation "[ 'fs' 'fun' x 'in' aT => F ]" := [fsfun[_] x in aT => F]
   (at level 0, x at level 99,
-  format "[ 'fs' 'fun'  x  'in'  aT  =>  F ]") : fun_scope.
+  format "[ 'fs' 'fun'  x  'in'  aT  =>  F ]") : function_scope.
 
 Fact fsfun0_key : unit. Proof. exact: tt. Qed.
 Notation "[ 'fsfun' 'for' default ]" := (fsfun_of_ffun fsfun0_key [fmap] default)
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fsfun' 'of' x => default ]" := [fsfun for fun x => default]
-  (at level 0,  x at level 99, only parsing) : fun_scope.
+  (at level 0,  x at level 99, only parsing) : function_scope.
 
 Notation "[ 'fsfun' 'with' default ]" := [fsfun of _ => default]
-  (at level 0, only parsing) : fun_scope.
+  (at level 0, only parsing) : function_scope.
 
 Notation "[ 'fsfun' ]" := [fsfun for _]
- (at level 0, format "[ 'fsfun' ]") : fun_scope.
+ (at level 0, format "[ 'fsfun' ]") : function_scope.
 
 Section FsfunTheory.
 Variables (key : unit) (K : choiceType) (V : eqType) (default : K -> V).
@@ -3946,12 +3946,12 @@ Arguments app_fswithout {K V default}.
 Notation "[ 'fsfun' f 'with' d1 , .. , dn ]" :=
   (app_fsdelta d1%FUN_DELTA .. (app_fsdelta dn%FUN_DELTA f) ..)
   (at level 0, f at level 99, format
-  "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'with'  '[' d1 , '/'  .. , '/'  dn ']' ] ']'") : fun_scope.
+  "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'with'  '[' d1 , '/'  .. , '/'  dn ']' ] ']'") : function_scope.
 
 Notation "[ 'fsfun' f 'without' x1 , .. , xn ]" :=
   (app_fswithout x1 .. (app_fswithout xn f) ..)
   (at level 0, f at level 99, format
-  "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'without'  '[' x1 , '/'  .. , '/'  xn ']' ] ']'") : fun_scope.
+  "'[hv' [ '[' 'fsfun' '/ '  f ']' '/'  'without'  '[' x1 , '/'  .. , '/'  xn ']' ] ']'") : function_scope.
 
 Section FsWithTheory.
 Variables (K : choiceType) (V : eqType) (default : K -> V).
