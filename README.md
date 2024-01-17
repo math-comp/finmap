@@ -6,8 +6,8 @@ Follow the instructions on https://github.com/coq-community/templates to regener
 
 [![Docker CI][docker-action-shield]][docker-action-link]
 
-[docker-action-shield]: https://github.com/math-comp/finmap/workflows/Docker%20CI/badge.svg?branch=master
-[docker-action-link]: https://github.com/math-comp/finmap/actions?query=workflow:"Docker%20CI"
+[docker-action-shield]: https://github.com/math-comp/finmap/actions/workflows/docker-action.yml/badge.svg?branch=master
+[docker-action-link]: https://github.com/math-comp/finmap/actions/workflows/docker-action.yml
 
 
 
@@ -24,9 +24,9 @@ which will be used to subsume notations for finite sets, eventually.
   - Cyril Cohen (initial)
   - Kazuhiko Sakaguchi
 - License: [CeCILL-B](CECILL-B)
-- Compatible Coq versions: Coq 8.16 to 8.18
+- Compatible Coq versions: Coq 8.16 to 8.20
 - Additional dependencies:
-  - [MathComp ssreflect 2.0 to 2.1](https://math-comp.github.io)
+  - [MathComp ssreflect 2.0 to 2.2](https://math-comp.github.io)
 - Coq namespace: `mathcomp.finmap`
 - Related publication(s): none
 
