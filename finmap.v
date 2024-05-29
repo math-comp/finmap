@@ -1606,6 +1606,11 @@ Proof. by apply/fsetP=> x; rewrite in_fset_cons !inE. Qed.
 Lemma fset_nil : [fset[key] x in [::] : seq K] = fset0.
 Proof. by apply/fsetP=> x; rewrite in_fset_nil. Qed.
 
+Lemma fset_seq1 a : [:: a] = [fset a].
+Proof.
+by rewrite (@perm_small_eq _ [fset a] [:: a])//; apply: uniq_perm=>// ? /[!inE].
+Qed.
+
 Lemma fset_cat s s' :
    [fset[key] x in s ++ s'] = [fset[key] x in s] `|` [fset[key] x in s'].
 Proof. by apply/fsetP=> x; rewrite !inE !in_fset_cat. Qed.
@@ -2131,7 +2136,7 @@ End Enum.
 
 Section ImfsetTh.
 Variables (key : unit) (K V V' : choiceType).
-Implicit Types (f : K -> V) (g : V -> V') (A V : {fset K}).
+Implicit Types (f : K -> V) (g : V -> V') (A B : {fset K}).
 
 Lemma imfset_id (A : {fset K}) : id @` A = A.
 Proof. by apply/fsetP=> a; rewrite in_fset. Qed.
@@ -2157,6 +2162,39 @@ Lemma eq_imfset (f f' : K -> V) (p q : finmempred _):
 Proof.
 move=> eq_f eqP; apply/fsetP => x; apply/imfsetP/imfsetP => /= [] [k Pk ->];
 by exists k => //=; rewrite ?eq_f ?eqP in Pk *.
+Qed.
+
+Lemma imfsetU f A B : f @` (A `|` B) = f @` A `|` f @` B.
+Proof.
+apply/fsetP => v; apply/imfsetP/fsetUP.
+  by move=> [k /fsetUP [? ->|? ->]]; [left|right]; apply/imfsetP; exists k.
+by move=> [|] /imfsetP /= [k kin ->]; exists k => //; rewrite inE kin ?orbT.
+Qed.
+
+Lemma imfset0 f : f @` fset0 = fset0.
+Proof. by apply/fsetP => v; apply/imfsetP; rewrite inE => -[k /[!inE]]. Qed.
+
+Lemma imfset_fset1 f x : f @` [fset x] = [fset f x].
+Proof.
+apply/fsetP => y.
+by apply/imfsetP/fset1P => [[x' /fset1P -> //]|->]; exists x; rewrite ?fset11.
+Qed.
+
+Lemma imfset_fset2 f k1 k2 : f @` [fset k1; k2] = [fset f k1; f k2].
+Proof. by rewrite imfsetU 2!imfset_fset1. Qed.
+
+Lemma imfsetU1 f a A : f @` (a |` A) = f a |` (f @` A).
+Proof. by rewrite imfsetU imfset_fset1. Qed.
+
+Lemma imfsetI f A B :
+  {in A & B, injective f} -> f @` (A `&` B) = f @` A `&` f @` B.
+Proof.
+  move=> injf; apply/fsetP => v.
+  apply/imfsetP/fsetIP => /=.
+    by move=> [k /fsetIP [kinA kinB] ->]; split; apply/imfsetP; exists k.
+  move=> [/imfsetP /= [ka kainA eqka] /imfsetP /= [kb kbinB eqkb]].
+  have eqk : ka = kb by apply: injf => //; rewrite -eqka -eqkb.
+  by exists ka => //; apply/fsetIP; split=> //; rewrite eqk.
 Qed.
 
 End ImfsetTh.
@@ -2477,14 +2515,28 @@ Qed.
 
 End BigFOpsSeq.
 
-Lemma bigfcup_imfset1 (I T : choiceType) (P : {fset I}) (f : I -> T) :
-  \bigcup_(i <- P) [fset f i] = f @` P.
+Section BigFOps.
+
+Variables (I T : choiceType).
+Implicit Types (f : I -> T).
+
+Lemma bigfcup_imfset1 (P : {fset I}) f : \bigcup_(i <- P) [fset f i] = f @` P.
 Proof.
 apply/eqP; rewrite eqEfsubset; apply/andP; split; apply/fsubsetP => x.
 - by case/bigfcupP=> i /andP [] iP _; rewrite inE => /eqP ->; apply/imfsetP; exists i.
 - case/imfsetP => i /= iP ->; apply/bigfcupP; exists i; rewrite ?andbT //.
   by apply/imfsetP; exists (f i); rewrite ?inE.
 Qed.
+
+Lemma bigfcup_imfset (V : choiceType) f (F : V -> {fset I}) (A : {fset V}):
+  \bigcup_(a <- A) f @` F a = f @` (\bigcup_(a <- A) F a).
+Proof.
+apply/fsetP => t; apply/bigfcupP/imfsetP.
+  by move=> [v ? /imfsetP [i ? ->]]; exists i => //; apply/bigfcupP; exists v.
+by move=> [i /bigfcupP [v ? ?] ->]; exists v => //; apply/imfsetP; exists i.
+Qed.
+
+End BigFOps.
 
 Section fbig_pred1_inj.
 Variables (R : Type) (idx : R) (op : Monoid.com_law idx).
