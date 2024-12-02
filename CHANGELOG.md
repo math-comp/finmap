@@ -1,6 +1,15 @@
 # Changelog
 
-Last release: [[1.5.2] - 2022-07-06](#152---2022-07-06)
+Last release: [[2.1.0] - 2024-01-17](#210---2024-01-17)
+
+## [2.1.0] - 2024-01-17
+
+no documentation
+
+## [2.0.0] - 2023-05-23
+
+- in `finmap.v`:
+  + lemmas `bigfcup_imfset1`, `fbig_pred1_inj`
 
 ## [1.5.2] - 2022-07-06
 
