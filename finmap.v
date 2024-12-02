@@ -5,7 +5,7 @@ From HB Require Import structures.
 Set Warnings "-notation-incompatible-format".
 From mathcomp Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
 Set Warnings "notation-incompatible-format".
-From mathcomp Require Import choice path finset finfun fintype bigop.
+From mathcomp Require Import choice finset finfun fintype bigop.
 
 (*****************************************************************************)
 (* This file provides representations for finite sets over a choiceType K,   *)
@@ -2189,12 +2189,12 @@ Proof. by rewrite imfsetU imfset_fset1. Qed.
 Lemma imfsetI f A B :
   {in A & B, injective f} -> f @` (A `&` B) = f @` A `&` f @` B.
 Proof.
-  move=> injf; apply/fsetP => v.
-  apply/imfsetP/fsetIP => /=.
-    by move=> [k /fsetIP [kinA kinB] ->]; split; apply/imfsetP; exists k.
-  move=> [/imfsetP /= [ka kainA eqka] /imfsetP /= [kb kbinB eqkb]].
-  have eqk : ka = kb by apply: injf => //; rewrite -eqka -eqkb.
-  by exists ka => //; apply/fsetIP; split=> //; rewrite eqk.
+move=> injf; apply/fsetP => v.
+apply/imfsetP/fsetIP => /=.
+  by move=> [k /fsetIP [kinA kinB] ->]; split; apply/imfsetP; exists k.
+move=> [/imfsetP /= [ka kainA eqka] /imfsetP /= [kb kbinB eqkb]].
+have eqk : ka = kb by apply: injf => //; rewrite -eqka -eqkb.
+by exists ka => //; apply/fsetIP; split=> //; rewrite eqk.
 Qed.
 
 End ImfsetTh.
@@ -2523,7 +2523,7 @@ Implicit Types (f : I -> T).
 Lemma bigfcup_imfset1 (P : {fset I}) f : \bigcup_(i <- P) [fset f i] = f @` P.
 Proof.
 apply/eqP; rewrite eqEfsubset; apply/andP; split; apply/fsubsetP => x.
-- by case/bigfcupP=> i /andP [] iP _; rewrite inE => /eqP ->; apply/imfsetP; exists i.
+- by case/bigfcupP=> i /andP [] iP _ /[!inE] /eqP ->; apply/imfsetP; exists i.
 - case/imfsetP => i /= iP ->; apply/bigfcupP; exists i; rewrite ?andbT //.
   by apply/imfsetP; exists (f i); rewrite ?inE.
 Qed.
