@@ -4,10 +4,10 @@
 
 ### Added
 
-- in `finmap.v`:
-  + lemmas `bigfcup_imfset`, `fbig_pred1_inj`
-
 ### Changed
+
+- in `finmap.v`
+  + lemma `partition_disjoint_bigfcup` generalized
 
 ### Renamed
 

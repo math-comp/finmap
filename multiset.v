@@ -7,7 +7,7 @@
 Set Warnings "-notation-incompatible-format".
 From mathcomp Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.
 Set Warnings "notation-incompatible-format".
-From mathcomp Require Import choice path finset finfun fintype bigop tuple.
+From mathcomp Require Import choice finset finfun fintype bigop tuple.
 Require Import finmap.
 
 (*****************************************************************************)
