@@ -26,7 +26,7 @@ which will be used to subsume notations for finite sets, eventually.
 - License: [CeCILL-B](CECILL-B)
 - Compatible Coq versions: Coq 8.16 to 8.20
 - Additional dependencies:
-  - [MathComp ssreflect 2.0 to 2.2](https://math-comp.github.io)
+  - [MathComp ssreflect 2.0 to 2.3](https://math-comp.github.io)
 - Coq namespace: `mathcomp.finmap`
 - Related publication(s): none
 
