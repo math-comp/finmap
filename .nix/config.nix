@@ -75,6 +75,9 @@
     "8.19".coqPackages = common-bundles // {
       coq.override.version = "8.19";
     };
+    "8.20".coqPackages = common-bundles // {
+      coq.override.version = "8.20";
+    };
     "master".coqPackages = {
       coq.override.version = "master";
       coq-elpi.override.version = "coq-master";
