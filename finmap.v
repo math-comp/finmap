@@ -1,7 +1,7 @@
 (* (c) Copyright 2006-2019 Microsoft Corporation and Inria.                  *)
 (* Distributed under the terms of CeCILL-B.                                  *)
 
-From Coq Require Import Setoid.
+From Corelib Require Import Setoid.
 From HB Require Import structures.
 Set Warnings "-notation-incompatible-format".
 From mathcomp Require Import ssreflect ssrbool ssrnat eqtype ssrfun seq.

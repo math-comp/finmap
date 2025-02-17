@@ -4,5 +4,7 @@
 *.glob
 *.v.d
 *.aux
-Makefile.*
+.Makefile.coq.d
+Makefile.coq
+Makefile.coq.conf
 *~
