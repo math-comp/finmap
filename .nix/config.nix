@@ -31,7 +31,7 @@
 
   ## select an entry to build in the following `bundles` set
   ## defaults to "default"
-  default-bundle = "8.18";
+  default-bundle = "8.20";
 
   ## Cachix caches to use in CI
   ## Below we list some standard ones
@@ -78,13 +78,23 @@
     "8.20".coqPackages = common-bundles // {
       coq.override.version = "8.20";
     };
-    "master".coqPackages = {
+    "9.0".coqPackages = common-bundles // {
+      coq.override.version = "9.0";
+    };
+    "master" = { rocqPackages = {
+      rocq-core.override.version = "master";
+      rocq-elpi.override.version = "master";
+      rocq-elpi.override.elpi-version = "2.0.7";
+      stdlib.override.version = "master";
+    }; coqPackages = {
       coq.override.version = "master";
-      coq-elpi.override.version = "coq-master";
+      coq-elpi.override.version = "master";
+      coq-elpi.override.elpi-version = "2.0.7";
       hierarchy-builder.override.version = "master";
       mathcomp.override.version = "master";
-      mathcomp-bigenough.override.version = "1.0.1";
+      mathcomp-bigenough.override.version = "1.0.2";
       multinomials.override.version = "master";
-    };
+      stdlib.override.version = "master";
+    }; };
   };
 }
