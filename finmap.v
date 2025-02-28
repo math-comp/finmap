@@ -356,11 +356,11 @@ Reserved Notation "\bigcup_ ( i 'in' A ) F"
 
 Reserved Notation "{fmap T }" (at level 0, format "{fmap  T }").
 Reserved Notation "x .[ k <- v ]"
-  (at level 2, left associativity, format "x .[ k  <-  v ]").
-Reserved Notation "x .[~ k ]" (at level 2, k at level 200, format "x .[~  k ]").
-Reserved Notation "x .[& k ]" (at level 2, k at level 200, format "x .[&  k ]").
-Reserved Notation "x .[\ k ]" (at level 2, k at level 200, format "x .[\  k ]").
-Reserved Notation "x .[? k ]" (at level 2, k at level 200, format "x .[?  k ]").
+  (left associativity, format "x .[ k  <-  v ]").
+Reserved Notation "x .[~ k ]" (format "x .[~  k ]").
+Reserved Notation "x .[& k ]" (format "x .[&  k ]").
+Reserved Notation "x .[\ k ]" (format "x .[\  k ]").
+Reserved Notation "x .[? k ]" (format "x .[?  k ]").
 Reserved Infix "`~`" (at level 52).
 Reserved Notation "[ 'fset' k ]" (at level 0, k at level 99, format "[ 'fset'  k ]").
 

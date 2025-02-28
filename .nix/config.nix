@@ -62,19 +62,6 @@
       "mathcomp".override.version = "mathcomp-2.2.0";
       "multinomials".override.version = "master";
     }; in {
-    "8.16".coqPackages = common-bundles // {
-      coq.override.version = "8.16";
-      multinomials.job = false;  # native compute broken on Nix with Coq 8.16
-    };
-    "8.17".coqPackages = common-bundles // {
-      coq.override.version = "8.17";
-    };
-    "8.18".coqPackages = common-bundles // {
-      coq.override.version = "8.18";
-    };
-    "8.19".coqPackages = common-bundles // {
-      coq.override.version = "8.19";
-    };
     "8.20".coqPackages = common-bundles // {
       coq.override.version = "8.20";
     };
