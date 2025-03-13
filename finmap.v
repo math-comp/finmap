@@ -2660,21 +2660,24 @@ Qed.
 
 Lemma partition_disjoint_bigfcup (f : T -> R) (F : I -> {fset T})
   (K : {fset I}) :
-  (forall i j, i != j -> [disjoint F i & F j])%fset ->
+  (forall i j, i \in K -> j \in K -> i != j -> [disjoint F i & F j])%fset ->
   \big[op/idx]_(i <- \big[fsetU/fset0]_(x <- K) (F x)) f i =
   \big[op/idx]_(k <- K) (\big[op/idx]_(i <- F k) f i).
 Proof.
 move=> disjF; pose P := [fset F i | i in K & F i != fset0]%fset.
 have trivP : trivIfset P.
-  apply/trivIfsetP => _ _ /imfsetP[i _ ->] /imfsetP[j _ ->] neqFij.
-  by apply: disjF; apply: contraNneq neqFij => ->.
+  apply/trivIfsetP => _ _ /imfsetP[i iK ->] /imfsetP[j jK ->] neqFij.
+  move: iK; rewrite !inE/= => /andP[iK Fi0].
+  move: jK; rewrite !inE/= => /andP[jK Fj0].
+  by apply: (disjF _ _ iK jK); apply: contraNneq neqFij => ->.
 have -> : (\bigcup_(i <- K) F i)%fset = fcover P.
   apply/esym; rewrite /P fcover_imfset big_mkcond /=; apply eq_bigr => i _.
   by case: ifPn => // /negPn/eqP.
-rewrite big_trivIfset // /rhs big_imfset => [|i j _ /andP[jK notFj0] eqFij] /=.
+rewrite big_trivIfset // /rhs big_imfset => [|i j iK /andP[jK notFj0] eqFij] /=.
   rewrite big_filter big_mkcond; apply eq_bigr => i _.
   by case: ifPn => // /negPn /eqP ->;  rewrite big_seq_fset0.
-by apply: contraNeq (disjF _ _) _; rewrite -fsetI_eq0 eqFij fsetIid.
+move: iK; rewrite !inE/= => /andP[iK Fi0].
+by apply: contraNeq (disjF _ _ iK jK) _; rewrite -fsetI_eq0 eqFij fsetIid.
 Qed.
 
 End FsetBigOps.
