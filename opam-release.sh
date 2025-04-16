@@ -25,9 +25,9 @@ URL=$4
 fi
 
 COA=$(mktemp -d) # stands for Coq Opam Archive
-git clone --depth=10 git@github.com:coq/opam-coq-archive $COA -o upstream
+git clone --depth=10 git@github.com:rocq-prover/opam.git $COA -o upstream
 git -C $COA remote add\
-  origin git@github.com:$GITHUBUSER/opam-coq-archive
+  origin git@github.com:$GITHUBUSER/opam.git
 BRANCH=$PROJECT.$VERSION
 git -C $COA checkout -b $BRANCH
 PKGS=$COA/released/packages
@@ -56,5 +56,5 @@ git -C $COA push origin -f $BRANCH
 
 echo "**********************************************************************"
 echo "Create a pull request by visiting"
-echo "https://github.com/$GITHUBUSER/opam-coq-archive/pull/new/$BRANCH"
+echo "https://github.com/$GITHUBUSER/opam/pull/new/$BRANCH"
 echo "**********************************************************************"
