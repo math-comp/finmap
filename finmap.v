@@ -3059,6 +3059,14 @@ HB.instance Definition _ := Countable.copy {fmap K -> V}
 
 End FinMapCountType.
 
+Section FinMapFinType.
+Variable (K V : finType).
+
+HB.instance Definition _ := Finite.copy {fmap K -> V}
+  (can_type (@finMap_codeK K V)).
+
+End FinMapFinType.
+
 End FinMapCanonicals.
 
 Section FinMapTheory.
@@ -3844,6 +3852,9 @@ HB.instance Definition _ (K V : choiceType) (d : K -> V) :=
 
 HB.instance Definition _ (K V : countType) (d : K -> V) :=
   [Countable of fsfun d by <:].
+
+HB.instance Definition _ (K V : finType) (d : K -> V) :=
+  [Finite of fsfun d by <:].
 
 Declare Scope fsfun_scope.
 Delimit Scope fsfun_scope with fsfun.
