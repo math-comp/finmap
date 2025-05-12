@@ -2174,6 +2174,13 @@ move=> eq_f eqP; apply/fsetP => x; apply/imfsetP/imfsetP => /= [] [k Pk ->];
 by exists k => //=; rewrite ?eq_f ?eqP in Pk *.
 Qed.
 
+Lemma eq_in_imfset f f' (p : finmempred _):
+  {in p, f =1 f'} -> imfset key f p = imfset key f' p.
+Proof.
+move=> eq_f; apply/fsetP=> x; apply/imfsetP/imfsetP => /= [] [k Pk ->];
+by exists k => //; rewrite eq_f.
+Qed.
+
 Lemma imfsetU f A B : f @` (A `|` B) = f @` A `|` f @` B.
 Proof.
 apply/fsetP => v; apply/imfsetP/fsetUP.
