@@ -2110,6 +2110,15 @@ Qed.
 Lemma FSetK A (X : {set A}) : fsub A [fsetval k in X] = X.
 Proof. by apply/setP => x; rewrite !inE. Qed.
 
+Lemma fset_injective_inP (T : eqType) (f : K -> T) A :
+  reflect {in A &, injective f} (injectiveb (fun x : A => f (val x))).
+Proof.
+apply: (iffP (@injectiveP _ _ _)) => f_inj a b; last first.
+  by move => *; apply: val_inj; apply: f_inj => //; apply: valP.
+move=> aT bT eq_ga_gb; have := f_inj (Sub a aT) (Sub b bT).
+by move=> /(_ eq_ga_gb) /(congr1 val).
+Qed.
+
 End Theory.
 #[global] Hint Resolve fsubset_refl fsubset_trans : core.
 #[global] Hint Resolve fproper_irrefl fsub0set : core.
@@ -4090,7 +4099,7 @@ Lemma fscomp_inj g f : injective f -> injective g -> injective (g \o f)%fsfun.
 Proof. by move=> f_inj g_inj k k'; rewrite !fscompE => /= /g_inj /f_inj. Qed.
 
 Definition fsinjectiveb : pred {fsfun K -> K} :=
-  [pred f | (injectiveb [ffun a : finsupp f => f (val a)])
+  [pred f | (injectiveb (fun a : finsupp f => f (val a)))
             && [forall a : finsupp f, f (val a) \in finsupp f]].
 
 Lemma fsinjP {f} : [<->
@@ -4118,7 +4127,7 @@ Qed.
 Lemma fsinjectiveP f : reflect (injective f) (fsinjectiveb f).
 Proof.
 apply: equivP (fsinjP 1 0) => /=;
-by apply: (iffP andP)=> -[/fsfun_injective_inP ? /forallP ?].
+by apply: (iffP andP)=> -[/fset_injective_inP ? /forallP ?].
 Qed.
 
 Lemma fsinjectivebP f :
