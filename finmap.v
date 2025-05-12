@@ -2696,6 +2696,18 @@ move=> Xleq; apply: ih => Y XsubY; apply: IHn.
 by rewrite -ltnS (leq_trans _ Xleq) // fproper_ltn_card.
 Qed.
 
+Lemma fset1U_rect (T : choiceType) (P : {fset T} -> Type) :
+  P fset0 ->
+  (forall x X, x \notin X -> P X -> P (x |` X)) ->
+  forall X, P X.
+Proof.
+move=> P0 PS; elim/finSet_rect=> X IH.
+case: (altP (X =P fset0)) => [->|] //.
+case/fset0Pn/sigW=> x X_x; rewrite -(fsetD1K X_x); apply: PS.
+  by rewrite in_fsetD1 eqxx.
+apply: IH; exact: fproperD1.
+Qed.
+
 Lemma fset_bounded_coind (T : choiceType) (P : {fset T} -> Type) (U : {fset T}):
   (forall X, (forall Y, Y `<=` U -> X `<` Y -> P Y) -> P X) ->
    forall X, X `<=` U -> P X.
