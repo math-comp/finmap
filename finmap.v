@@ -2214,6 +2214,21 @@ have eqk : ka = kb by apply: injf => //; rewrite -eqka -eqkb.
 by exists ka => //; apply/fsetIP; split=> //; rewrite eqk.
 Qed.
 
+Lemma card_in_imfsetP f A :
+  reflect {in A &, injective f} (#|` f @` A| == #|` A|).
+Proof.
+apply/(iffP eqP) => [card_eq|?]; last exact: card_in_imfset.
+apply/fset_injective_inP; have [//|] := boolP (injectiveb _).
+case/injectivePn=> /= x [] y x_y fx_fy; pose B := A `\ \val x.
+have AE : A = \val x |` B by rewrite fsetD1K ?(valP x).
+have card_A : #|` A| = #|` B|.+1 by rewrite (cardfsD1 (\val x)) /= (valP x).
+suff /fsubset_leq_card fAfB : f @` A `<=` f @` B.
+  by rewrite card_eq card_A ltnNge leq_imfset_card in fAfB.
+rewrite AE imfsetU1 fsubUset fsub1set fx_fy fsubset_refl andbT.
+apply/imfsetP; exists (\val y); rewrite //= in_fsetD1 eq_sym (valP y).
+by rewrite inj_eq ?x_y //; exact: val_inj.
+Qed.
+
 End ImfsetTh.
 
 Section PowerSetTheory.
