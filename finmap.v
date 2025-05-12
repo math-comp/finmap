@@ -3996,6 +3996,14 @@ Proof. by move=> x; rewrite unlock insubF ?inE. Qed.
 
 Definition fsfunE := (fsfun_fun, fsfun0E).
 
+Lemma finsupp_fsfun (S : {fset K}) h :
+  finsupp [fsfun[key] a : S => h (\val a) | default a]
+  = [fset x | x in S & h x != default x].
+Proof.
+apply/fsetP=> x; rewrite mem_finsupp fsfunE inE /= inE.
+by case: ifP => // _; rewrite eqxx.
+Qed.
+
 Lemma finsupp_sub  (S : {fset K}) (h : S -> V) :
   finsupp [fsfun[key] a : S => h a | default a] `<=` S.
 Proof.
