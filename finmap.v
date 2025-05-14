@@ -4166,10 +4166,24 @@ Lemma fsinjectivebP f :
         (fsinjectiveb f).
 Proof. by apply/(iffP (fsinjectiveP _)) => /(fsinjP 0 2). Qed.
 
+Lemma imfset_eq_fsinjectiveP f :
+  reflect (f @` finsupp f = finsupp f) (fsinjectiveb f).
+Proof.
+apply: (equivP (fsinjectiveP _)); apply: (iff_trans (fsinjP 0 1)) => /=.
+split=> [[f_inj supp_clos]|e_supp].
+- apply/eqP; rewrite -fsubset_leqif_cards ?(introT (card_in_imfsetP _ _)) //.
+  apply/fsubsetP=> _ /imfsetP [] /= x x_in ->.
+  exact: (supp_clos (Sub x x_in)).
+- split; first by apply/card_in_imfsetP; rewrite e_supp.
+  move=> x; rewrite -{2}e_supp; apply/imfsetP.
+  by exists (\val x); rewrite // (valP x).
+Qed.
+
 End FsfunIdTheory.
 
 Arguments fsinjP {K f}.
 Arguments fsinjectiveP {K f}.
 Arguments fsinjectivebP {K f}.
+Arguments imfset_eq_fsinjectiveP {K f}.
 
 Definition inE := inE.
