@@ -3423,6 +3423,28 @@ Notation "x .[& A ]" := (restrictf x A) : fmap_scope.
 Notation "x .[\ A ]" := (x.[& domf x `\` A]) : fmap_scope.
 Notation "x .[~ k ]" := (x.[\ [fset k]]) : fmap_scope.
 
+Section FMapRect.
+
+Variables (T : choiceType) (S : Type) (P : {fmap T -> S} -> Type).
+
+Hypothesis P0 : P [fmap].
+Hypothesis P1 : forall m, P m -> forall x y, x \notin domf m -> P m.[x <- y].
+
+Lemma fmap_rect m : P m.
+Proof.
+move e: (domf m) => X.
+elim/fset1U_rect: X => [|x X xX IH] in m e *.
+  by move/fmap_nil: e => ->.
+have x_m : x \in domf m by rewrite e fset1U1.
+pose y := m.[x_m].
+have {}e: domf m.[~ x] = X by rewrite domf_rem e fsetU1K.
+have -> : m = m.[~ x].[x <- y].
+  by rewrite -[LHS](setf_get [` x_m]) /= setf_rem1.
+by apply: P1; rewrite ?e //; apply: IH.
+Qed.
+
+End FMapRect.
+
 Section Cat.
 Variables (K : choiceType) (V : Type).
 Implicit Types (f g : {fmap K -> V}).
