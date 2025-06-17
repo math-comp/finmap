@@ -338,22 +338,6 @@ Reserved Notation "[ 'f' 'setval' x : A | P ]"
 Reserved Notation "[ 'f' 'setval' x : A | P & Q ]"
   (at level 0, x at level 99, format "[ 'f' 'setval'  x  :  A  |  P  &  Q ]").
 
-Reserved Notation "\bigcup_ ( i <- r | P ) F"
-  (at level 41, F at level 41, i, r at level 50,
-           format "'[' \bigcup_ ( i  <-  r  |  P ) '/  '  F ']'").
-Reserved Notation "\bigcup_ ( i <- r ) F"
-  (at level 41, F at level 41, i, r at level 50,
-           format "'[' \bigcup_ ( i  <-  r ) '/  '  F ']'").
-Reserved Notation "\bigcup_ ( i | P ) F"
-  (at level 41, F at level 41, i at level 50,
-           format "'[' \bigcup_ ( i  |  P ) '/  '  F ']'").
-Reserved Notation "\bigcup_ ( i 'in' A | P ) F"
-  (at level 41, F at level 41, i, A at level 50,
-           format "'[' \bigcup_ ( i  'in'  A  |  P ) '/  '  F ']'").
-Reserved Notation "\bigcup_ ( i 'in' A ) F"
-  (at level 41, F at level 41, i, A at level 50,
-           format "'[' \bigcup_ ( i  'in'  A ) '/  '  F ']'").
-
 Reserved Notation "{fmap T }" (at level 0, format "{fmap  T }").
 Reserved Notation "x .[ k <- v ]"
   (left associativity, format "x .[ k  <-  v ]").
