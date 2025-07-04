@@ -2313,6 +2313,9 @@ Proof. by rewrite big_seq_fsetE big_fset1. Qed.
 
 End BigFSet.
 
+Lemma card_fset_sum1 (T : choiceType) (A : {fset T}) : #|` A| = \sum_(i <- A) 1.
+Proof. by rewrite big_seq_fsetE/= sum1_card cardfE. Qed.
+
 Notation eq_big_imfset := (perm_big _ (enum_imfset _ _)).
 
 Section BigComFSet.
