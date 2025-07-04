@@ -17,6 +17,10 @@
   ## the name of the nixpkgs attribute, if so, set it here:
   # pname = "{{shortname}}";
 
+  ## Set this when the package has no rocqPackages version yet
+  ## (either in nixpkgs or in .nix/rocq-overlays)
+  no-rocq-yet = true;
+
   ## Lists the dependencies, phrased in terms of nix attributes.
   ## No need to list Coq, it is already included.
   ## These dependencies will systematically be added to the currently
@@ -59,7 +63,6 @@
   ## will be created per bundle
   bundles = let
     common-bundles = {
-      "mathcomp".override.version = "mathcomp-2.2.0";
       "multinomials".override.version = "master";
     }; in {
     "8.20".coqPackages = common-bundles // {
@@ -72,6 +75,7 @@
       rocq-core.override.version = "master";
       rocq-elpi.override.version = "master";
       rocq-elpi.override.elpi-version = "2.0.7";
+      hierarchy-builder.override.version = "master";
       stdlib.override.version = "master";
     }; coqPackages = {
       coq.override.version = "master";
@@ -79,7 +83,7 @@
       coq-elpi.override.elpi-version = "2.0.7";
       hierarchy-builder.override.version = "master";
       mathcomp.override.version = "master";
-      mathcomp-bigenough.override.version = "1.0.2";
+      mathcomp-bigenough.override.version = "master";
       multinomials.override.version = "master";
       stdlib.override.version = "master";
     }; };
