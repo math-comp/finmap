@@ -338,7 +338,10 @@ Reserved Notation "[ 'f' 'setval' x : A | P ]"
 Reserved Notation "[ 'f' 'setval' x : A | P & Q ]"
   (at level 0, x at level 99, format "[ 'f' 'setval'  x  :  A  |  P  &  Q ]").
 
-Reserved Notation "{fmap T }" (at level 0, format "{fmap  T }").
+Reserved Notation "{ 'fmap' K -> T }"
+  (at level 0, K at level 98, T at level 99, format "{ 'fmap'  K  ->  T }").
+Reserved Notation "[ 'fmap' 'of' K -> T ]"
+  (at level 0, K at level 98, T at level 99, format "[ 'fmap' 'of'  K  -> T ]").
 Reserved Notation "x .[ k <- v ]"
   (left associativity, format "x .[ k  <-  v ]").
 Reserved Notation "x .[~ k ]" (format "x .[~  k ]").
@@ -476,12 +479,16 @@ Structure finSet : Type := mkFinSet {
   _ : canonical_keys enum_fset
 }.
 
+#[deprecated(since="finmap 2.3.0", note="Use finSet instead")]
 Definition finset_of (_ : phant K) := finSet.
 
 End Def.
 
+Arguments finSet K%type_scope.
+
+#[warning="-deprecated-reference"]
 Identity Coercion type_of_finset : finset_of >-> finSet.
-Notation "{fset T }" := (@finset_of _ (Phant T)) : type_scope.
+Notation "{fset T }" := (finSet T) : type_scope.
 
 Definition pred_of_finset (K : choiceType)
   (f : finSet K) : pred K := fun k => k \in (enum_fset f).
@@ -547,6 +554,7 @@ Proof. by rewrite cardE enum_fsetE size_map. Qed.
 
 End FinTypeSet.
 
+#[warning="-deprecated-reference"]
 Identity Coercion finSet_sub_type : finset_of >-> finSet.
 Coercion fset_sub_type : finSet >-> predArgType.
 #[global] Hint Resolve fsvalP fset_uniq mem_fset_sub_enum : core.
@@ -635,6 +643,7 @@ Definition mkFinPredType_of (T : eqType) (U : Type) :=
   @FinPredType T U a (exist _ fpred_seq
    (fpred_seq_uniq, (mkFinPredType_of_subproof fpred_seqE))).
 
+#[deprecated(since="finmap 2.3.0", note="Use the reverse coercion instead.")]
 Definition clone_finpredType (T : eqType) (U : Type) :=
   fun (pT : finpredType T) & finpred_sort pT -> U =>
   fun a pP (pT' := @FinPredType T U a pP) & phant_id pT' pT => pT'.
@@ -672,6 +681,7 @@ Canonical fin_finpred (T : eqType) (pT : finpredType T) (p : pT) :=
   @FinPred _ _ p (@IsFinite _ _ (enum_finpred p)
                             (enum_finpred_uniq p) (enum_finpredE p)).
 
+#[deprecated(since="finmap 2.3.0", note="Use the reverse coercion instead.")]
 Definition finpred_of (T : eqType) (pT : predType T) (p : pT)
  (fp : finpred pT) & phantom pT fp : finpred pT := fp.
 
@@ -691,6 +701,7 @@ Lemma enum_finmemE  (T : eqType) (p : finmempred T) :
   enum_finmem p =i p.
 Proof. by case: p => ?[]. Qed.
 
+#[deprecated(since="finmap 2.3.0", note="Use the reverse coercion instead.")]
 Definition finmempred_of (T : eqType) (P : pred T)
  (mP : finmempred T) & phantom (mem_pred T) mP : finmempred T := mP.
 
@@ -700,6 +711,8 @@ Canonical mem_fin (T : eqType) (pT : predType T) (p : finpred pT) :=
 
 End FinPredStruct.
 
+#[deprecated(since="finmap 2.3.0", note="Use the reverse coercion instead."),
+  warning="-deprecated"]
 Notation "[ 'finpredType' 'of' T ]" := (@clone_finpredType _ T _ id _ _ id)
   (at level 0, format "[ 'finpredType'  'of'  T ]") : form_scope.
 
@@ -735,22 +748,19 @@ End CanonicalFinPred.
 
 Local Notation imfset_def key :=
   (fun (T K : choiceType) (f : T -> K) (p : finmempred T)
-       & phantom (mem_pred T) p => seq_fset key [seq f x | x <- enum_finmem p]).
+       => seq_fset key [seq f x | x <- enum_finmem p]).
 Local Notation imfset2_def key :=
   (fun (K T1 : choiceType) (T2 : T1 -> choiceType)
        (f : forall x : T1, T2 x -> K)
-       (p1 : finmempred T1) (p2 : forall x : T1, finmempred (T2 x))
-   & phantom (mem_pred T1) p1 & phantom (forall x, mem_pred (T2 x)) p2 =>
+       (p1 : finmempred T1) (p2 : forall x : T1, finmempred (T2 x)) =>
   seq_fset key [seq f x y | x <- enum_finmem p1, y <- enum_finmem (p2 x)]).
 
 Module Type ImfsetSig.
 Parameter imfset : forall (key : unit) (T K : choiceType)
-       (f : T -> K) (p : finmempred T),
-  phantom (mem_pred T) p ->  {fset K}.
+       (f : T -> K) (p : finmempred T), {fset K}.
 Parameter imfset2 : forall (key : unit) (K T1 : choiceType)
        (T2 : T1 -> choiceType)(f : forall x : T1, T2 x -> K)
-       (p1 : finmempred T1) (p2 : forall x : T1, finmempred (T2 x)),
-  phantom (mem_pred T1) p1 -> phantom (forall x, mem_pred (T2 x)) p2 -> {fset K}.
+       (p1 : finmempred T1) (p2 : forall x : T1, finmempred (T2 x)), {fset K}.
 Axiom imfsetE : forall key, imfset key = imfset_def key.
 Axiom imfset2E : forall key, imfset2 key = imfset2_def key.
 End ImfsetSig.
@@ -762,11 +772,8 @@ Lemma imfsetE key : imfset key = imfset_def key. Proof. by []. Qed.
 Lemma imfset2E key : imfset2 key = imfset2_def key. Proof. by []. Qed.
 End Imfset.
 
-Notation imfset key f p :=
-   (Imfset.imfset key f (Phantom _ (pred_of_finmempred p))).
-Notation imfset2 key f p q :=
-   (Imfset.imfset2 key f (Phantom _ (pred_of_finmempred p))
-                   (Phantom _ (fun x => (pred_of_finmempred (q x))))).
+Notation imfset := Imfset.imfset.
+Notation imfset2 := Imfset.imfset2.
 Canonical imfset_unlock k := Unlockable (Imfset.imfsetE k).
 Canonical imfset2_unlock k := Unlockable (Imfset.imfset2E k).
 
@@ -776,11 +783,9 @@ Notation "A `==` B" := (A == B :> {fset _}) (only parsing) : fset_scope.
 Notation "A `!=` B" := (A != B :> {fset _}) (only parsing) : fset_scope.
 Notation "A `=P` B" := (A =P B :> {fset _}) (only parsing) : fset_scope.
 
-Notation "f @`[ key ] A" :=
-  (Imfset.imfset key f (Phantom _ (mem A))) : fset_scope.
+Notation "f @`[ key ] A" := (Imfset.imfset key f (mem A)) : fset_scope.
 Notation "f @2`[ key ] ( A , B )" :=
-   (Imfset.imfset2 key f (Phantom _ (mem A)) (Phantom _ (fun x => (mem (B x)))))
-  : fset_scope.
+  (Imfset.imfset2 key f (mem A) (fun x => (mem (B x)))) : fset_scope.
 
 Fact imfset_key : unit. Proof. exact: tt. Qed.
 
@@ -2984,6 +2989,7 @@ Record finMap : Type := FinMap {
   ffun_of_fmap :> {ffun domf -> V}
 }.
 
+#[deprecated(since="finmap 2.3.0", note="Use finMap instead.")]
 Definition finmap_of (_ : phant (K -> V)) := finMap.
 
 Let T_ (domf : {fset K}) :=  {ffun domf -> V}.
@@ -2991,7 +2997,9 @@ Local Notation finMap' := {domf : _ & T_ domf}.
 
 End DefMap.
 
-Notation "{fmap T }" := (@finmap_of _ _ (Phant T)) : type_scope.
+Arguments finMap K%type_scope V%type_scope.
+
+Notation "{ 'fmap' K -> T }" := (finMap K T) : type_scope.
 
 Definition pred_of_finmap (K : choiceType) (V : Type)
   (f : {fmap K -> V}) : pred K := mem (domf f).
@@ -3045,7 +3053,8 @@ Arguments fmap0 {K V}.
 Arguments setf : simpl never.
 Arguments fnd : simpl never.
 
-Notation "[ 'fmap' 'of' T ]" := (fmap0 : {fmap T}) (only parsing) : fmap_scope.
+Notation "[ 'fmap' 'of' K -> T ]" :=
+  (fmap0 : {fmap K -> T}) (only parsing) : fmap_scope.
 Notation "[fmap]" := fmap0 : fmap_scope.
 Notation "x .[ k <- v ]" := (setf x k v) : fmap_scope.
 Notation "f .[? k ]" := (fnd f k) : fmap_scope.
