@@ -494,14 +494,9 @@ Definition pred_of_finset (K : choiceType)
   (f : finSet K) : pred K := fun k => k \in (enum_fset f).
 Canonical finSetPredType (K : choiceType) := PredType (@pred_of_finset K).
 
-Section FinSetCanonicals.
-
-Variable (K : choiceType).
-
-HB.instance Definition _ := [isSub for (@enum_fset K)].
-HB.instance Definition _ := [Choice of {fset K} by <:].
-
-End FinSetCanonicals.
+HB.instance Definition _ (K : choiceType) := [isSub for @enum_fset K].
+HB.instance Definition _ (K : choiceType) := [Choice of {fset K} by <:].
+HB.instance Definition _ (T : countType) := [Countable of {fset T} by <:].
 
 Section FinTypeSet.
 
@@ -518,7 +513,6 @@ Record fset_sub_type : predArgType :=
 
 HB.instance Definition _ := [isSub for fsval].
 HB.instance Definition _ := [Choice of fset_sub_type by <:].
-HB.instance Definition _ (T : countType) := [Countable of {fset T} by <:].
 
 Definition fset_sub_enum : seq fset_sub_type :=
   undup (pmap insub (enum_fset A)).
@@ -577,32 +571,31 @@ Definition set_of_fset (K : choiceType) (A : {fset K}) : {set A} :=
 
 Arguments pred_of_finset : simpl never.
 
+Elpi mlock Definition seq_fset
+  (finset_key : unit) (K : choiceType) (s : seq K) : {fset K} :=
+   mkFinSet (@canonical_sort_keys K s).
+
 Section SeqFset.
 
-Variable finset_key : unit.
-Definition seq_fset : forall K : choiceType, seq K -> {fset K} :=
-   locked_with finset_key (fun K s => mkFinSet (@canonical_sort_keys K s)).
+Variable (finset_key : unit) (K : choiceType) (s : seq K).
 
-Variable (K : choiceType) (s : seq K).
+Notation seq_fset := (seq_fset finset_key).
 
 Lemma seq_fsetE : seq_fset s =i s.
-Proof. by move=> a; rewrite [seq_fset]unlock sort_keysE. Qed.
+Proof. by move=> a; rewrite unlock sort_keysE. Qed.
 
 Lemma size_seq_fset : size (seq_fset s) = size (undup s).
-Proof. by rewrite [seq_fset]unlock /= size_sort_keys. Qed.
+Proof. by rewrite unlock /= size_sort_keys. Qed.
 
 Lemma seq_fset_uniq  : uniq (seq_fset s).
-Proof. by rewrite [seq_fset]unlock /= sort_keys_uniq. Qed.
+Proof. by rewrite unlock /= sort_keys_uniq. Qed.
 
 Lemma seq_fset_perm : perm_eq (seq_fset s) (undup s).
-Proof. by rewrite [seq_fset]unlock //= sort_keys_perm. Qed.
+Proof. by rewrite unlock //= sort_keys_perm. Qed.
 
 End SeqFset.
 
 #[global] Hint Resolve keys_canonical sort_keys_uniq : core.
-
-HB.instance Definition _ K := [isSub for (@enum_fset K)].
-HB.instance Definition _ (K : choiceType) := [Choice of {fset K} by <:].
 
 Section FinPredStruct.
 
@@ -746,36 +739,22 @@ Canonical seq_finpredType (T : eqType) :=
 
 End CanonicalFinPred.
 
-Local Notation imfset_def key :=
-  (fun (T K : choiceType) (f : T -> K) (p : finmempred T)
-       => seq_fset key [seq f x | x <- enum_finmem p]).
-Local Notation imfset2_def key :=
-  (fun (K T1 : choiceType) (T2 : T1 -> choiceType)
-       (f : forall x : T1, T2 x -> K)
-       (p1 : finmempred T1) (p2 : forall x : T1, finmempred (T2 x)) =>
-  seq_fset key [seq f x y | x <- enum_finmem p1, y <- enum_finmem (p2 x)]).
+Elpi mlock Definition imfset
+  (key : unit) (T K : choiceType) (f : T -> K) (p : finmempred T) : {fset K} :=
+  seq_fset key [seq f x | x <- enum_finmem p].
 
-Module Type ImfsetSig.
-Parameter imfset : forall (key : unit) (T K : choiceType)
-       (f : T -> K) (p : finmempred T), {fset K}.
-Parameter imfset2 : forall (key : unit) (K T1 : choiceType)
-       (T2 : T1 -> choiceType)(f : forall x : T1, T2 x -> K)
-       (p1 : finmempred T1) (p2 : forall x : T1, finmempred (T2 x)), {fset K}.
-Axiom imfsetE : forall key, imfset key = imfset_def key.
-Axiom imfset2E : forall key, imfset2 key = imfset2_def key.
-End ImfsetSig.
+Elpi mlock Definition imfset2
+  (key : unit) (K T1 : choiceType) (T2 : T1 -> choiceType)
+  (f : forall x : T1, T2 x -> K)
+  (p1 : finmempred T1) (p2 : forall x : T1, finmempred (T2 x)) : {fset K} :=
+  seq_fset key [seq f x y | x <- enum_finmem p1, y <- enum_finmem (p2 x)].
 
-Module Imfset : ImfsetSig.
-Definition imfset key := imfset_def key.
-Definition imfset2 key := imfset2_def key.
-Lemma imfsetE key : imfset key = imfset_def key. Proof. by []. Qed.
-Lemma imfset2E key : imfset2 key = imfset2_def key. Proof. by []. Qed.
+Module Imfset.
+#[deprecated(since="finmap 2.3.0", note="Use imfset instead.")]
+Notation imfset := imfset.
+#[deprecated(since="finmap 2.3.0", note="Use imfset2 instead.")]
+Notation imfset2 := imfset2.
 End Imfset.
-
-Notation imfset := Imfset.imfset.
-Notation imfset2 := Imfset.imfset2.
-Canonical imfset_unlock k := Unlockable (Imfset.imfsetE k).
-Canonical imfset2_unlock k := Unlockable (Imfset.imfset2E k).
 
 Notation "A `=` B" := (A = B :> {fset _}) (only parsing) : fset_scope.
 Notation "A `<>` B" := (A <> B :> {fset _}) (only parsing) : fset_scope.
@@ -783,9 +762,9 @@ Notation "A `==` B" := (A == B :> {fset _}) (only parsing) : fset_scope.
 Notation "A `!=` B" := (A != B :> {fset _}) (only parsing) : fset_scope.
 Notation "A `=P` B" := (A =P B :> {fset _}) (only parsing) : fset_scope.
 
-Notation "f @`[ key ] A" := (Imfset.imfset key f (mem A)) : fset_scope.
+Notation "f @`[ key ] A" := (imfset key f (mem A)) : fset_scope.
 Notation "f @2`[ key ] ( A , B )" :=
-  (Imfset.imfset2 key f (mem A) (fun x => (mem (B x)))) : fset_scope.
+  (imfset2 key f (mem A) (fun x => (mem (B x)))) : fset_scope.
 
 Fact imfset_key : unit. Proof. exact: tt. Qed.
 
@@ -3766,17 +3745,14 @@ End FsfunDef.
 
 Coercion fun_of_fsfun : fsfun >-> Funclass.
 
-Module Type FinSuppSig.
-Axiom fs : forall (K : choiceType) (V : eqType) (default : K -> V),
-  fsfun default -> {fset K}.
-Axiom E : fs = (fun K V d f => domf (@fmap_of_fsfun K V d f)).
-End FinSuppSig.
-Module FinSupp : FinSuppSig.
-Definition fs := (fun K V d f => domf (@fmap_of_fsfun K V d f)).
-Definition E := erefl fs.
+Elpi mlock Definition finsupp
+  (K : choiceType) (V : eqType) (d : K -> V) (f : fsfun d) : {fset K} :=
+  domf (@fmap_of_fsfun K V d f).
+
+Module FinSupp.
+#[deprecated(since="finmap 2.3.0", note="Use finsupp instead.")]
+Notation fs := finsupp.
 End FinSupp.
-Notation finsupp := FinSupp.fs.
-Canonical unlockable_finsupp := Unlockable FinSupp.E.
 
 Section FSfunBasics.
 
@@ -3853,38 +3829,34 @@ Notation "{ 'fsfun' 'of' x => dflt }" := {fsfun of x : _ => dflt}
 Notation "{ 'fsfun' 'with' dflt }" := {fsfun of _ => dflt}
   (at level 0, only parsing) : type_scope.
 
-Module Type FsfunSig.
-Section FsfunSig.
-Variables (K : choiceType) (V : eqType) (default : K -> V).
-
-Parameter of_ffun : forall (S : {fset K}), (S -> V) -> unit -> fsfun default.
-Variables (S : {fset K}) (h : S -> V).
-Axiom of_ffunE :forall key x, of_ffun h key x = odflt (default x) (omap h (insub x)).
-
-End FsfunSig.
-End FsfunSig.
-
-Module Fsfun : FsfunSig.
 Section FsfunOfFinfun.
 
-Variables (K : choiceType) (V : eqType) (default : K -> V)
-          (S : {fset K}) (h : S -> V).
+Variables (K : choiceType) (V : eqType).
+Variables (S : {fset K}) (h : S -> V) (default : K -> V).
 
-Let fmap :=
+Let fmap : {fmap K -> V} :=
   [fmap a : [fsetval a in {: S} | h a != default (val a)]
    => h (fincl (fset_sub_val _ _) a)].
 
-Fact fmapP a : fmap a != default (val a).
+Fact fsfun_of_ffun_subproof (a : domf fmap) : fmap a != default (val a).
 Proof.
 rewrite ffunE; have /in_fset_valP [a_in_S] := valP a.
 by have -> : [` a_in_S] = fincl (fset_sub_val _ _) a by exact/val_inj.
 Qed.
 
-Definition of_ffun (k : unit) := fsfun_of_can_ffun fmapP.
+End FsfunOfFinfun.
 
-Lemma of_ffunE key x : of_ffun key x = odflt (default x) (omap h (insub x)).
+Elpi mlock Definition fsfun_of_ffun
+  (k : unit) (K : choiceType) (V : eqType)
+  (S : {fset K}) (h : S -> V) (default : K -> V) :=
+  fsfun_of_can_ffun (@fsfun_of_ffun_subproof K V S h default).
+
+Lemma fsfun_ffun
+  (k : unit) (K : choiceType) (V : eqType)
+  (default : K -> V) (S : {fset K}) (h : S -> V) (x : K) :
+  fsfun_of_ffun k h default x = odflt (default x) (omap h (insub x)).
 Proof.
-rewrite /fun_of_fsfun /=.
+rewrite unlock /fun_of_fsfun /=.
 case: insubP => /= [u _ <-|xNS]; last first.
   case: fndP => //= kf; rewrite !ffunE /=.
   by set y := (X in h X); rewrite (valP y) in xNS.
@@ -3893,16 +3865,22 @@ case: fndP => /= [kf|].
 by rewrite inE /= -topredE /= negbK => /eqP ->.
 Qed.
 
-End FsfunOfFinfun.
+Module Fsfun.
+
+#[deprecated(since="finmap 2.3.0", note="Use fsfun_of_ffun instead.")]
+Definition of_ffun (K : choiceType) (V : eqType)
+  (S : {fset K}) (h : S -> V) (default : K -> V) (key : unit) (x : K) :=
+  fsfun_of_ffun key h default x.
+
+#[deprecated(since="finmap 2.3.0", note="Use fsfun_ffun instead.")]
+Lemma of_ffunE (K : choiceType) (V : eqType)
+  (S : {fset K}) (h : S -> V) (default : K -> V) key (x : K) :
+  fsfun_of_ffun key h default x = odflt (default x) (omap h (insub x)).
+Proof. exact: fsfun_ffun. Qed.
+
 End Fsfun.
-Canonical fsfun_of_funE K V default S h key x :=
-   Unlockable (@Fsfun.of_ffunE K V default S h key x).
 
 Fact fsfun_key : unit. Proof. exact: tt. Qed.
-
-Definition fsfun_of_ffun key (K : choiceType) (V : eqType)
-  (S : {fset K}) (h : S -> V) (default : K -> V) :=
-  (Fsfun.of_ffun default h key).
 
 HB.instance Definition _ (K V : choiceType) (d : K -> V) :=
   [Choice of fsfun d by <:].
@@ -4017,18 +3995,13 @@ Notation "[ 'fsfun' ]" := [fsfun for _]
 Section FsfunTheory.
 Variables (key : unit) (K : choiceType) (V : eqType) (default : K -> V).
 
-Lemma fsfun_ffun (S : {fset K}) (h : S -> V) (x : K) :
-  [fsfun[key] a : S => h a | default a] x =
-  odflt (default x) (omap h (insub x)).
-Proof. by rewrite unlock. Qed.
-
 Lemma fsfun_fun (S : {fset K}) (h : K -> V) (x : K) :
   [fsfun[key] a in S => h a | default a] x =
    if x \in S then h x else (default x).
 Proof. by rewrite fsfun_ffun; case: insubP => //= [u -> ->|/negPf ->]. Qed.
 
 Lemma fsfun0E : [fsfun for default] =1 default.
-Proof. by move=> x; rewrite unlock insubF ?inE. Qed.
+Proof. by move=> x; rewrite fsfun_ffun insubF ?inE. Qed.
 
 Definition fsfunE := (fsfun_fun, fsfun0E).
 
@@ -4043,7 +4016,7 @@ Qed.
 Lemma finsupp_sub  (S : {fset K}) (h : S -> V) :
   finsupp [fsfun[key] a : S => h a | default a] `<=` S.
 Proof.
-apply/fsubsetP => a; rewrite mem_finsupp unlock /=.
+apply/fsubsetP => a; rewrite mem_finsupp fsfun_ffun.
 by case: insubP => //=; rewrite eqxx.
 Qed.
 
