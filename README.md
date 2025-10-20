@@ -24,10 +24,10 @@ which will be used to subsume notations for finite sets, eventually.
   - Cyril Cohen (initial)
   - Kazuhiko Sakaguchi
 - License: [CeCILL-B](CECILL-B)
-- Compatible Coq versions: Coq 8.20 to 9.0
+- Compatible Rocq/Coq versions: 8.20 or later
 - Additional dependencies:
-  - [MathComp ssreflect 2.0 to 2.3](https://math-comp.github.io)
-- Coq namespace: `mathcomp.finmap`
+  - [MathComp](https://math-comp.github.io) ssreflect 2.0.0 or later
+- Rocq/Coq namespace: `mathcomp.finmap`
 - Related publication(s): none
 
 ## Building and installation instructions
@@ -37,7 +37,7 @@ is via [OPAM](https://opam.ocaml.org/doc/Install.html):
 
 ```shell
 opam repo add coq-released https://coq.inria.fr/opam/released
-opam install coq-mathcomp-finmap
+opam install rocq-mathcomp-finmap
 ```
 
 To instead build and install manually, do:
