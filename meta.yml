@@ -31,25 +31,33 @@ license:
   file: CECILL-B
 
 supported_coq_versions:
-  text: Coq 8.20 to 9.0
-  opam: '{ (>= "8.20" & < "8.21~") | (= "dev") }'
+  text: 8.20 or later
+  opam: '{>= "8.20"}'
 
 tested_coq_opam_versions:
-- version: '2.3.0-coq-8.20'
+- version: '2.2.0-coq-8.20'
   repo: 'mathcomp/mathcomp'
 - version: '2.3.0-coq-8.20'
   repo: 'mathcomp/mathcomp'
-- version: 'coq-8.20'
+- version: '2.4.0-rocq-prover-9.0'
+  repo: 'mathcomp/mathcomp'
+- version: '2.4.0-rocq-prover-9.1'
+  repo: 'mathcomp/mathcomp'
+- version: '2.5.0-rocq-prover-9.0'
+  repo: 'mathcomp/mathcomp'
+- version: '2.5.0-rocq-prover-9.1'
+  repo: 'mathcomp/mathcomp'
+- version: 'rocq-prover-9.1'
   repo: 'mathcomp/mathcomp-dev'
-- version: 'coq-dev'
+- version: 'rocq-prover-dev'
   repo: 'mathcomp/mathcomp-dev'
 
 dependencies:
 - opam:
     name: rocq-mathcomp-ssreflect
-    version: '{ (>= "2.0" & < "2.5~") | (= "dev") }'
+    version: '{>= "2.2.0"}'
   description: |-
-    [MathComp ssreflect 2.0 to 2.3](https://math-comp.github.io)
+    [MathComp](https://math-comp.github.io) ssreflect 2.2.0 or later
 
 namespace: mathcomp.finmap
 
