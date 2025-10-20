@@ -3555,14 +3555,14 @@ Proof. by move=> dfg; rewrite catfC remf_id. Qed.
 Lemma catfAC f g h : f + g + h = f + h + g.[\ domf h].
 Proof. by rewrite -!catfA [X in _ + X]catfC. Qed.
 
-Lemma disjoint_catfAC f g h : [disjoint domf g & domf h]%fmap ->
+Lemma disjoint_catfAC f g h : [disjoint domf g & domf h] ->
      f + g + h = f + h + g.
 Proof. by move=> dgh; rewrite catfAC remf_id. Qed.
 
 Lemma catfCA f g h : f + (g + h) = g + (f.[\ domf g] + h).
 Proof. by rewrite !catfA [X in X + _]catfC. Qed.
 
-Lemma disjoint_catfCA f g h : [disjoint domf f & domf g]%fmap ->
+Lemma disjoint_catfCA f g h : [disjoint domf f & domf g] ->
      f + (g + h) = g + (f + h).
 Proof. by move=> dfg; rewrite catfCA remf_id. Qed.
 
@@ -3747,16 +3747,12 @@ Record fsfun := Fsfun {
 HB.instance Definition _ := [isSub for fmap_of_fsfun].
 HB.instance Definition _ := [Equality of fsfun by <:].
 
-Fact fsfun_subproof (f : fsfun) :
-  forall (k : K) (kf : k \in fmap_of_fsfun f),
-  (fmap_of_fsfun f).[kf]%fmap != default k.
-Proof.
-case:f => f f_stable k kf /=.
-exact: (forallP f_stable [` kf]).
-Qed.
+Fact fsfun_subproof (f : fsfun) (k : K) (kf : k \in fmap_of_fsfun f) :
+  (fmap_of_fsfun f).[kf] != default k.
+Proof. case:f kf => f f_stable kf; exact: (forallP f_stable [` kf]). Qed.
 
 Definition fun_of_fsfun (f : fsfun) (k : K) :=
-  odflt (default k) (fmap_of_fsfun f).[? k]%fmap.
+  odflt (default k) (fmap_of_fsfun f).[? k].
 End FsfunDef.
 
 Coercion fun_of_fsfun : fsfun >-> Funclass.
