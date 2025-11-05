@@ -1902,6 +1902,9 @@ apply/idP/idP => [subA|/andP [AB CA]]; last by rewrite -[A]fsetUid fsetUSS.
 by rewrite !(fsubset_trans _ subA).
 Qed.
 
+Lemma fsubU1set x A B : (x |` A `<=` B) = (x \in B) && (A `<=` B).
+Proof. by rewrite fsubUset fsub1set. Qed.
+
 Lemma fsubUsetP A B C : reflect (A `<=` C /\ B `<=` C) (A `|` B `<=` C).
 Proof. by rewrite fsubUset; exact: andP. Qed.
 
