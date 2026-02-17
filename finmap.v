@@ -735,12 +735,12 @@ End CanonicalFinPred.
 
 Local Notation imfset_def key :=
   (fun (T K : choiceType) (f : T -> K) (p : finmempred T)
-       of phantom (mem_pred T) p => seq_fset key [seq f x | x <- enum_finmem p]).
+       & phantom (mem_pred T) p => seq_fset key [seq f x | x <- enum_finmem p]).
 Local Notation imfset2_def key :=
   (fun (K T1 : choiceType) (T2 : T1 -> choiceType)
        (f : forall x : T1, T2 x -> K)
        (p1 : finmempred T1) (p2 : forall x : T1, finmempred (T2 x))
-   of phantom (mem_pred T1) p1 & phantom (forall x, mem_pred (T2 x)) p2 =>
+   & phantom (mem_pred T1) p1 & phantom (forall x, mem_pred (T2 x)) p2 =>
   seq_fset key [seq f x y | x <- enum_finmem p1, y <- enum_finmem (p2 x)]).
 
 Module Type ImfsetSig.
