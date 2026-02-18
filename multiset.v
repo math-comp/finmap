@@ -55,7 +55,7 @@ Local Open Scope mset_scope.
 Local Open Scope nat_scope.
 
 Definition multiset (T : choiceType) := {fsfun T -> nat with 0}.
-Definition multiset_of (T : choiceType) of phant T := @multiset T.
+Definition multiset_of (T : choiceType) & phant T := @multiset T.
 Notation "'{mset' T }" := (@multiset_of _ (Phant T))
   (format "'{mset'  T }") : mset_scope.
 
