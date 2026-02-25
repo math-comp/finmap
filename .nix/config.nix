@@ -17,10 +17,6 @@
   ## the name of the nixpkgs attribute, if so, set it here:
   # pname = "{{shortname}}";
 
-  ## Set this when the package has no rocqPackages version yet
-  ## (either in nixpkgs or in .nix/rocq-overlays)
-  no-rocq-yet = true;
-
   ## Lists the dependencies, phrased in terms of nix attributes.
   ## No need to list Coq, it is already included.
   ## These dependencies will systematically be added to the currently
@@ -68,19 +64,26 @@
     "8.20".coqPackages = common-bundles // {
       coq.override.version = "8.20";
     };
-    "9.0".coqPackages = common-bundles // {
-      coq.override.version = "9.0";
-    };
+    "9.0" = {
+      rocqPackages = { rocq-core.override.version = "9.0"; };
+      coqPackages = common-bundles // {
+        coq.override.version = "9.0";
+      }; };
+    "9.1" = {
+      rocqPackages = { rocq-core.override.version = "9.1"; };
+      coqPackages = common-bundles // {
+        coq.override.version = "9.1";
+      }; };
     "master" = { rocqPackages = {
       rocq-core.override.version = "master";
       rocq-elpi.override.version = "master";
-      rocq-elpi.override.elpi-version = "2.0.7";
+      rocq-elpi.override.elpi-version = "3.4.2";
       hierarchy-builder.override.version = "master";
       stdlib.override.version = "master";
     }; coqPackages = {
       coq.override.version = "master";
       coq-elpi.override.version = "master";
-      coq-elpi.override.elpi-version = "2.0.7";
+      coq-elpi.override.elpi-version = "3.4.2";
       hierarchy-builder.override.version = "master";
       mathcomp.override.version = "master";
       mathcomp-bigenough.override.version = "master";
