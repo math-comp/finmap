@@ -24,10 +24,10 @@ which will be used to subsume notations for finite sets, eventually.
   - Cyril Cohen (initial)
   - Kazuhiko Sakaguchi
 - License: [CeCILL-B](CECILL-B)
-- Compatible Coq versions: Coq 8.20 to 9.0
+- Compatible Rocq/Coq versions: 8.20 or later
 - Additional dependencies:
-  - [MathComp ssreflect 2.0 to 2.3](https://math-comp.github.io)
-- Coq namespace: `mathcomp.finmap`
+  - [MathComp](https://math-comp.github.io) ssreflect 2.2.0 or later
+- Rocq/Coq namespace: `mathcomp.finmap`
 - Related publication(s): none
 
 ## Building and installation instructions
@@ -36,15 +36,19 @@ The easiest way to install the latest released version of Finite maps
 is via [OPAM](https://opam.ocaml.org/doc/Install.html):
 
 ```shell
-opam repo add coq-released https://coq.inria.fr/opam/released
-opam install coq-mathcomp-finmap
+opam repo add rocq-released https://rocq-prover.org/opam/released
+opam install rocq-mathcomp-finmap
 ```
 
-To instead build and install manually, do:
+To instead build and install manually, you need to make sure that all the
+libraries this development depends on are installed.  The easiest way to do that
+is still to rely on opam:
 
 ``` shell
 git clone https://github.com/math-comp/finmap.git
 cd finmap
+opam repo add rocq-released https://rocq-prover.org/opam/released
+opam install --deps-only .
 make   # or make -j <number-of-cores-on-your-machine> 
 make install
 ```

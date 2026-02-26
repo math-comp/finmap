@@ -68,24 +68,31 @@
     "8.20".coqPackages = common-bundles // {
       coq.override.version = "8.20";
     };
-    "9.0".coqPackages = common-bundles // {
-      coq.override.version = "9.0";
-    };
+    "9.0" = {
+      rocqPackages = { rocq-core.override.version = "9.0"; };
+      coqPackages = common-bundles // {
+        coq.override.version = "9.0";
+      }; };
+    "9.1" = {
+      rocqPackages = { rocq-core.override.version = "9.1"; };
+      coqPackages = common-bundles // {
+        coq.override.version = "9.1";
+      }; };
     "master" = { rocqPackages = {
       rocq-core.override.version = "master";
       rocq-elpi.override.version = "master";
-      rocq-elpi.override.elpi-version = "2.0.7";
+      rocq-elpi.override.elpi-version = "3.4.2";
       hierarchy-builder.override.version = "master";
-      stdlib.override.version = "master";
+      mathcomp.override.version = "master";
+      mathcomp-bigenough.override.version = "master";
     }; coqPackages = {
       coq.override.version = "master";
       coq-elpi.override.version = "master";
-      coq-elpi.override.elpi-version = "2.0.7";
+      coq-elpi.override.elpi-version = "3.4.2";
       hierarchy-builder.override.version = "master";
       mathcomp.override.version = "master";
       mathcomp-bigenough.override.version = "master";
       multinomials.override.version = "master";
-      stdlib.override.version = "master";
     }; };
   };
 }
