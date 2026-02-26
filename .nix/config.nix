@@ -85,7 +85,10 @@
       coq-elpi.override.version = "master";
       coq-elpi.override.elpi-version = "3.4.2";
       hierarchy-builder.override.version = "master";
-      mathcomp.override.version = "master";
+      mathcomp-boot.override.version = "master";
+      mathcomp-order.override.version = "master";
+      mathcomp-fingroup.override.version = "master";
+      mathcomp-algebra.override.version = "master";
       mathcomp-bigenough.override.version = "master";
       multinomials.override.version = "master";
       stdlib.override.version = "master";
