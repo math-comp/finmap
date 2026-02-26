@@ -17,6 +17,10 @@
   ## the name of the nixpkgs attribute, if so, set it here:
   # pname = "{{shortname}}";
 
+  ## Set this when the package has no rocqPackages version yet
+  ## (either in nixpkgs or in .nix/rocq-overlays)
+  no-rocq-yet = true;
+
   ## Lists the dependencies, phrased in terms of nix attributes.
   ## No need to list Coq, it is already included.
   ## These dependencies will systematically be added to the currently
