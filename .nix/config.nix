@@ -85,7 +85,6 @@
       hierarchy-builder.override.version = "master";
       mathcomp.override.version = "master";
       mathcomp-bigenough.override.version = "master";
-      stdlib.override.version = "master";
     }; coqPackages = {
       coq.override.version = "master";
       coq-elpi.override.version = "master";
@@ -94,7 +93,6 @@
       mathcomp.override.version = "master";
       mathcomp-bigenough.override.version = "master";
       multinomials.override.version = "master";
-      stdlib.override.version = "master";
     }; };
   };
 }
