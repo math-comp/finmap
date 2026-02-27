@@ -35,14 +35,6 @@ supported_coq_versions:
   opam: '{>= "8.20"}'
 
 tested_coq_opam_versions:
-- version: '2.2.0-coq-8.20'
-  repo: 'mathcomp/mathcomp'
-- version: '2.3.0-coq-8.20'
-  repo: 'mathcomp/mathcomp'
-- version: '2.4.0-rocq-prover-9.0'
-  repo: 'mathcomp/mathcomp'
-- version: '2.4.0-rocq-prover-9.1'
-  repo: 'mathcomp/mathcomp'
 - version: '2.5.0-rocq-prover-9.0'
   repo: 'mathcomp/mathcomp'
 - version: '2.5.0-rocq-prover-9.1'
@@ -55,7 +47,7 @@ tested_coq_opam_versions:
 dependencies:
 - opam:
     name: rocq-mathcomp-ssreflect
-    version: '{>= "2.2.0"}'
+    version: '{>= "2.5.0"}'
   description: |-
     [MathComp](https://math-comp.github.io) ssreflect 2.2.0 or later
 

@@ -29,74 +29,32 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
 
-Module FPerm.
-
-Section Def.
-
-Variables (T : choiceType).
-
-Local Open Scope fset_scope.
-
-Record fperm_type := FPerm {
-  fpval : {fsfun T -> T};
+Record finPerm (T : choiceType) := FPerm {
+  fpval :> {fsfun T -> T};
   _ : fsinjectiveb fpval
 }.
-
-Definition fperm_of & phant T := fperm_type.
-
-End Def.
-
-Module Exports.
-
-Identity Coercion fperm_of_fperm : fperm_of >-> fperm_type.
-Coercion fpval : fperm_type >-> fsfun.
-Notation "{ 'fperm' T }" := (@fperm_of _ (Phant T))
+Notation "{ 'fperm' T }" := (@finPerm T)
   (at level 0, format "{ 'fperm'  T }") : type_scope.
 
 Section WithChoiceType.
-
 Variable T : choiceType.
-HB.instance Definition _ := [isSub of fperm_type T for @fpval T].
-HB.instance Definition _ := [Equality of fperm_type T by <:].
-#[hnf] HB.instance Definition _ := [Choice of fperm_type T by <:].
-HB.instance Definition _ := SubType.copy {fperm T} (fperm_type T).
-HB.instance Definition _ := Equality.copy {fperm T} (fperm_type T).
-HB.instance Definition _ := Choice.copy {fperm T} (fperm_type T).
-
+HB.instance Definition _ := [isSub of finPerm T for @fpval T].
+#[hnf] HB.instance Definition _ := [Choice of finPerm T by <:].
 End WithChoiceType.
 
-Section WithCountableType.
-
-Variable T : countType.
-#[hnf] HB.instance Definition _ := [Countable of fperm_type T by <:].
-HB.instance Definition _ := Countable.copy {fperm T} (fperm_type T).
-
-End WithCountableType.
-
-Section WithFiniteType.
-
-Variable T : finType.
-#[hnf] HB.instance Definition _ := [Finite of fperm_type T by <:].
-HB.instance Definition _ := Finite.copy {fperm T} (fperm_type T).
-
-End WithFiniteType.
-
-End Exports.
-
-End FPerm.
-
-Export FPerm.Exports.
+#[hnf] HB.instance Definition _ (T : countType) :=
+  [Countable of {fperm T} by <:].
+#[hnf] HB.instance Definition _ (T : finType) := [Finite of finPerm T by <:].
 
 Declare Scope fperm_scope.
 Delimit Scope fperm_scope with fperm.
 
-Section Operations.
-
-Variable T : choiceType.
-
-Implicit Types (s : {fperm T}) (x : T) (X Y : {fset T}).
-
 Local Open Scope fset_scope.
+Local Open Scope fperm_scope.
+
+Section Prelim.
+Variable T : choiceType.
+Implicit Types (s : {fperm T}) (x : T) (X Y : {fset T}).
 
 Lemma fpermP s1 s2 : s1 =1 s2 <-> s1 = s2.
 Proof.
@@ -133,16 +91,20 @@ Fact fperm_one_key : unit. exact: tt. Qed.
 Lemma fperm_one_subproof : fsinjectiveb ([fsfun] : {fsfun T -> T}).
 Proof. by apply/fsinjectiveP => ??; rewrite !fsfunE. Qed.
 
-Definition fperm_one : {fperm T} :=
-  locked_with fperm_one_key
-    (@FPerm.FPerm T [fsfun] fperm_one_subproof).
-Notation "1" := fperm_one.
+End Prelim.
 
-Lemma fperm1 x : 1 x = x.
-Proof. by rewrite /fperm_one unlock fsfunE. Qed.
+Elpi mlock Definition fperm_one {T} : {fperm T} :=
+  @FPerm T [fsfun] (@fperm_one_subproof T).
+Notation "1" := fperm_one : fperm_scope.
 
-Lemma finsupp1 : finsupp 1 = fset0.
-Proof. rewrite [1]unlock; exact: finsupp0. Qed.
+Section InverseTheory.
+Variable T : choiceType.
+Implicit Types (s : {fperm T}) (x : T) (X Y : {fset T}) (f : T -> T).
+
+Lemma fperm1 x : 1 x = x. Proof. by rewrite unlock fsfunE. Qed.
+
+Lemma finsupp1 : finsupp 1 = fset0 :> {fset T}.
+Proof. rewrite fperm_one.unlock; exact: finsupp0. Qed.
 
 Lemma finsuppfp_eq0 s : (finsupp s == fset0) = (s == 1).
 Proof.
@@ -151,21 +113,31 @@ move=> /eqP e; apply/eqP/fpermP=> x; rewrite fperm1; case: (finsuppP s) => //.
 by rewrite e in_fset0.
 Qed.
 
-Section Build.
+End InverseTheory.
 
-Implicit Types (f : T -> T).
-
-Definition fperm_def (X : {fset T}) (f : T -> T) x :=
+Definition fperm_def {T} (X : {fset T}) (f : T -> T) (x : T) :=
   let Y1 : {fset T} := [fset f x | x in X] `\` X in
   let Y2 : {fset T} := X `\` [fset f x | x in X] in
   if x \in Y1 then nth x Y2 (index x Y1) else f x.
 
-Definition fperm X f :=
-  odflt 1 (insub [fsfun x in (X `|` f @` X) => fperm_def X f x]).
+Elpi mlock Definition fperm_keyed (key : unit) {T} X f :=
+  odflt 1 (insub [fsfun x in (X `|` f @` X) => @fperm_def T X f x]).
 
-Lemma fpermE f X : {in X &, injective f} -> {in X, fperm X f =1 f}.
+Arguments fperm_keyed key {T} X f.
+
+Fact default_key : unit. Proof. by []. Qed.
+Notation fperm := (@fperm_keyed default_key).
+
+Section BuildAndRename.
+Variable T : choiceType.
+Implicit Types (s : {fperm T}) (x : T) (X Y : {fset T}) (f : T -> T).
+
+Lemma fperm_default_key k : @fperm_keyed k = @fperm.
+Proof. by rewrite !unlock. Qed.
+
+Lemma fpermE k f X : {in X &, injective f} -> {in X, fperm_keyed k X f =1 f}.
 Proof.
-move=> /card_in_imfsetP inj; rewrite /fperm insubT /=; last first.
+move=> /card_in_imfsetP inj; rewrite unlock insubT /=; last first.
   by move=> _ x x_X; rewrite fsfunE in_fsetU /fperm_def /= in_fsetD x_X.
 set D := X `|` _; apply/fsinjectivebP; exists D; rewrite ?finsupp_sub //.
 rewrite /fperm_def; set Y1 := f @` X `\` X; set Y2 := X `\` f @` X.
@@ -193,27 +165,27 @@ rewrite !fsfunE x_D y_D; case: ifPn => x_Y1; case: ifPn => y_Y1.
 - by apply: (card_in_imfsetP _ _ inj); rewrite nY1_X.
 Qed.
 
-Lemma finsupp_fperm f X : finsupp (fperm X f) `<=` X `|` f @` X.
+Lemma finsupp_fperm k f X : finsupp (fperm_keyed k X f) `<=` X `|` f @` X.
 Proof.
-rewrite /fperm; case: insubP => /= [g _ ->|_]; first exact: finsupp_sub.
+rewrite fperm_keyed.unlock; case: insubP => /= [g _ ->|_].
+  exact: finsupp_sub.
 by rewrite finsupp1 fsub0set.
 Qed.
 
-Lemma fpermEst f X x : f @` X = X -> fperm X f x = if x \in X then f x else x.
+Lemma fpermEst k f X x : f @` X = X ->
+  fperm_keyed k X f x = if x \in X then f x else x.
 Proof.
 move=> st; case: ifPn=> /= [|x_nin].
   by apply/fpermE/card_in_imfsetP/eqP; rewrite st.
-suff: x \notin finsupp (fperm X f) by case: finsuppP.
+suff: x \notin finsupp (fperm_keyed k X f) by case: finsuppP.
 apply: contra x_nin; apply/fsubsetP.
 by rewrite -{2}[X]fsetUid -{3}st finsupp_fperm.
 Qed.
 
-End Build.
-
-Section Renaming.
+Fact rename_key : unit. Proof. by []. Qed.
 
 Definition fperm_rename (X Y : {fset T}) : {fperm T} :=
-  fperm X (fun x => nth x Y (index x X)).
+  @fperm_keyed rename_key T X (fun x => nth x Y (index x X)).
 
 Lemma fperm_renameP X Y :
   let s := fperm_rename X Y in
@@ -231,14 +203,23 @@ have im_f: f @` X = Y.
       by rewrite mem_nth // size_X index_mem.
     by rewrite /f nthK ?fset_uniq //= ?inE ?size_X ?index_mem // nth_index.
   by case/imfsetP: y_in => x /= x_in ->; rewrite mem_nth // -size_X index_mem.
-rewrite -im_f; split; first by rewrite finsupp_fperm.
+rewrite -im_f; split; first by rewrite  finsupp_fperm.
 by apply: eq_in_imfset; apply: fpermE.
 Qed.
 
-End Renaming.
+End BuildAndRename.
 
-Section Inverse.
+Elpi mlock Definition fperm_mul {T} (s1 s2 : {fperm T}) :=
+  fperm (finsupp s1 `|` finsupp s2) (s1 \o s2).
+Infix "*" := fperm_mul : fperm_scope.
 
+Elpi mlock Definition fperm_exp {T} (s : {fperm T}) n :=
+  iter n (fperm_mul s) 1.
+Infix "^+" := fperm_exp : fperm_scope.
+
+Section InverseSubDef.
+Variable T : choiceType.
+Implicit Types (x : T) (X Y : {fset T}).
 Variable s : {fperm T}.
 
 Local Notation inv_def :=
@@ -254,19 +235,28 @@ apply/fsetP=> x; apply/(sameP idP)/(iffP idP).
 by case/imfsetP=> [y Py -> {x}]; case: pickP => /=.
 Qed.
 
-Definition fperm_inv := locked (fperm (finsupp s) inv_def).
+End InverseSubDef.
 
-Lemma fpermK : cancel s fperm_inv.
+Elpi mlock Definition fperm_inv {T} (s : {fperm T}) :=
+  fperm (finsupp s) (fun x => oapp val x [pick y : finsupp s | x == s (val y)]).
+Notation "x ^-1" := (fperm_inv x) : fperm_scope.
+
+Section InverseTheory.
+Variable T : choiceType.
+Implicit Types (x : T) (X Y : {fset T}).
+Variable (s : {fperm T}).
+
+Lemma fpermK : cancel s s^-1.
 Proof.
-move=> x; rewrite /fperm_inv -lock fpermEst; last exact: fperm_inv_subproof.
+move=> x; rewrite unlock fpermEst; last exact: fperm_inv_subproof.
 rewrite fperm_finsupp; case: finsuppP => // x_in_supp.
 case: pickP => [y /= /eqP/esym /fperm_inj-> //|/(_ (Sub x x_in_supp)) /=].
 by rewrite eqxx.
 Qed.
 
-Lemma fpermKV : cancel fperm_inv s.
+Lemma fpermKV : cancel s^-1 s.
 Proof.
-move=> x; rewrite /fperm_inv -lock fpermEst; last exact: fperm_inv_subproof.
+move=> x; rewrite unlock fpermEst; last exact: fperm_inv_subproof.
 case: ifPn=> [x_in_sup|].
   case: pickP=> [x' /= /eqP/esym -> //|/=].
   rewrite -imfset_finsuppfp in x_in_sup; case/imfsetP: x_in_sup=> [x' Px' ->].
@@ -274,17 +264,24 @@ case: ifPn=> [x_in_sup|].
 by rewrite mem_finsupp negbK => /eqP.
 Qed.
 
-Lemma finsupp_inv : finsupp fperm_inv = finsupp s.
+Lemma finsupp_inv : finsupp s^-1 = finsupp s.
 Proof.
 apply/fsetP=> x; apply/(sameP idP)/(iffP idP).
   by rewrite !mem_finsupp; apply: contra => /eqP {1}<-; rewrite fpermKV eqxx.
 by rewrite !mem_finsupp; apply: contra=> /eqP {1}<-; rewrite fpermK eqxx.
 Qed.
 
-Lemma fperm_finsuppV x : (fperm_inv x \in finsupp s) = (x \in finsupp s).
+Lemma fperm_finsuppV x : (s^-1 x \in finsupp s) = (x \in finsupp s).
 Proof. by rewrite -{1}finsupp_inv fperm_finsupp finsupp_inv. Qed.
 
-End Inverse.
+End InverseTheory.
+
+Section Operations.
+Variable T : choiceType.
+Implicit Types (s : {fperm T}) (x : T) (X Y : {fset T}).
+Local Notation "1" := (1 : {fperm T}).
+Local Notation fperm_inv := (@fperm_inv T).
+Local Notation fperm_mul := (@fperm_mul T).
 
 Lemma fperm_mul_subproof s1 s2 :
   (s1 \o s2) @` (finsupp s1 `|` finsupp s2) = finsupp s1 `|` finsupp s2.
@@ -292,17 +289,9 @@ Proof.
 by rewrite imfset_comp !imfset_finsuppfpS // ?fsubsetUr // fsubsetUl.
 Qed.
 
-Fact fperm_mul_key : unit. exact: tt. Qed.
-
-Definition fperm_mul s1 s2 :=
-  locked_with fperm_mul_key (fperm (finsupp s1 `|` finsupp s2) (s1 \o s2)).
-
-Infix "*" := fperm_mul.
-Notation "x ^-1" := (fperm_inv x).
-
 Lemma fpermM s1 s2 : s1 * s2 =1 s1 \o s2.
 Proof.
-move=> x; rewrite /fperm_mul locked_withE fpermEst; last first.
+move=> x; rewrite unlock fpermEst; last first.
   exact: fperm_mul_subproof.
 have [|nin_supp] //= := boolP (x \in _).
 rewrite in_fsetU negb_or !mem_finsupp !negbK in nin_supp.
@@ -405,7 +394,8 @@ case/imfsetP=> [w /fset2P [->|->] ->] /=; rewrite eqxx ?fset22 //.
 case: ifP=> ?; by [apply fset21|apply fset22].
 Qed.
 
-Definition fperm2 x y := fperm [fset x; y] (fperm2_def x y).
+Fact fperm2_key : unit. Proof. by []. Qed.
+Definition fperm2 x y := fperm_keyed fperm2_key [fset x; y] (fperm2_def x y).
 
 Lemma fperm2E x y : fperm2 x y =1 [fun z => z with x |-> y, y |-> x].
 Proof.
@@ -486,17 +476,8 @@ rewrite (fsubset_trans (fsubset_finsupp_fperm2 x y)) //.
 by rewrite fsubUset !fsub1set x_s es.
 Qed.
 
-Fact fperm_exp_key : unit. exact: tt. Qed.
-
-Definition fperm_exp s n :=
-  locked_with fperm_exp_key (iter n (fperm_mul s) 1).
-
-Infix "^+" := fperm_exp.
-
 Lemma fperm_expE s n : (s ^+ n) = iter n (fperm_mul s) 1.
-Proof. exact: locked_withE. Qed.
-
-Canonical fperm_exp_unlockable s n := Unlockable (fperm_expE s n).
+Proof. by rewrite unlock. Qed.
 
 Lemma fpermX s n x : (s ^+ n) x = iter n s x.
 Proof.
@@ -504,7 +485,7 @@ rewrite unlock; by elim: n => /= [|n IH]; rewrite ?fperm1 // fpermM /= IH.
 Qed.
 
 Lemma fperm_expSl s n : s ^+ n.+1 = s * s ^+ n.
-Proof. by rewrite !unlock. Qed.
+Proof. by rewrite unlock. Qed.
 
 Lemma fperm_expSr s n : s ^+ n.+1 = s ^+ n * s.
 Proof.
@@ -566,15 +547,7 @@ Qed.
 
 End Operations.
 
-Arguments fperm_one {_}.
-Prenex Implicits fperm_inv fperm_mul fperm2.
-
-Delimit Scope fperm_scope with fperm.
-
-Notation "1" := fperm_one : fperm_scope.
-Infix "*" := fperm_mul : fperm_scope.
-Infix "^+" := fperm_exp : fperm_scope.
-Notation "x ^-1" := (fperm_inv x) : fperm_scope.
+Prenex Implicits fperm2.
 
 Section Extend.
 
@@ -747,23 +720,20 @@ Qed.
 
 End Order.
 
-Section Generation.
 
-Local Open Scope fset_scope.
-Local Open Scope fperm_scope.
+Elpi mlock Definition generate {T} (A : {fset {fperm T}}) : {fset {fperm T}} :=
+  fixfset (fperm_on (\bigcup_(s <- A) finsupp s))
+    (fun S : {fset {fperm T}} => 1 |` fperm_mul @2`(A, (fun=> S))).
+
+Section Generation.
 
 Variable (T : choiceType) (A : {fset {fperm T}}).
 Implicit Types (x y : T) (S : {fset {fperm T}}).
 
-Let F :=
-  (fun S : {fset {fperm T}} => 1 |` fperm_mul @2`(A, (fun=> S))).
+Let F (S : {fset {fperm T}}) := 1 |` fperm_mul @2`(A, (fun=> S)).
 
 Let U : {fset {fperm T}} := fperm_on (\bigcup_(s <- A) finsupp s).
 
-Fact generate_key : unit. exact: tt. Qed.
-
-Definition generate : {fset {fperm T}} :=
-  locked_with generate_key (fixfset U F).
 
 Local Lemma generateF_mono : {homo F : X Y / X `<=` Y}.
 Proof.
@@ -781,21 +751,19 @@ rewrite in_fperm_on (fsubset_trans (finsupp_mul _ _)) //=.
 by rewrite fsubUset -!in_fperm_on s1_in s2_in.
 Qed.
 
-Lemma generateE : generate = 1 |` fperm_mul @2`(A, (fun=> generate)).
+Lemma generateE : generate A = 1 |` fperm_mul @2`(A, (fun=> generate A)).
 Proof.
-rewrite /generate locked_withE -{1}fixfsetK //=.
+rewrite unlock -{1}fixfsetK //=.
 - exact: generateF_mono.
 - exact: generateF_bounded.
 Qed.
 
-Lemma generateP s :
-  reflect (exists2 ss : seq {fperm T},
-             {subset ss <= A} &
-             s = foldr fperm_mul 1 ss)
-          (s \in generate).
+Lemma generateP s : reflect
+  (exists2 ss : seq {fperm T}, {subset ss <= A} & s = foldr fperm_mul 1 ss)
+  (s \in generate A).
 Proof.
 apply/(iffP idP) => [|[{s} ss ss_A ->]].
-- rewrite /generate locked_withE.
+- rewrite unlock.
   rewrite -in_iter_ffix_orderE; last exact: generateF_bounded.
   move: (ffix_order _ _ _) => n; elim: n => //= n IH in s *.
   case/fset1UP => [->|]; first by exists [::].
@@ -810,18 +778,18 @@ apply/(iffP idP) => [|[{s} ss ss_A ->]].
   by rewrite IH // => ? H; rewrite ss_A // inE H orbT.
 Qed.
 
-Lemma fsubset_generate : A `<=` generate.
+Lemma fsubset_generate : A `<=` generate A.
 Proof.
 apply/fsubsetP=> s s_A; apply/generateP; exists [:: s] => /= [s'|].
 - by rewrite inE => /eqP ->.
 - by rewrite fperm_muls1.
 Qed.
 
-Lemma generate1 : 1 \in generate.
+Lemma generate1 : 1 \in generate A.
 Proof. by apply/generateP; exists [::]. Qed.
 
 Lemma generate_mul s1 s2 :
-  s1 \in generate -> s2 \in generate -> s1 * s2 \in generate.
+  s1 \in generate A -> s2 \in generate A -> s1 * s2 \in generate A.
 Proof.
 case/generateP=> ss1 ss1_A ->; case/generateP=> ss2 ss2_A -> {s1 s2}.
 apply/generateP; exists (ss1 ++ ss2) => [?|{ss1_A ss2_A}].
@@ -829,13 +797,13 @@ apply/generateP; exists (ss1 ++ ss2) => [?|{ss1_A ss2_A}].
 by elim: ss1 => [|s1 ss1 IH] //=; rewrite ?fperm_mul1s // -IH fperm_mulA.
 Qed.
 
-Lemma generate_exp s n : s \in generate -> s ^+ n \in generate.
+Lemma generate_exp s n : s \in generate A -> s ^+ n \in generate A.
 Proof.
 move=> s_in; elim: n => [|n IH]; rewrite ?fperm_exp0 ?generate1 //.
 by rewrite fperm_expSl generate_mul.
 Qed.
 
-Lemma generate_inv s : s \in generate -> s^-1 \in generate.
+Lemma generate_inv s : s \in generate A -> s^-1 \in generate A.
 Proof. rewrite -fperm_exp_orderV; exact: generate_exp. Qed.
 
 End Generation.
@@ -843,10 +811,6 @@ End Generation.
 Arguments generateP {T A s}.
 
 Section GenerateTheory.
-
-Local Open Scope fset_scope.
-Local Open Scope fperm_scope.
-
 Variables (T : choiceType).
 Implicit Types (s : {fperm T}) (x y : T).
 
@@ -867,10 +831,6 @@ Qed.
 End GenerateTheory.
 
 Section Orbit.
-
-Local Open Scope fset_scope.
-Local Open Scope fperm_scope.
-
 Variable (T : choiceType) (s : {fperm T}) (x : T).
 Implicit Types (y : T) (X Y : {fset T}).
 
@@ -966,10 +926,9 @@ Qed.
 
 End OrbitTheory.
 
-Section Cyclic.
+Elpi mlock Definition cycle_at {T} (s : {fperm T}) x := fperm (orbit s x) s.
 
-Local Open Scope fset_scope.
-Local Open Scope fperm_scope.
+Section Cyclic.
 
 Variables (T : choiceType).
 Implicit Types (x y : T) (s : {fperm T}).
@@ -977,14 +936,9 @@ Implicit Types (x y : T) (s : {fperm T}).
 Definition is_cyclic s :=
   [forall a : finsupp s, orbit s (val a) == finsupp s].
 
-Fact cycle_at_key : unit. exact: tt. Qed.
-
-Definition cycle_at :=
-  locked_with cycle_at_key (fun s x => fperm (orbit s x) s).
-
 Lemma cycle_atE s x y :
   cycle_at s x y = if y \in orbit s x then s y else y.
-Proof. by rewrite /cycle_at locked_withE fpermEst ?imfset_orbit. Qed.
+Proof. by rewrite unlock fpermEst ?imfset_orbit. Qed.
 
 Lemma finsupp_cycle_at s x :
   finsupp (cycle_at s x) = if x \in finsupp s then orbit s x else fset0.
