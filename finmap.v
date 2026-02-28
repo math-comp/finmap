@@ -1784,6 +1784,15 @@ rewrite -cardfs_eq0 cardfE; apply: (equivP existsP).
 by split=> [] [a aP]; [exists (val a); apply: valP|exists [` aP]].
 Qed.
 
+Lemma fset_nat_maximum A (f : K -> nat) : A != fset0 ->
+  (exists i, i \in A /\ forall j, j \in A -> f j <= f i)%N.
+Proof.
+move=> /fset0Pn[x Ax].
+have [/= y _ /(_ _ isT) mf] := @arg_maxnP _ [` Ax]%fset xpredT (f \o val) isT.
+exists (val y); split; first exact: valP.
+by move=> z Az; have := mf [` Az]%fset.
+Qed.
+
 Lemma cardfs_gt0 A : (0 < #|` A|)%N = (A != fset0).
 Proof. by rewrite lt0n cardfs_eq0. Qed.
 
