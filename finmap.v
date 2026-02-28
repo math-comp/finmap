@@ -1902,7 +1902,7 @@ Proof. by rewrite -!fsubset0 fsubUset. Qed.
 Lemma fsubsetD1 A B x : (A `<=` B `\ x) = (A `<=` B) && (x \notin A).
 Proof.
 do !rewrite -(@subset_fsubE (x |` A `|` B)) ?fsubDset ?fsetUA // 1?fsetUAC //.
-rewrite fsubD1 => [|mem_x]; first by rewrite -fsetUA fset1U1.
+rewrite fsubD1 => [mem_x|]; last by rewrite -fsetUA fset1U1.
 by rewrite subsetD1 // inE.
 Qed.
 
@@ -1955,9 +1955,9 @@ Qed.
 Lemma fsetDpS C A B : B `<=` C ->  A `<` B -> C `\` B `<` C `\` A.
 Proof.
 move=> subBC subAB; rewrite fproperEneq fsetDS 1?fproper_sub// andbT.
-apply/negP => /eqP /(congr1 (fsetD C)); rewrite !fsetDK // => [eqAB//|].
- by rewrite eqAB (negPf (fproper_irrefl _)) in subAB.
-by apply: fsubset_trans subBC; apply: fproper_sub.
+apply/negP => /eqP /(congr1 (fsetD C)); rewrite !fsetDK // => [|eqAB//].
+  by apply: fsubset_trans subBC; apply: fproper_sub.
+by rewrite eqAB (negPf (fproper_irrefl _)) in subAB.
 Qed.
 
 Lemma fproperD2l C A B : A `<=` C -> B `<=` C -> (C `\` B `<` C `\` A) = (A `<` B).
@@ -2011,7 +2011,7 @@ Proof.
 pose D := A `|` B `|` C.
 have AD : A `<=` D by rewrite /D -fsetUA fsubsetUl.
 have BD : B `<=` D by rewrite /D fsetUAC fsubsetUr.
-rewrite -(@subset_fsubE D) //; last first.
+rewrite -(@subset_fsubE D) //.
   by rewrite fsubDset (fsubset_trans BD) // fsubsetUr.
 rewrite fsubD subsetD !subset_fsubE // disjoint_fsub //.
 by rewrite /D fsetUAC fsubsetUl.
@@ -2235,7 +2235,7 @@ Proof. by apply/fsetP=> X; rewrite inE !fpowersetE fsubsetI. Qed.
 
 Lemma card_fpowerset (A : {fset K}) : #|` fpowerset A| = 2 ^ #|` A|.
 Proof.
-rewrite !card_imfset; first by rewrite -cardE card_powerset cardsE cardfE.
+rewrite !card_imfset; last by rewrite -cardE card_powerset cardsE cardfE.
 by move=> X Y /fsetP eqXY; apply/setP => x; have := eqXY (val x); rewrite !inE.
 Qed.
 
@@ -2379,7 +2379,7 @@ Lemma big_fset_incl (A : {fset I}) B F : A `<=` B ->
   \big[op/idx]_(x <- A) F x = \big[op/idx]_(x <- B) F x.
 Proof.
 move=> subAB Fid; rewrite [in RHS](big_fsetID (mem A)) /=.
-rewrite [X in op _ X]big1_fset ?Monoid.mulm1; last first.
+rewrite [X in op _ X]big1_fset ?Monoid.mulm1.
   by move=> i; rewrite !inE /= => /andP[iB iNA _]; apply: Fid.
 by apply: eq_fbigl => i; rewrite !inE /= -(@in_fsetI _ B A) (fsetIidPr _).
 Qed.
@@ -2425,7 +2425,7 @@ Lemma pair_big_dep_cond (A : {fset I}) (B : I -> {fset J})
    \big[op/idx]_(p <- [fset ((i, j) : I * J) | i in [fset i in A | P i],
                              j in [fset j in B i | Q i j]]) F p.1 p.2.
 Proof.
-rewrite big_imfset2 //=; last by move=> [??] [??] _ _ /= [-> ->].
+rewrite big_imfset2 //=; first by move=> [??] [??] _ _ /= [-> ->].
 by rewrite big_fset /=; apply: eq_bigr => i _; rewrite big_fset.
 Qed.
 End BigFsetDep.
@@ -2450,8 +2450,8 @@ transitivity (\big[op/idx]_(i <- [fset ij | ij in
     by rewrite in_imfset.
   by move=> /andP[/allpairsP[[/= j i] [/imfsetP[/=a aA ->] iA ->/= /eqP<-]]]; exists i.
 rewrite eq_big_imfset //= big_map undup_id.
-  by rewrite big_allpairs; apply: eq_bigr => i /= _; rewrite -big_mkcond.
-by rewrite allpairs_uniq => //= -[j0 i0] [j1 i1] /=.
+  by rewrite allpairs_uniq => //= -[j0 i0] [j1 i1] /=.
+by rewrite big_allpairs; apply: eq_bigr => i /= _; rewrite -big_mkcond.
 Qed.
 
 End BigComImfset.
@@ -2646,7 +2646,7 @@ have {tI} : {in enum_fset P &, forall A B, A != B -> [disjoint A & B]%fset}.
   by [].
 elim: (enum_fset P) (fset_uniq P) => [_|h t ih /= /andP[ht ut] tP].
   by rewrite !big_nil.
-rewrite !big_cons -ih //; last first.
+rewrite !big_cons -ih //.
   by move=> x y xt yt xy; apply tP => //; rewrite !inE ?(xt,yt) orbT.
 rewrite {1}/fsetU big_imfset //= undup_cat /= big_cat !undup_id //.
 congr (op _ _).
@@ -2675,11 +2675,11 @@ have trivP : trivIfset P.
 have -> : (\bigcup_(i <- K) F i)%fset = fcover P.
   apply/esym; rewrite /P fcover_imfset big_mkcond /=; apply eq_bigr => i _.
   by case: ifPn => // /negPn/eqP.
-rewrite big_trivIfset // /rhs big_imfset => [|i j iK /andP[jK notFj0] eqFij] /=.
-  rewrite big_filter big_mkcond; apply eq_bigr => i _.
-  by case: ifPn => // /negPn /eqP ->;  rewrite big_seq_fset0.
-move: iK; rewrite !inE/= => /andP[iK Fi0].
-by apply: contraNeq (disjF _ _ iK jK) _; rewrite -fsetI_eq0 eqFij fsetIid.
+rewrite big_trivIfset // /rhs big_imfset => [i j iK /andP[jK notFj0] eqFij|] /=.
+  move: iK; rewrite !inE/= => /andP[iK Fi0].
+  by apply: contraNeq (disjF _ _ iK jK) _; rewrite -fsetI_eq0 eqFij fsetIid.
+rewrite big_filter big_mkcond; apply eq_bigr => i _.
+by case: ifPn => // /negPn /eqP ->;  rewrite big_seq_fset0.
 Qed.
 
 End FsetBigOps.
