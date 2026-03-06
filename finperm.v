@@ -25,6 +25,7 @@ From mathcomp.finmap Require Import finmap.
 (*           fperm_on X == The set of all permutations with support in X      *)
 (******************************************************************************)
 
+Unset SsrOldRewriteGoalsOrder.  (* remove this line when requiring MathComp >= 2.6 *)
 Set Implicit Arguments.
 Unset Strict Implicit.
 Unset Printing Implicit Defensive.
@@ -137,7 +138,7 @@ Proof. by rewrite !unlock. Qed.
 
 Lemma fpermE k f X : {in X &, injective f} -> {in X, fperm_keyed k X f =1 f}.
 Proof.
-move=> /card_in_imfsetP inj; rewrite unlock insubT /=; last first.
+move=> /card_in_imfsetP inj; rewrite unlock insubT /=.
   by move=> _ x x_X; rewrite fsfunE in_fsetU /fperm_def /= in_fsetD x_X.
 set D := X `|` _; apply/fsinjectivebP; exists D; rewrite ?finsupp_sub //.
 rewrite /fperm_def; set Y1 := f @` X `\` X; set Y2 := X `\` f @` X.
@@ -248,7 +249,7 @@ Variable (s : {fperm T}).
 
 Lemma fpermK : cancel s s^-1.
 Proof.
-move=> x; rewrite unlock fpermEst; last exact: fperm_inv_subproof.
+move=> x; rewrite unlock fpermEst; first exact: fperm_inv_subproof.
 rewrite fperm_finsupp; case: finsuppP => // x_in_supp.
 case: pickP => [y /= /eqP/esym /fperm_inj-> //|/(_ (Sub x x_in_supp)) /=].
 by rewrite eqxx.
@@ -256,7 +257,7 @@ Qed.
 
 Lemma fpermKV : cancel s^-1 s.
 Proof.
-move=> x; rewrite unlock fpermEst; last exact: fperm_inv_subproof.
+move=> x; rewrite unlock fpermEst; first exact: fperm_inv_subproof.
 case: ifPn=> [x_in_sup|].
   case: pickP=> [x' /= /eqP/esym -> //|/=].
   rewrite -imfset_finsuppfp in x_in_sup; case/imfsetP: x_in_sup=> [x' Px' ->].
@@ -291,7 +292,7 @@ Qed.
 
 Lemma fpermM s1 s2 : s1 * s2 =1 s1 \o s2.
 Proof.
-move=> x; rewrite unlock fpermEst; last first.
+move=> x; rewrite unlock fpermEst.
   exact: fperm_mul_subproof.
 have [|nin_supp] //= := boolP (x \in _).
 rewrite in_fsetU negb_or !mem_finsupp !negbK in nin_supp.
@@ -399,7 +400,7 @@ Definition fperm2 x y := fperm_keyed fperm2_key [fset x; y] (fperm2_def x y).
 
 Lemma fperm2E x y : fperm2 x y =1 [fun z => z with x |-> y, y |-> x].
 Proof.
-move=> z; rewrite fpermEst; last exact: fperm2_subproof.
+move=> z; rewrite fpermEst; first exact: fperm2_subproof.
 rewrite /= in_fset2.
 have [->|] := altP eqP => //= ?.
 by have [?|] := altP eqP => //= ?.
@@ -516,7 +517,7 @@ Lemma fperm_expDs s1 s2 n :
 Proof.
 move=> com; elim: n => [|n IH]; first by rewrite !fperm_exp0 fperm_mul1s.
 rewrite !fperm_expSl {}IH [s1 * s2 * _]fperm_mulA -[s1 * s2 * _]fperm_mulA.
-rewrite (@fperm_exp_com s2 s1); first by rewrite -!fperm_mulA.
+rewrite (@fperm_exp_com s2 s1); last by rewrite -!fperm_mulA.
 by rewrite com.
 Qed.
 
@@ -578,7 +579,7 @@ Lemma ext_fpermE s y :
   ext_fperm s y =
     if g s y is Some xx then f (s (\val xx)) else y.
 Proof.
-rewrite fpermEst /=.
+rewrite fpermEst /=; last first.
   case g_y: (g s y) => [xx|]; rewrite ?if_same //=.
   move: (gK s y); rewrite g_y /= => <-.
   by rewrite mem_imfset //= (valP xx).
@@ -609,7 +610,7 @@ Variables (T : choiceType) (P : pred T) (sT : subChoiceType P).
 Lemma ext_fpermE_sub (s : {fperm sT}) (y : T) :
   ext_fperm \val s y = if insub y is Some x then \val (s x) else y.
 Proof.
-rewrite ext_fpermE; last exact: val_inj.
+rewrite ext_fpermE; first exact: val_inj.
 case: pickP=> /= [x /eqP <-|yP].
 - rewrite insubT ?valP //= => ?; congr (\val (s _)).
   by apply/val_inj; rewrite SubK.
@@ -764,7 +765,7 @@ Lemma generateP s : reflect
 Proof.
 apply/(iffP idP) => [|[{s} ss ss_A ->]].
 - rewrite unlock.
-  rewrite -in_iter_ffix_orderE; last exact: generateF_bounded.
+  rewrite -in_iter_ffix_orderE; first exact: generateF_bounded.
   move: (ffix_order _ _ _) => n; elim: n => //= n IH in s *.
   case/fset1UP => [->|]; first by exists [::].
   case/imfset2P=> /= s1 s1_in [s2 s2_in ->].
