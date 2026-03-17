@@ -9,6 +9,9 @@
 
 - Added a theory of finite permutations in `finperm.v`
 
+- in `finmap.v`:
+  + lemma `fset_nat_maximum`
+
 ### Changed
 
 ### Renamed
