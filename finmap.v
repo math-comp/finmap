@@ -485,7 +485,7 @@ Definition finset_of (_ : phant K) := finSet.
 
 End Def.
 
-Arguments finSet K%type_scope.
+Arguments finSet K%_type_scope.
 
 #[warning="-deprecated-reference"]
 Identity Coercion type_of_finset : finset_of >-> finSet.
@@ -2977,7 +2977,7 @@ Local Notation finMap' := {domf : _ & T_ domf}.
 
 End DefMap.
 
-Arguments finMap K%type_scope V%type_scope.
+Arguments finMap K%_type_scope V%_type_scope.
 
 Notation "{ 'fmap' K -> T }" := (finMap K T) : type_scope.
 
