@@ -605,7 +605,7 @@ Structure finpredType (T : eqType) := FinPredType {
   tofinpred : finpred_sort -> pred T;
   _ : {finpred_seq : finpred_sort -> seq T |
        ((forall p, uniq (finpred_seq p))
-       * forall p x, x \in finpred_seq p = tofinpred p x)%type}
+       * forall p x, (x \in finpred_seq p) = tofinpred p x)%type}
 }.
 
 Canonical finpredType_predType (T : eqType) (fpT : finpredType T) :=
@@ -625,7 +625,7 @@ Proof. by case: fpT p => ?? [s sE] p x; rewrite sE -topredE. Qed.
 
 Lemma mkFinPredType_of_subproof (T : eqType) (pT : predType T)
    (fpred_seq : pT -> seq T) (pred_fsetE : forall p, fpred_seq p =i p) :
-  forall p x, x \in fpred_seq p = topred p x.
+  forall p x, (x \in fpred_seq p) = topred p x.
 Proof. by move=> p x; rewrite topredE pred_fsetE. Qed.
 
 Definition mkFinPredType_of (T : eqType) (U : Type) :=
@@ -645,14 +645,14 @@ Definition clone_finpredType (T : eqType) (U : Type) :=
 Structure is_finite (T : eqType) (P : pred T) := IsFinite {
   seq_of_is_finite :> seq T;
   _ : uniq seq_of_is_finite;
-  _ : forall x, x \in seq_of_is_finite = P x;
+  _ : forall x, (x \in seq_of_is_finite) = P x;
 }.
 
 Lemma is_finite_uniq (T : eqType) (P : pred T) (p : is_finite P) : uniq p.
 Proof. by case: p. Qed.
 
 Lemma is_finiteE (T : eqType) (P : pred T) (p : is_finite P) x :
-  x \in (seq_of_is_finite p) = P x.
+  (x \in seq_of_is_finite p) = P x.
 Proof. by case: p. Qed.
 
 Structure finpred (T : eqType) (pT : predType T) := FinPred {
@@ -1046,7 +1046,7 @@ Lemma mem_imfset2 (T1 : choiceType) (T2 : T1 -> choiceType)
     (p1 : finmempred T1)
     (p2 : forall x, finmempred (T2 x)) (x : T1) (y : T2 x) :
    injective g ->
-   f x y \in imfset2 key f p1 p2 = (in_mem x p1) && (in_mem y (p2 x)).
+   (f x y \in imfset2 key f p1 p2) = in_mem x p1 && in_mem y (p2 x).
 Proof.
 move=> f_inj; rewrite unlock seq_fsetE.
 apply/allpairsPdep/idP => [[t1 [t2]]|]; last first.
@@ -1117,7 +1117,7 @@ Lemma in_fset_valF A (p : finmempred A) (k : K) : k \notin A ->
   (k \in imfset key val p) = false.
 Proof. by apply: contraNF => /imfsetP[/= a Xa->]. Qed.
 
-Lemma in_fset_nil a : a \in [fset[key] x in [::]] = false.
+Lemma in_fset_nil a : (a \in [fset[key] x in [::]]) = false.
 Proof. by rewrite !mem_imfset. Qed.
 
 Lemma in_fset_cons x (xs : seq K) a :
@@ -1172,9 +1172,9 @@ Qed.
 Lemma fset_eqP {A B} : reflect (A =i B) (A == B).
 Proof. exact: (equivP eqP (iff_sym fsetP)). Qed.
 
-Lemma in_fset0 x : x \in fset0 = false. Proof. by []. Qed.
+Lemma in_fset0 x : (x \in fset0) = false. Proof. by []. Qed.
 
-Lemma in_fset1 a' a : a \in [fset a'] = (a == a').
+Lemma in_fset1 a' a : (a \in [fset a']) = (a == a').
 Proof. by rewrite !in_fset_ orbF. Qed.
 
 Lemma in_fsetU A B a : (a \in A `|` B) = (a \in A) || (a \in B).
@@ -1435,7 +1435,7 @@ apply/eqP/andP => [-> //|[/fsubsetP AB /fsubsetP BA]].
 by apply/fsetP=> x; apply/idP/idP=> [/AB|/BA].
 Qed.
 
-Lemma subEfproper A B : A `<=` B = (A == B) || (A `<` B).
+Lemma subEfproper A B : (A `<=` B) = (A == B) || (A `<` B).
 Proof. by rewrite eqEfsubset -andb_orr orbN andbT. Qed.
 
 Lemma fproper_sub A B : A `<` B -> A `<=` B.
@@ -1444,7 +1444,7 @@ Proof. by rewrite subEfproper orbC => ->. Qed.
 Lemma eqVfproper A B : A `<=` B -> A = B \/ A `<` B.
 Proof. by rewrite subEfproper => /predU1P. Qed.
 
-Lemma fproperEneq A B : A `<` B = (A != B) && (A `<=` B).
+Lemma fproperEneq A B : (A `<` B) = (A != B) && (A `<=` B).
 Proof. by rewrite andbC eqEfsubset negb_and andb_orr andbN. Qed.
 
 Lemma fproper_neq A B : A `<` B -> A != B.
@@ -2907,7 +2907,7 @@ by rewrite /fixfset !fset_iterFE; apply/subset_imfset/subsetP/iter_sub_fix.
 Qed.
 
 Definition ffix_order (x : T) :=
- if x \in U =P true is ReflectT xU then fix_order Fsub [` xU] else 0.
+ if (x \in U) =P true is ReflectT xU then fix_order Fsub [` xU] else 0.
 
 Lemma ffix_order_le_max (x : T) : ffix_order x <= #|` U|.
 Proof.
@@ -3217,7 +3217,7 @@ Definition reducef f : {fmap K -> V} :=
 Lemma domf_reduce f : domf (reducef f) = [fsetval x : domf f | f x].
 Proof. by []. Qed.
 
-Lemma mem_reducef f k : k \in reducef f = ojoin f.[? k].
+Lemma mem_reducef f k : (k \in reducef f) = ojoin f.[? k].
 Proof.
 rewrite inE; case: fndP => [kf|] /=; first by rewrite in_fset_valT.
 by apply: contraNF; apply: (fsubsetP (fset_sub_val _ _)).
@@ -3261,15 +3261,15 @@ Lemma mem_filterf f (P : pred K) (k : K) :
 Proof. by rewrite !inE. Qed.
 
 Lemma mem_restrictf f (A : {fset K}) (k : K) :
-   k \in f.[& A] = (k \in A) && (k \in f) :> bool.
+   (k \in f.[& A]) = (k \in A) && (k \in f) :> bool.
 Proof. by rewrite mem_filterf andbC. Qed.
 
 Lemma mem_remf f (A : {fset K}) (k : K) :
-   k \in f.[\ A] = (k \notin A) && (k \in f) :> bool.
+   (k \in f.[\ A]) = (k \notin A) && (k \in f) :> bool.
 Proof. by rewrite mem_restrictf inE -andbA andbb. Qed.
 
 Lemma mem_remf1 f (k' k : K) :
-   k \in f.[~ k'] = (k != k') && (k \in f) :> bool.
+   (k \in f.[~ k']) = (k != k') && (k \in f) :> bool.
 Proof. by rewrite mem_remf inE. Qed.
 
 Lemma domf_restrict f A : domf f.[& A] = A `&` domf f.
@@ -3278,7 +3278,7 @@ Proof. by apply/fsetP=> k'; rewrite mem_restrictf !inE. Qed.
 Lemma domf_rem f A : domf f.[\ A] = domf f `\` A.
 Proof. by rewrite domf_restrict fsetIDAC fsetIid. Qed.
 
-Lemma mem_remfF f (k : K) : k \in f.[~ k] = false.
+Lemma mem_remfF f (k : K) : (k \in f.[~ k]) = false.
 Proof. by rewrite mem_remf1 eqxx. Qed.
 
 Lemma fnd_filterf f P k : (filterf f P).[? k] = if P k then f.[? k] else None.
@@ -3439,7 +3439,7 @@ Proof.
 by apply/fsetP=> x; rewrite !inE; case: (boolP (_ \in domf _)); rewrite ?orbT.
 Qed.
 
-Lemma mem_catf f g k : k \in domf (f + g) = (k \in f) || (k \in g).
+Lemma mem_catf f g k : (k \in domf (f + g)) = (k \in f) || (k \in g).
 Proof. by rewrite domf_cat inE. Qed.
 
 Lemma fnd_cat f g k :
@@ -4027,7 +4027,7 @@ Proof. by apply/fsetP => x; rewrite !inE mem_finsupp fsfunE eqxx. Qed.
 Lemma fsfun0_inj : injective default -> injective [fsfun for default].
 Proof. by move=> def_inj x y; rewrite !fsfunE => /def_inj. Qed.
 
-Lemma in_finsupp0 x : x \in finsupp [fsfun for default] = false.
+Lemma in_finsupp0 x : (x \in finsupp [fsfun for default]) = false.
 Proof. by rewrite finsupp0 inE. Qed.
 
 End FsfunTheory.

@@ -296,13 +296,13 @@ Let msetE := (mset0E, msetE2, msetnE, msetnxx,
               mset1DE, mset1UE, msetB1E,
               mset_seqE, msetME).
 
-Lemma in_mset0 a : a \in mset0 = false.
+Lemma in_mset0 a : (a \in mset0) = false.
 Proof. by rewrite in_mset !msetE. Qed.
 
-Lemma in_msetn n a' a : a \in msetn n a' = (n > 0) && (a == a').
+Lemma in_msetn n a' a : (a \in msetn n a') = (n > 0) && (a == a').
 Proof. by rewrite in_mset msetE; case: (a == a'); rewrite ?andbT ?andbF. Qed.
 
-Lemma in_mset1 a' a : a \in [mset a'] = (a == a').
+Lemma in_mset1 a' a : (a \in [mset a']) = (a == a').
 Proof. by rewrite in_msetn. Qed.
 
 Lemma in_msetD A B a : (a \in A `+` B) = (a \in A) || (a \in B).
@@ -727,7 +727,7 @@ apply/eqP/andP => [<-|[/msubsetP AB /msubsetP BA]]; first by split.
 by apply/msetP=> a; apply/eqP; rewrite eqn_leq AB BA.
 Qed.
 
-Lemma msubEproper A B : A `<=` B = (A == B) || (A `<` B).
+Lemma msubEproper A B : (A `<=` B) = (A == B) || (A `<` B).
 Proof. by rewrite eqEmsubset -andb_orr orbN andbT. Qed.
 
 Lemma mproper_sub A B : A `<` B -> A `<=` B.
@@ -736,7 +736,7 @@ Proof. by rewrite msubEproper orbC => ->. Qed.
 Lemma eqVmproper A B : A `<=` B -> A = B \/ A `<` B.
 Proof. by rewrite msubEproper => /predU1P. Qed.
 
-Lemma mproperEneq A B : A `<` B = (A != B) && (A `<=` B).
+Lemma mproperEneq A B : (A `<` B) = (A != B) && (A `<=` B).
 Proof. by rewrite andbC eqEmsubset negb_and andb_orr andbN. Qed.
 
 Lemma mproper_neq A B : A `<` B -> A != B.
@@ -803,7 +803,7 @@ Proof. by do [apply: (iffP idP); rewrite !inE] => [/andP[]|[]] -> /eqP. Qed.
 Lemma gt0_msetnP n x a : 0 < n -> reflect (x = a) (x \in msetn n a).
 Proof. by move=> n_gt0; rewrite inE n_gt0 /=; exact: eqP. Qed.
 
-Lemma msetn1 n a : a \in msetn n a = (n > 0).
+Lemma msetn1 n a : (a \in msetn n a) = (n > 0).
 Proof. by rewrite inE eqxx andbT. Qed.
 
 Lemma mset1P x a : reflect (x = a) (x \in [mset a]).

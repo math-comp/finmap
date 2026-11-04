@@ -46,10 +46,10 @@ tested_coq_opam_versions:
 
 dependencies:
 - opam:
-    name: rocq-mathcomp-ssreflect
+    name: rocq-mathcomp-boot
     version: '{>= "2.5.0"}'
   description: |-
-    [MathComp](https://math-comp.github.io) ssreflect 2.2.0 or later
+    [MathComp](https://math-comp.github.io) boot 2.5.0 or later
 
 namespace: mathcomp.finmap
 

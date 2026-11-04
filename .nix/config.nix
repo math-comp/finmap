@@ -17,10 +17,6 @@
   ## the name of the nixpkgs attribute, if so, set it here:
   # pname = "{{shortname}}";
 
-  ## Set this when the package has no rocqPackages version yet
-  ## (either in nixpkgs or in .nix/rocq-overlays)
-  no-rocq-yet = true;
-
   ## Lists the dependencies, phrased in terms of nix attributes.
   ## No need to list Coq, it is already included.
   ## These dependencies will systematically be added to the currently
@@ -42,17 +38,17 @@
   cachix.coq = {};
   cachix.coq-community = {};
   cachix.math-comp.authToken = "CACHIX_AUTH_TOKEN";
-  
+
   ## If you have write access to one of these caches you can
   ## provide the auth token or signing key through a secret
   ## variable on GitHub. Then, you should give the variable
   ## name here. For instance, coq-community projects can use
   ## the following line instead of the one above:
   # cachix.coq-community.authToken = "CACHIX_AUTH_TOKEN";
-  
+
   ## Or if you have a signing key for a given Cachix cache:
   # cachix.my-cache.signingKey = "CACHIX_SIGNING_KEY"
-  
+
   ## Note that here, CACHIX_AUTH_TOKEN and CACHIX_SIGNING_KEY
   ## are the names of secret variables. They are set in
   ## GitHub's web interface.
@@ -65,34 +61,33 @@
     common-bundles = {
       "multinomials".override.version = "master";
     }; in {
-    "8.20".coqPackages = common-bundles // {
+    "8.20".rocqPackages = common-bundles // {
       coq.override.version = "8.20";
     };
-    "9.0" = {
-      rocqPackages = { rocq-core.override.version = "9.0"; };
-      coqPackages = common-bundles // {
-        coq.override.version = "9.0";
-      }; };
-    "9.1" = {
-      rocqPackages = { rocq-core.override.version = "9.1"; };
-      coqPackages = common-bundles // {
-        coq.override.version = "9.1";
-      }; };
-    "master" = { rocqPackages = {
+    "9.0".rocqPackages = common-bundles // {
+      rocq-core.override.version = "9.0";
+      coq.override.version = "9.0";
+    };
+    "9.1".rocqPackages = common-bundles // {
+      rocq-core.override.version = "9.1";
+      coq.override.version = "9.1";
+    };
+    "9.2".rocqPackages = common-bundles // {
+      rocq-core.override.version = "9.2";
+      coq.override.version = "9.2";
+    };
+    "9.3".rocqPackages = common-bundles // {
+      rocq-core.override.version = "9.3";
+      coq.override.version = "9.3";
+    };
+    "master".rocqPackages = {
       rocq-core.override.version = "master";
-      rocq-elpi.override.version = "master";
-      rocq-elpi.override.elpi-version = "3.4.2";
-      hierarchy-builder.override.version = "master";
-      mathcomp.override.version = "master";
-      mathcomp-bigenough.override.version = "master";
-    }; coqPackages = {
       coq.override.version = "master";
-      coq-elpi.override.version = "master";
-      coq-elpi.override.elpi-version = "3.4.2";
+      rocq-elpi.override.version = "master";
       hierarchy-builder.override.version = "master";
       mathcomp.override.version = "master";
       mathcomp-bigenough.override.version = "master";
       multinomials.override.version = "master";
-    }; };
+    };
   };
 }
