@@ -11,3 +11,4 @@ finperm.v
 -arg -w -arg +undeclared-scope
 -arg -w -arg -ambiguous-paths
 -arg -w -arg -uniform-inheritance
+-arg -w -arg +level-tolerance
