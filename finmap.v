@@ -2296,6 +2296,23 @@ Lemma big_seq_fset1 (a : I) (F : I -> R) :
   \big[op/idx]_(i <- [fset a]) F i = F a.
 Proof. by rewrite big_seq_fsetE big_fset1. Qed.
 
+Lemma eq_fbig (A B : {fset I}) (F G : I -> R) :
+  A =i B -> (forall x, x \in A -> F x = G x) ->
+  \big[op/idx]_(i <- A) F i = \big[op/idx]_(i <- B) G i.
+Proof. by move=> /fsetP<- FG; rewrite big_seq [RHS]big_seq; apply: eq_bigr. Qed.
+
+Lemma eq_fbigl (A B : {fset I}) (F : I -> R) :
+  A =i B -> \big[op/idx]_(i <- A) F i = \big[op/idx]_(i <- B) F i.
+Proof. by move=> AB; apply: eq_fbig. Qed.
+
+Lemma eq_fbigr (A : {fset I}) (P : pred I) (F G : I -> R) :
+  (forall x, x \in A -> P x -> F x = G x) ->
+  \big[op/idx]_(i <- A | P i) F i = \big[op/idx]_(i <- A | P i) G i.
+Proof.
+move=> FG; rewrite big_seq_cond [RHS]big_seq_cond.
+by apply: eq_bigr => ? /andP[]; apply: FG.
+Qed.
+
 End BigFSet.
 
 Lemma card_fset_sum1 (T : choiceType) (A : {fset T}) : #|` A| = \sum_(i <- A) 1.
@@ -2325,26 +2342,10 @@ rewrite big_seq_cond [in RHS]big_seq_cond; apply: eq_bigr => i.
 by rewrite in_fset !inE => /andP[/andP[??] _]; apply: FG.
 Qed.
 
-Lemma eq_fbig (A B : {fset I}) (F G : I -> R) :
-  A =i B -> (forall x, x \in A -> F x = G x) ->
-  \big[op/idx]_(i <- A) F i = \big[op/idx]_(i <- B) G i.
-Proof.
-by move=> AB FG; apply: eq_fbig_cond => x; rewrite ?inE/= -?AB// => /FG.
-Qed.
-
 Lemma eq_fbigl_cond (A B : {fset I}) (P Q : pred I) (F : I -> R) :
   [fset x in A | P x] =i [fset x in B | Q x] ->
   \big[op/idx]_(i <- A | P i) F i = \big[op/idx]_(i <- B | Q i) F i.
 Proof. by move=> AB; apply: eq_fbig_cond. Qed.
-
-Lemma eq_fbigl (A B : {fset I}) (F : I -> R) :
-  A =i B -> \big[op/idx]_(i <- A) F i = \big[op/idx]_(i <- B) F i.
-Proof. by move=> AB; apply: eq_fbig. Qed.
-
-Lemma eq_fbigr (A : {fset I}) (P : pred I) (F G : I -> R) :
-  (forall x, x \in A -> P x -> F x = G x) ->
-  \big[op/idx]_(i <- A | P i) F i = \big[op/idx]_(i <- A | P i) G i.
-Proof. by apply: eq_fbig_cond. Qed.
 
 Lemma big_fsetID  (B : pred I) (A : {fset I}) (F : I -> R) :
    \big[op/idx]_(i <- A) F i =
