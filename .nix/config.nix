@@ -31,7 +31,7 @@
 
   ## select an entry to build in the following `bundles` set
   ## defaults to "default"
-  default-bundle = "8.20";
+  default-bundle = "9.3";
 
   ## Cachix caches to use in CI
   ## Below we list some standard ones
